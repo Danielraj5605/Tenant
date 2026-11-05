@@ -56,3 +56,6 @@ supabase/.branches/
 # Edge Function secrets (npm run push:keys)
 supabase/.env.functions
 supabase/.vault-setup.sql
+
+.vercel
+.env*
