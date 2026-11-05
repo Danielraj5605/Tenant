@@ -48,3 +48,42 @@ export const MemberEditInput = z.object({
     .refine((v) => v === null || isIsoDate(v), "Pick a valid date"),
 });
 export type MemberEditInput = z.infer<typeof MemberEditInput>;
+
+export const ChoreInput = z
+  .object({
+    name: z.string().trim().min(1, "Enter a chore name").max(40, "Keep the name under 41 characters"),
+    frequency: z.enum(["daily", "weekly", "custom"]),
+    days: z
+      .string()
+      .transform((v) => [...new Set(v.split(",").filter(Boolean).map(Number))].sort((x, y) => x - y))
+      .pipe(z.array(z.number().int().min(1).max(7))),
+    dueTime: z
+      .string()
+      .optional()
+      .transform((v) => (v ? v : null))
+      .refine((v) => v === null || /^([01]\d|2[0-3]):[0-5]\d$/.test(v), "Pick a valid time"),
+    rotation: z
+      .string()
+      .transform((v, ctx) => {
+        try {
+          return JSON.parse(v) as unknown;
+        } catch {
+          ctx.addIssue({ code: "custom", message: "Choose who takes turns" });
+          return z.NEVER;
+        }
+      })
+      .pipe(
+        z
+          .array(z.uuid())
+          .min(1, "Choose at least one person")
+          .refine((ids) => new Set(ids).size === ids.length, "Each person can only appear once"),
+      ),
+  })
+  .superRefine((v, ctx) => {
+    if (v.frequency === "daily") return;
+    if (v.days.length === 0) ctx.addIssue({ code: "custom", path: ["days"], message: "Pick at least one day" });
+    if (v.frequency === "weekly" && v.days.length > 1)
+      ctx.addIssue({ code: "custom", path: ["days"], message: "Pick one day for a weekly chore" });
+  })
+  .transform((v) => ({ ...v, days: v.frequency === "daily" ? [] : v.days }));
+export type ChoreInput = z.infer<typeof ChoreInput>;

@@ -11,6 +11,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { InviteLink } from "./invite-link";
 import { SignOutButton } from "./sign-out";
 import { AddStaffForm, MenuOwnerForm } from "./member-forms";
+import { PushSetup } from "@/components/push-setup";
 
 export const metadata = { title: "Flat settings · Tenant" };
 
@@ -134,6 +135,11 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             </Card>
           </>
         ) : null}
+
+        <Card className="flex flex-col gap-3">
+          <h2 className="text-title font-bold">Reminders on this phone</h2>
+          <PushSetup />
+        </Card>
 
         <SignOutButton />
       </div>

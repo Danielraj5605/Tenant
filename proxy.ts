@@ -5,7 +5,7 @@ import { supabaseEnv } from "@/lib/supabase/env";
 import { safeNextPath } from "@/lib/engine/onboarding";
 
 /** Paths reachable without signing in. */
-const PUBLIC_PATHS = ["/login", "/auth/"];
+const PUBLIC_PATHS = ["/login", "/auth/", "/sw.js", "/manifest.webmanifest", "/icons/"];
 
 /**
  * Refreshes the Supabase session cookie on every request and sends signed-out

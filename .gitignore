@@ -48,3 +48,11 @@ supabase/.branches/
 
 # leftover scaffold build cache
 /scaffold/
+
+# generated service worker (npm run build)
+/public/sw.js
+/public/sw.js.map
+
+# Edge Function secrets (npm run push:keys)
+supabase/.env.functions
+supabase/.vault-setup.sql

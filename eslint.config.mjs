@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Leftover build cache from project scaffolding; safe to delete.
     "scaffold/**",
+    // Deno code, checked by the Supabase CLI on deploy.
+    "supabase/functions/**",
+    // Generated service worker.
+    "public/sw.js",
   ]),
 ]);
 

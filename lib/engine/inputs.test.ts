@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AwayPeriodInput, MemberEditInput, StaffInput } from "./inputs";
+import { AwayPeriodInput, ChoreInput, MemberEditInput, StaffInput } from "./inputs";
 
 const id = "7d3c1a54-2f7e-4c11-9a0b-1f2e3d4c5b6a";
 
@@ -65,5 +65,29 @@ describe("MemberEditInput", () => {
       leftOn: null,
     });
     expect(MemberEditInput.parse({ memberId: id, name: "Arun", leftOn: "2026-12-31" }).leftOn).toBe("2026-12-31");
+  });
+});
+
+describe("ChoreInput", () => {
+  const a = "7d3c1a54-2f7e-4c11-9a0b-1f2e3d4c5b6a";
+  const b = "8e4d2b65-3a8f-4d22-8b1c-2a3f4e5d6c7b";
+
+  it("parses a daily chore with an ordered rotation", () => {
+    expect(
+      ChoreInput.parse({ name: " Garbage ", frequency: "daily", days: "", dueTime: "", rotation: JSON.stringify([b, a]) }),
+    ).toEqual({ name: "Garbage", frequency: "daily", days: [], dueTime: null, rotation: [b, a] });
+  });
+
+  it("requires days for weekly and custom chores, and exactly one for weekly", () => {
+    const base = { name: "Water cans", dueTime: "09:00", rotation: JSON.stringify([a]) };
+    expect(ChoreInput.safeParse({ ...base, frequency: "custom", days: "" }).success).toBe(false);
+    expect(ChoreInput.safeParse({ ...base, frequency: "weekly", days: "1,4" }).success).toBe(false);
+    expect(ChoreInput.parse({ ...base, frequency: "custom", days: "4,1" }).days).toEqual([1, 4]);
+  });
+
+  it("needs at least one person in the rotation, without duplicates", () => {
+    const base = { name: "Kitchen", frequency: "daily", days: "", dueTime: "" };
+    expect(ChoreInput.safeParse({ ...base, rotation: "[]" }).success).toBe(false);
+    expect(ChoreInput.safeParse({ ...base, rotation: JSON.stringify([a, a]) }).success).toBe(false);
   });
 });

@@ -43,10 +43,24 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
     reason: v.reason,
   };
   const supabase = await createClient();
-  const { error } = id.success
-    ? await supabase.from("away_periods").update(row).eq("id", id.data).eq("flat_id", flat.id)
-    : await supabase.from("away_periods").insert({ ...row, flat_id: flat.id });
-  if (error) return { error: "This couldn't be saved. Check your connection and try again." };
+  if (id.success) {
+    const { error } = await supabase.from("away_periods").update(row).eq("id", id.data).eq("flat_id", flat.id);
+    if (error) return { error: "This couldn't be saved. Check your connection and try again." };
+  } else {
+    const { data, error } = await supabase
+      .from("away_periods")
+      .insert({ ...row, flat_id: flat.id })
+      .select("id")
+      .single();
+    if (error || !data) return { error: "This couldn't be saved. Check your connection and try again." };
+    // New cook or maid leave: push an alert to the flat (SPEC 4.9). The Edge
+    // Function ignores flatmates. A failed alert never blocks saving.
+    try {
+      await supabase.functions.invoke("notify", { body: { awayPeriodId: data.id } });
+    } catch {
+      // Push is best-effort.
+    }
+  }
 
   revalidatePath("/", "layout");
   redirect(`/calendar?d=${v.startDate}`);
