@@ -12,6 +12,7 @@ import { InviteLink } from "./invite-link";
 import { SignOutButton } from "./sign-out";
 import { AddStaffForm, MenuOwnerForm } from "./member-forms";
 import { PushSetup } from "@/components/push-setup";
+import { CategoryRules } from "./category-rules";
 
 export const metadata = { title: "Flat settings · Tenant" };
 
@@ -20,7 +21,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   const { created } = await searchParams;
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
-  const [{ data: members }, { data: periods }] = await Promise.all([
+  const [{ data: members }, { data: periods }, { data: categories }] = await Promise.all([
     supabase
       .from("members")
       .select("*")
@@ -28,6 +29,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       .or(`left_on.is.null,left_on.gte.${today}`)
       .order("sort_order"),
     supabase.from("away_periods").select("*").eq("flat_id", flat.id).lte("start_date", today).gte("end_date", today),
+    supabase.from("expense_categories").select("id, name, default_rule").eq("flat_id", flat.id).order("created_at"),
   ]);
 
   const people = members ?? [];
@@ -127,6 +129,16 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                 </p>
               </div>
               <AddStaffForm />
+            </Card>
+
+            <Card className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-title font-bold">Default splits</h2>
+                <p className="text-sm text-muted">
+                  Who shares each kind of cost by default. You can always change people and amounts on a split.
+                </p>
+              </div>
+              <CategoryRules categories={categories ?? []} />
             </Card>
 
             <Card className="flex flex-col gap-3">

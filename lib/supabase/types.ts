@@ -47,6 +47,46 @@ type MenuDayRow = {
   plan: MenuPlan;
   created_at: string;
 };
+export type SplitRule = "all_members" | "present_only" | "per_day_worked" | "custom";
+type ExpenseCategoryRow = { id: string; flat_id: string; name: string; default_rule: SplitRule; created_at: string };
+type ExpenseRow = {
+  id: string;
+  flat_id: string;
+  category_id: string;
+  title: string;
+  merchant: string | null;
+  paid_by: string;
+  total_paise: number;
+  expense_date: string;
+  source: "manual" | "scan";
+  bill_image_path: string | null;
+  rule_note: string | null;
+  created_by: string;
+  settled: boolean;
+  created_at: string;
+};
+type ExpenseItemRow = {
+  id: string;
+  expense_id: string;
+  flat_id: string;
+  name: string;
+  quantity: number | null;
+  amount_paise: number;
+  kind: "item" | "fee" | "tax" | "discount";
+  included: boolean;
+  personal_member_id: string | null;
+  sort_order: number;
+  created_at: string;
+};
+type ExpenseShareRow = {
+  expense_id: string;
+  member_id: string;
+  flat_id: string;
+  amount_paise: number;
+  is_custom: boolean;
+  reason: string | null;
+  created_at: string;
+};
 type PushSubscriptionRow = {
   id: string;
   flat_id: string;
@@ -156,6 +196,10 @@ export type Database = {
       chore_rotation: Table<ChoreRotationRow, "chore_id" | "member_id" | "flat_id" | "position">;
       chore_assignments: Table<ChoreAssignmentRow, "chore_id" | "flat_id" | "due_date">;
       menu_days: Table<MenuDayRow, "flat_id" | "date">;
+      expense_categories: Table<ExpenseCategoryRow, "flat_id" | "name" | "default_rule">;
+      expenses: Table<ExpenseRow, "flat_id" | "category_id" | "title" | "paid_by" | "total_paise" | "expense_date" | "created_by">;
+      expense_items: Table<ExpenseItemRow, "expense_id" | "flat_id" | "name" | "amount_paise" | "kind">;
+      expense_shares: Table<ExpenseShareRow, "expense_id" | "member_id" | "flat_id" | "amount_paise">;
       push_subscriptions: Table<PushSubscriptionRow, "flat_id" | "member_id" | "endpoint" | "p256dh" | "auth">;
     };
     Views: { [_ in never]: never };
@@ -177,6 +221,9 @@ export type Database = {
           already_member: boolean;
         }[];
       };
+      save_expense: { Args: { p: Json }; Returns: string };
+      set_expense_settled: { Args: { p_expense_id: string }; Returns: undefined };
+      delete_expense: { Args: { p_expense_id: string }; Returns: undefined };
       set_chore_done: { Args: { p_assignment_id: string; p_done: boolean }; Returns: undefined };
       is_flat_member: { Args: { p_flat_id: string }; Returns: boolean };
       is_flat_admin: { Args: { p_flat_id: string }; Returns: boolean };
@@ -192,3 +239,7 @@ export type AwayPeriodRow = Database["public"]["Tables"]["away_periods"]["Row"];
 export type Chore = ChoreRow;
 export type ChoreAssignment = ChoreAssignmentRow;
 export type MenuDay = MenuDayRow;
+export type ExpenseCategory = ExpenseCategoryRow;
+export type Expense = ExpenseRow;
+export type ExpenseItemDb = ExpenseItemRow;
+export type ExpenseShare = ExpenseShareRow;

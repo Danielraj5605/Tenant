@@ -87,3 +87,43 @@ export const ChoreInput = z
   })
   .transform((v) => ({ ...v, days: v.frequency === "daily" ? [] : v.days }));
 export type ChoreInput = z.infer<typeof ChoreInput>;
+
+const paise = z.number().int().min(0).max(100_000_000);
+
+export const ExpensePayload = z
+  .object({
+    id: z.uuid().nullable(),
+    title: z.string().trim().min(1, "Say what it was for").max(80),
+    merchant: z.string().trim().max(80).nullable(),
+    categoryId: z.uuid("Pick a category"),
+    date: z.string().refine(isIsoDate, "Pick a date"),
+    paidBy: z.uuid("Choose who paid"),
+    totalPaise: paise.refine((v) => v > 0, "Enter the total"),
+    source: z.enum(["manual", "scan"]),
+    billImagePath: z.string().max(200).nullable(),
+    items: z
+      .array(
+        z.object({
+          name: z.string().trim().min(1, "Name every item").max(80),
+          quantity: z.number().positive().nullable(),
+          amountPaise: paise,
+          kind: z.enum(["item", "fee", "tax", "discount"]),
+          included: z.boolean(),
+          personalMemberId: z.uuid().nullable(),
+        }),
+      )
+      .max(150),
+    shares: z
+      .array(z.object({ memberId: z.uuid(), amountPaise: paise, isCustom: z.boolean() }))
+      .min(1, "Pick at least one person")
+      .refine((s) => new Set(s.map((x) => x.memberId)).size === s.length, "Each person once"),
+    dailyRatePaise: paise.nullable(),
+  })
+  .superRefine((v, ctx) => {
+    const signed = (i: (typeof v.items)[number]) => (i.kind === "discount" ? -i.amountPaise : i.amountPaise);
+    const split = v.items.length ? v.items.filter((i) => i.included).reduce((s, i) => s + signed(i), 0) : v.totalPaise;
+    const sum = v.shares.reduce((s, x) => s + x.amountPaise, 0);
+    if (split <= 0) ctx.addIssue({ code: "custom", path: ["items"], message: "Tick at least one item to split" });
+    if (sum !== split) ctx.addIssue({ code: "custom", path: ["shares"], message: "Shares must add up to the split total" });
+  });
+export type ExpensePayload = z.infer<typeof ExpensePayload>;

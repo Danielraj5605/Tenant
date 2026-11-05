@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AwayPeriodInput, ChoreInput, MemberEditInput, StaffInput } from "./inputs";
+import { AwayPeriodInput, ChoreInput, ExpensePayload, MemberEditInput, StaffInput } from "./inputs";
 
 const id = "7d3c1a54-2f7e-4c11-9a0b-1f2e3d4c5b6a";
 
@@ -89,5 +89,50 @@ describe("ChoreInput", () => {
     const base = { name: "Kitchen", frequency: "daily", days: "", dueTime: "" };
     expect(ChoreInput.safeParse({ ...base, rotation: "[]" }).success).toBe(false);
     expect(ChoreInput.safeParse({ ...base, rotation: JSON.stringify([a, a]) }).success).toBe(false);
+  });
+});
+
+describe("ExpensePayload", () => {
+  const ids = ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"];
+  const base = {
+    id: null,
+    title: "Zepto groceries",
+    merchant: null,
+    categoryId: ids[0],
+    date: "2026-11-05",
+    paidBy: ids[0],
+    totalPaise: 50000,
+    source: "manual" as const,
+    billImagePath: null,
+    items: [],
+    dailyRatePaise: null,
+  };
+
+  it("accepts shares that sum exactly to the total", () => {
+    const shares = [
+      { memberId: ids[0], amountPaise: 25000, isCustom: false },
+      { memberId: ids[1], amountPaise: 25000, isCustom: false },
+    ];
+    expect(ExpensePayload.safeParse({ ...base, shares }).success).toBe(true);
+  });
+
+  it("rejects shares a paisa off", () => {
+    const shares = [
+      { memberId: ids[0], amountPaise: 25000, isCustom: false },
+      { memberId: ids[1], amountPaise: 24999, isCustom: false },
+    ];
+    expect(ExpensePayload.safeParse({ ...base, shares }).success).toBe(false);
+  });
+
+  it("checks shares against the ticked items when there are items", () => {
+    const items = [
+      { name: "Atta", quantity: null, amountPaise: 21600, kind: "item", included: true, personalMemberId: null },
+      { name: "Chocolate", quantity: null, amountPaise: 4000, kind: "item", included: false, personalMemberId: null },
+    ];
+    const shares = [{ memberId: ids[0], amountPaise: 21600, isCustom: false }];
+    expect(ExpensePayload.safeParse({ ...base, totalPaise: 25600, items, shares }).success).toBe(true);
+    expect(
+      ExpensePayload.safeParse({ ...base, totalPaise: 25600, items, shares: [{ ...shares[0], amountPaise: 25600 }] }).success,
+    ).toBe(false);
   });
 });

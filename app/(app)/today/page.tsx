@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireFlat } from "@/lib/flat";
 import { loadAvailability } from "@/lib/availability";
 import { loadChoreWeek } from "@/lib/chores";
+import { myShareThisMonth } from "@/lib/money";
+import { formatINR } from "@/lib/engine/money";
+import { formatMonth, monthOf } from "@/lib/engine/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { headcount } from "@/lib/engine/presence";
 import { cookStatusOn } from "@/lib/engine/menu";
@@ -28,10 +31,11 @@ export default async function TodayPage() {
   const today = todayIn(flat.timezone, now);
   const horizon = addDays(today, ALERT_DAYS - 1);
   const supabase = await createClient();
-  const [{ members, periods }, { views }, { data: menu }] = await Promise.all([
+  const [{ members, periods }, { views }, { data: menu }, myShare] = await Promise.all([
     loadAvailability(flat.id, today, horizon),
     loadChoreWeek(flat.id, today, 1),
     supabase.from("menu_days").select("*").eq("flat_id", flat.id).eq("date", today).maybeSingle(),
+    myShareThisMonth(flat.id, monthOf(today), me.id),
   ]);
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
   const eating = headcount(members, today, periods);
@@ -182,6 +186,17 @@ export default async function TodayPage() {
           </dl>
           {noCook ? <NoCookCard date={today} plan={menu?.plan ?? "cook"} label="today" /> : null}
         </Card>
+
+        <Link
+          href="/money"
+          className="flex min-h-16 items-center justify-between gap-3 rounded-[var(--radius-card)] bg-surface p-5 hover:ring-2 hover:ring-line-strong"
+        >
+          <span className="flex flex-col">
+            <span className="text-sm font-semibold text-muted">Your share in {formatMonth(monthOf(today)).split(" ")[0]}</span>
+            <span className="text-2xl font-extrabold">{formatINR(myShare)}</span>
+          </span>
+          <ChevronRightIcon size={22} className="text-muted" />
+        </Link>
 
         <Link
           href="/calendar/away/new"
