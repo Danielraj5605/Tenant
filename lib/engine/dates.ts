@@ -1,0 +1,53 @@
+/** Date helpers. All "days" are calendar dates in the flat's timezone. */
+
+export const FLAT_TZ = "Asia/Kolkata";
+
+function parts(tz: string, at: Date) {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  });
+  const out: Record<string, string> = {};
+  for (const p of fmt.formatToParts(at)) out[p.type] = p.value;
+  return out;
+}
+
+/** Today's date as `yyyy-mm-dd` in the given timezone. */
+export function todayIn(tz: string = FLAT_TZ, at: Date = new Date()): string {
+  const p = parts(tz, at);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+/** Current hour (0–23) in the given timezone. */
+export function hourIn(tz: string = FLAT_TZ, at: Date = new Date()): number {
+  return Number(parts(tz, at).hour);
+}
+
+export function greetingFor(hour: number): string {
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+/** True for a real calendar date written as `yyyy-mm-dd`. */
+export function isIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
+/** "Thursday, 5 November" for an ISO date, in English (India). */
+export function formatLongDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
+}
