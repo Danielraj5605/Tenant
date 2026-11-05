@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { MemberRole } from "@/lib/supabase/types";
 import { formatRange, formatShortDate } from "@/lib/engine/calendar";
-import { isLongAway, returnDate } from "@/lib/engine/presence";
+import { SLOTS, SLOT_LABEL, isLongAway, returnDate, type AwaySlot } from "@/lib/engine/presence";
 import { Avatar, cx } from "./ui";
 import { ChevronRightIcon } from "./icons";
 
@@ -33,9 +33,16 @@ export type AwayItem = {
   start_date: string;
   end_date: string;
   full_day: boolean;
+  slots: AwaySlot[] | null;
   reason: string | null;
   member: { id: string; name: string; role: MemberRole };
 };
+
+/** "Morning and night" for a part-day absence. */
+export function partLabel(slots: readonly AwaySlot[] | null | undefined): string {
+  const names = SLOTS.filter((s) => !slots?.length || slots.includes(s)).map((s, i) => (i ? SLOT_LABEL[s].toLowerCase() : SLOT_LABEL[s]));
+  return names.length === 1 ? `${names[0]} only` : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
 
 /** One row in "Who's away". Tapping it opens the edit form. */
 export function AwayRow({ item, today }: { item: AwayItem; today: string }) {
@@ -43,11 +50,12 @@ export function AwayRow({ item, today }: { item: AwayItem; today: string }) {
   const long = isLongAway(item);
   const staff = member.role !== "flatmate";
   const back = returnDate(item);
-  const ongoing = item.start_date <= today && today <= item.end_date;
+  // "Back" only means something after a full-day absence.
+  const ongoing = item.full_day && item.start_date <= today && today <= item.end_date;
 
   const detail = [
     staff ? ROLE_LABEL[member.role] : null,
-    item.full_day ? null : "Part of the day",
+    item.full_day ? null : partLabel(item.slots),
     item.reason,
   ].filter(Boolean);
 

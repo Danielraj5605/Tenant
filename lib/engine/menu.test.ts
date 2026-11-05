@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { cookStatusOn, weekDates, weekStart } from "./menu";
-import type { AwayPeriod, PresenceMember } from "./presence";
+import type { AwayPeriod, AwaySlot, PresenceMember } from "./presence";
 
 const cook: PresenceMember = { id: "cook", role: "cook", joined_on: "2026-01-01", left_on: null };
-const leave = (full_day: boolean): AwayPeriod => ({ member_id: "cook", start_date: "2026-11-07", end_date: "2026-11-07", full_day });
+const leave = (full_day: boolean, slots: AwaySlot[] | null = null): AwayPeriod => ({
+  member_id: "cook",
+  start_date: "2026-11-07",
+  end_date: "2026-11-07",
+  full_day,
+  slots,
+});
+const ALL = ["breakfast", "lunch", "dinner"];
 
 describe("weekStart and weekDates", () => {
   it("starts weeks on Monday", () => {
@@ -17,18 +24,29 @@ describe("weekStart and weekDates", () => {
 
 describe("cookStatusOn", () => {
   it("is 'cooking' on a normal day", () => {
-    expect(cookStatusOn([cook], "2026-11-06", [leave(true)])).toEqual({ noCook: false, paid: true });
+    expect(cookStatusOn([cook], "2026-11-06", [leave(true)])).toEqual({ noCook: false, noCookMeals: [], paid: true });
   });
 
-  it("full-day leave: no cook for both meals, day unpaid (SPEC §12 case 11)", () => {
-    expect(cookStatusOn([cook], "2026-11-07", [leave(true)])).toEqual({ noCook: true, paid: false });
+  it("full-day leave: no cook for every meal, day unpaid (SPEC §12 case 11)", () => {
+    expect(cookStatusOn([cook], "2026-11-07", [leave(true)])).toEqual({ noCook: true, noCookMeals: ALL, paid: false });
   });
 
-  it("partial leave: no cook for both meals, day still paid (SPEC §12 case 12)", () => {
-    expect(cookStatusOn([cook], "2026-11-07", [leave(false)])).toEqual({ noCook: true, paid: true });
+  it("part-day leave at night: no cook for dinner only, day still paid (SPEC §12 case 12)", () => {
+    expect(cookStatusOn([cook], "2026-11-07", [leave(false, ["night"])])).toEqual({
+      noCook: true,
+      noCookMeals: ["dinner"],
+      paid: true,
+    });
+  });
+
+  it("part-day leave in the morning and afternoon: no cook for breakfast and lunch", () => {
+    expect(cookStatusOn([cook], "2026-11-07", [leave(false, ["afternoon", "morning"])]).noCookMeals).toEqual([
+      "breakfast",
+      "lunch",
+    ]);
   });
 
   it("no cook in the flat means no 'No cook' prompts", () => {
-    expect(cookStatusOn([], "2026-11-07", [])).toEqual({ noCook: false, paid: false });
+    expect(cookStatusOn([], "2026-11-07", [])).toEqual({ noCook: false, noCookMeals: [], paid: false });
   });
 });

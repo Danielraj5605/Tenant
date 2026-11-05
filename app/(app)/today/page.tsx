@@ -6,12 +6,13 @@ import { myShareThisMonth } from "@/lib/money";
 import { formatINR } from "@/lib/engine/money";
 import { formatMonth, monthOf } from "@/lib/engine/calendar";
 import { createClient } from "@/lib/supabase/server";
-import { headcount } from "@/lib/engine/presence";
+import { MEALS, headcount, slotsPhrase, type Meal } from "@/lib/engine/presence";
 import { cookStatusOn } from "@/lib/engine/menu";
 import { DutyButton } from "@/components/chore-duty";
 import { InstallCard } from "@/components/install-card";
 import { NoCookCard } from "@/components/no-cook";
-import { CheckIcon, UsersIcon } from "@/components/icons";
+import { MealList, mealsPhrase } from "@/components/meals";
+import { CheckIcon } from "@/components/icons";
 import { formatLongDate, greetingFor, hourIn, todayIn } from "@/lib/engine/dates";
 import { addDays, formatShortDate } from "@/lib/engine/calendar";
 import { awayOn, isPresent, returnDate } from "@/lib/engine/presence";
@@ -38,8 +39,8 @@ export default async function TodayPage() {
     myShareThisMonth(flat.id, monthOf(today), me.id),
   ]);
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
-  const eating = headcount(members, today, periods);
-  const { noCook } = cookStatusOn(members, today, periods);
+  const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, today, periods, m)])) as Record<Meal, number>;
+  const { noCook, noCookMeals } = cookStatusOn(members, today, periods);
 
   const flatmates = members.filter(
     (m) => m.role === "flatmate" && m.joined_on <= today && (!m.left_on || m.left_on >= today),
@@ -61,12 +62,15 @@ export default async function TodayPage() {
       const period = awayOn(date, periods).find((p) => p.member_id === staff.id);
       if (!period || (i === 0 && staff.role === "cook")) continue;
       const when = i === 0 ? "today" : i === 1 ? "tomorrow" : `on ${formatShortDate(date)}`;
-      const part = period.full_day ? "" : " for part of the day";
-      alerts.push(
-        staff.role === "cook"
-          ? { key: `${staff.id}-${date}`, tone: "warn", date, text: `No cook ${when}${part}. Order in or cook yourselves?` }
-          : { key: `${staff.id}-${date}`, tone: "info", date, text: `No maid ${when}${part}. Cleaning is on us.` },
-      );
+      if (staff.role === "cook") {
+        const meals = cookStatusOn(members, date, periods).noCookMeals;
+        if (meals.length === 0) continue;
+        const forMeals = meals.length === MEALS.length ? "" : ` for ${mealsPhrase(meals)}`;
+        alerts.push({ key: `${staff.id}-${date}`, tone: "warn", date, text: `No cook${forMeals} ${when}. Order in or cook yourselves?` });
+      } else {
+        const part = period.full_day ? "" : ` ${slotsPhrase(period.slots ?? [])}`.trimEnd();
+        alerts.push({ key: `${staff.id}-${date}`, tone: "info", date, text: `No maid ${when}${part}. Cleaning is on us.` });
+      }
     }
   }
 
@@ -173,18 +177,15 @@ export default async function TodayPage() {
             <Link href="/menu" className="text-title font-bold underline-offset-4 hover:underline">
               Today&rsquo;s menu
             </Link>
-            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent-dark">
-              <UsersIcon size={16} />
-              {eating} eating
-            </span>
           </div>
-          <dl className="grid grid-cols-[4.5rem_1fr] gap-x-3 gap-y-1">
-            <dt className="text-sm font-semibold text-muted">Lunch</dt>
-            <dd className={menu?.lunch ? "font-semibold" : "text-muted"}>{menu?.lunch ?? "Not planned"}</dd>
-            <dt className="text-sm font-semibold text-muted">Dinner</dt>
-            <dd className={menu?.dinner ? "font-semibold" : "text-muted"}>{menu?.dinner ?? "Not planned"}</dd>
-          </dl>
-          {noCook ? <NoCookCard date={today} plan={menu?.plan ?? "cook"} label="today" /> : null}
+          <MealList day={menu} counts={counts} noCookMeals={noCookMeals} />
+          {noCook ? (
+            <NoCookCard
+              date={today}
+              plan={menu?.plan ?? "cook"}
+              label={noCookMeals.length === MEALS.length ? "today" : `for ${mealsPhrase(noCookMeals)} today`}
+            />
+          ) : null}
         </Card>
 
         <Link

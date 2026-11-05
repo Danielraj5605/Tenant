@@ -39,6 +39,7 @@ It is built first for one real flat, then generalised so any flat can sign up.
 | Cook's pay | **No pay for a full day of leave.** If she worked any part of the day, she is paid in full for that day |
 | Menu owner | One fixed flatmate, changeable in settings |
 | Cook and maid | Tracked as members with no login; any flatmate marks their leave |
+| Part-day away | For a single day, pick Morning, Afternoon and/or Night. It only changes the matching meals (breakfast, lunch, dinner); chores and money treat the person as home (decided 2026-11-05) |
 | Bill scanning AI | Free tiers only: Gemini Flash primary, Groq Llama 4 Scout fallback |
 | Money section | Expense ledger with itemised split justification. No payments |
 | Split amounts | The person creating a split sets the total **and can edit each person's share** at creation time |
@@ -53,7 +54,8 @@ Every feature reads one question: **is this member present on this date?**
 | --- | --- | --- | --- |
 | Flatmate marks a weekend away | Their duties pass to the next present person in rotation | Headcount drops by 1 for those days | Excluded from "present only" splits for those days |
 | Cook marked on leave (full day) | No change | Day shows "No cook" with a prompt: order in or cook yourselves | That day is unpaid |
-| Cook marked on leave (partial day) | No change | Day still shows "No cook" for the affected meal | That day is paid in full |
+| Cook marked on leave (partial day) | No change | "No cook" only for the meals in the chosen slots | That day is paid in full |
+| Flatmate out for part of a day | No change | Not counted for the meals in the chosen slots | No change |
 | Maid marked on leave | Cleaning tasks are flagged for flatmates | No change | Per flat setting |
 | Flatmate away for months | Skipped in every rotation | Not counted | Pays rent and WiFi only |
 
@@ -70,6 +72,7 @@ When an away period ends, the member rejoins everything automatically. No manual
 
 ### 4.2 Availability
 - A calendar where any flatmate marks someone away: start date, end date, full day or partial, optional reason.
+- A partial absence is for a single day and names the slots missed: **Morning** (breakfast), **Afternoon** (lunch), **Night** (dinner).
 - Short trips and long absences use the same feature.
 - Flatmates mark leave for the cook and maid.
 - The month view shows coloured dots per day: cook (amber), maid (purple), flatmate (blue). A "Who's away" list sits under the calendar, and long absences get a "Long away" badge.
@@ -82,9 +85,9 @@ When an away period ends, the member rejoins everything automatically. No manual
 - Menu planning is **not** a rotating chore. It belongs to the fixed menu owner.
 
 ### 4.4 Menu and headcount
-- The menu owner plans lunch and dinner per day.
-- Headcount = number of flatmates present that day. It is computed, never typed.
-- Cook-leave days show "No cook" with two actions: **Order in** or **We'll cook**.
+- The menu owner plans breakfast, lunch and dinner per day.
+- Each meal has its own headcount: flatmates present that day and not out for that meal's slot. It is computed, never typed.
+- Cook-leave days show "No cook" on the affected meals with two actions: **Order in** or **We'll cook**.
 - The Today screen shows today's menu and headcount.
 
 ### 4.5 Money (expense ledger)
@@ -166,13 +169,19 @@ Share-editing rules:
 ```
 isPresent(member, date) =
   date within [member.joined_on, member.left_on or ∞]
-  AND no away_period covers date
+  AND no away_period with full_day = true covers date
+
+isPresentFor(member, date, meal) =
+  isPresent(member, date)
+  AND no partial away_period on date includes the meal's slot
+  (breakfast = morning, lunch = afternoon, dinner = night)
 ```
+Partial absences never change chores or money; they only change meals.
 For cook pay, a day counts as "worked" unless an away period with `full_day = true` covers it.
 
 ### 5.2 Headcount
 ```
-headcount(date) = count of members with role = 'flatmate' where isPresent(member, date)
+headcount(date, meal) = count of members with role = 'flatmate' where isPresentFor(member, date, meal)
 ```
 
 ### 5.3 Chore rotation
@@ -289,11 +298,11 @@ All tables carry `flat_id` (except `flats`) and `created_at`. Money columns are 
 | --- | --- | --- |
 | `flats` | id, name, timezone (default `Asia/Kolkata`), menu_owner_id, prorate_monthly (bool, default true) | |
 | `members` | id, flat_id, user_id (nullable), name, role (`flatmate`/`cook`/`maid`), is_admin, joined_on, left_on, sort_order | Cook and maid have null user_id |
-| `away_periods` | id, member_id, start_date, end_date, full_day (bool, default true), reason, created_by | Read by every feature |
+| `away_periods` | id, member_id, start_date, end_date, full_day (bool, default true), slots (`morning`/`afternoon`/`night`[], partial only), reason, created_by | Read by every feature |
 | `chores` | id, flat_id, name, frequency (`daily`/`weekly`/`custom`), days_of_week (int[]), due_time | |
 | `chore_rotation` | chore_id, member_id, position | |
 | `chore_assignments` | id, chore_id, member_id, due_date, status (`pending`/`done`/`skipped`), done_at | Unique (chore_id, due_date) |
-| `menu_days` | id, flat_id, date, lunch, dinner, plan (`cook`/`order_in`/`self_cook`) | Headcount computed on read |
+| `menu_days` | id, flat_id, date, breakfast, lunch, dinner, plan (`cook`/`order_in`/`self_cook`) | Headcount computed on read |
 | `expense_categories` | id, flat_id, name, default_rule (`all_members`/`present_only`/`per_day_worked`/`custom`) | Seed: Rent, WiFi → all_members; Groceries, Gas, Household → present_only; Cook's pay → per_day_worked |
 | `expenses` | id, flat_id, category_id, title, merchant, paid_by (member_id), total_paise, expense_date, source (`manual`/`scan`), bill_image_path, rule_note, created_by, settled (bool) | One row per bill or split |
 | `expense_items` | id, expense_id, name, quantity, amount_paise, kind (`item`/`fee`/`tax`/`discount`), included (bool), personal_member_id (nullable), sort_order | The itemised justification. Unticked items: `included = false` |
@@ -367,6 +376,7 @@ Wrap providers behind a single `scanBill(image): ScanResult` interface so models
 **Cook pay**
 11. Cook on full-day leave on 7 Nov → 7 Nov is unpaid.
 12. Cook on partial-day leave → that day is paid in full.
+14. Flatmate out at night on 14 Nov → dinner headcount drops by 1; lunch headcount, chores and present-only splits are unchanged.
 
 **Snapshot**
 13. After saving an expense, editing an away period does **not** change its `expense_shares`.

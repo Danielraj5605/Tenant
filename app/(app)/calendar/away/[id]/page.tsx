@@ -42,6 +42,7 @@ export default async function EditAwayPage({ params }: PageProps<"/calendar/away
           startDate: period.start_date,
           endDate: period.end_date,
           fullDay: period.full_day,
+          slots: period.slots ?? [],
           reason: period.reason ?? "",
         }}
       />

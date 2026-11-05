@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { MemberRole } from "@/lib/supabase/types";
 import { Avatar, Button, Field, Notice, cx } from "@/components/ui";
 import { ROLE_LABEL } from "@/components/away";
+import { MEALS, MEAL_LABEL, MEAL_SLOT, SLOT_LABEL, type AwaySlot } from "@/lib/engine/presence";
 import { saveAway, type AwayFormState } from "./actions";
 
 export type AwayFormMember = { id: string; name: string; role: MemberRole };
@@ -14,6 +15,7 @@ export type AwayFormValues = {
   startDate: string;
   endDate: string;
   fullDay: boolean;
+  slots: AwaySlot[];
   reason: string;
 };
 
@@ -23,6 +25,7 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
   const [startDate, setStartDate] = useState(initial.startDate);
   const [endDate, setEndDate] = useState(initial.endDate);
   const [fullDay, setFullDay] = useState(initial.fullDay);
+  const [slots, setSlots] = useState<AwaySlot[]>(initial.slots);
   const chosen = members.find((m) => m.id === memberId);
 
   return (
@@ -76,7 +79,7 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
           onChange={(e) => {
             const v = e.target.value;
             setStartDate(v);
-            if (v && (!endDate || endDate < v)) setEndDate(v);
+            if (v && (!fullDay || !endDate || endDate < v)) setEndDate(v);
           }}
           error={state.fieldErrors?.startDate}
         />
@@ -86,7 +89,9 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
           label="Until"
           type="date"
           min={startDate || undefined}
-          value={endDate}
+          value={fullDay ? endDate : startDate}
+          readOnly={!fullDay}
+          hint={fullDay ? undefined : "Same day"}
           onChange={(e) => setEndDate(e.target.value)}
           error={state.fieldErrors?.endDate}
         />
@@ -98,7 +103,11 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
           name="fullDay"
           value="true"
           checked={fullDay}
-          onChange={(e) => setFullDay(e.target.checked)}
+          onChange={(e) => {
+            setFullDay(e.target.checked);
+            // Part of the day is for one day only.
+            if (!e.target.checked) setEndDate(startDate);
+          }}
           className="mt-0.5 size-6 shrink-0 accent-accent"
         />
         <span className="flex flex-col">
@@ -106,10 +115,59 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
           <span className="text-sm text-muted">
             {chosen?.role === "cook"
               ? "Untick if she still works part of the day. Part days are paid in full; full days off are unpaid."
-              : "Untick if they're only out for part of the day."}
+              : "Untick if they're only out for part of one day."}
           </span>
         </span>
       </label>
+
+      {fullDay ? null : (
+        <fieldset className="flex flex-col gap-2" aria-describedby="slots-hint">
+          <legend className="mb-1 text-sm font-semibold">Which part of the day?</legend>
+          <p id="slots-hint" className="mb-1 text-sm text-muted">
+            {chosen?.role === "cook"
+              ? "No cook for these meals. The rest of the day she cooks as usual."
+              : chosen?.role === "maid"
+                ? "Shown on the calendar so the flat knows when she's out."
+                : "They're left out of the headcount for these meals. Chores and splits treat them as home."}
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {MEALS.map((meal) => {
+              const slot = MEAL_SLOT[meal];
+              const checked = slots.includes(slot);
+              return (
+                <label
+                  key={slot}
+                  className={cx(
+                    "flex min-h-16 cursor-pointer flex-col items-center justify-center rounded-xl border px-2 py-2 text-center",
+                    "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
+                    checked ? "border-accent bg-accent-tint text-accent-dark" : "border-line-strong bg-surface hover:border-ink/40",
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    name="slots"
+                    value={slot}
+                    checked={checked}
+                    onChange={(e) =>
+                      setSlots((cur) => (e.target.checked ? [...cur, slot] : cur.filter((s) => s !== slot)))
+                    }
+                    className="sr-only"
+                  />
+                  <span className="font-bold">{SLOT_LABEL[slot]}</span>
+                  <span className={cx("text-xs font-semibold", checked ? "text-accent-dark" : "text-muted")}>
+                    {MEAL_LABEL[meal]}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {state.fieldErrors?.slots && slots.length === 0 ? (
+            <p className="text-sm font-semibold text-danger" role="alert">
+              {state.fieldErrors.slots}
+            </p>
+          ) : null}
+        </fieldset>
+      )}
 
       <Field
         id="reason"

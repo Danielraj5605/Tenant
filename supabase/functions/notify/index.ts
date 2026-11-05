@@ -2,6 +2,7 @@
 // maid is marked on leave. Alerts the rest of the flat (SPEC §4.9).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
+import { MEALS, MEAL_LABEL, MEAL_SLOT, periodSlots, slotsPhrase } from "../_shared/engine/presence.ts";
 import { sendToMembers } from "../_shared/push.ts";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -17,7 +18,7 @@ Deno.serve(async (req) => {
 
   const { data: period } = await admin
     .from("away_periods")
-    .select("flat_id, member_id, start_date, end_date, full_day, created_by")
+    .select("flat_id, member_id, start_date, end_date, full_day, slots, created_by")
     .eq("id", awayPeriodId)
     .maybeSingle();
   if (!period) return new Response("Not found", { status: 404 });
@@ -35,10 +36,13 @@ Deno.serve(async (req) => {
   const { data: flatmates } = await query;
 
   const when = formatRange(period.start_date, period.end_date);
-  const part = period.full_day ? "" : " for part of the day";
+  const slots = periodSlots(period);
+  const part = period.full_day ? "" : ` ${slotsPhrase(slots)}`;
+  const meals = MEALS.filter((m) => slots.includes(MEAL_SLOT[m])).map((m) => MEAL_LABEL[m].toLowerCase());
+  const forMeals = period.full_day || meals.length === MEALS.length ? "" : ` for ${meals.join(" and ")}`;
   const payload =
     staff.role === "cook"
-      ? { title: `No cook ${when}`, body: `${staff.name} is on leave${part}. Order in or cook yourselves?`, url: "/menu" }
+      ? { title: `No cook${forMeals} ${when}`, body: `${staff.name} is on leave${part}. Order in or cook yourselves?`, url: "/menu" }
       : { title: `No maid ${when}`, body: `${staff.name} is on leave${part}. Cleaning is on us.`, url: "/chores" };
 
   const result = await sendToMembers(admin, (flatmates ?? []).map((m) => m.id), {

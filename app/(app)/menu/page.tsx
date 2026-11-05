@@ -4,10 +4,11 @@ import { loadAvailability } from "@/lib/availability";
 import { createClient } from "@/lib/supabase/server";
 import { isIsoDate, todayIn } from "@/lib/engine/dates";
 import { addDays, formatRange, formatShortDate } from "@/lib/engine/calendar";
-import { headcount } from "@/lib/engine/presence";
+import { MEALS, headcount, type Meal } from "@/lib/engine/presence";
 import { cookStatusOn, weekDates, weekStart } from "@/lib/engine/menu";
 import { Card, cx } from "@/components/ui";
 import { NoCookCard } from "@/components/no-cook";
+import { MealList, mealsPhrase } from "@/components/meals";
 import { ChevronLeftIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Menu · Tenant" };
@@ -59,9 +60,11 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
       <ul className="flex flex-col gap-3">
         {dates.map((date) => {
           const day = byDate.get(date);
-          const count = headcount(members, date, periods);
-          const { noCook } = cookStatusOn(members, date, periods);
+          const home = headcount(members, date, periods);
+          const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, date, periods, m)])) as Record<Meal, number>;
+          const { noCook, noCookMeals } = cookStatusOn(members, date, periods);
           const isToday = date === today;
+          const label = isToday ? "today" : `on ${formatShortDate(date)}`;
           const past = date < today;
           return (
             <li key={date}>
@@ -73,24 +76,23 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
                   </h3>
                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent-dark">
                     <UsersIcon size={16} />
-                    {count} eating
+                    {home} home
                   </span>
                 </div>
-                <dl className="grid grid-cols-[4.5rem_1fr] gap-x-3 gap-y-1">
-                  <dt className="text-sm font-semibold text-muted">Lunch</dt>
-                  <dd className={day?.lunch ? "font-semibold" : "text-muted"}>{day?.lunch ?? "Not planned"}</dd>
-                  <dt className="text-sm font-semibold text-muted">Dinner</dt>
-                  <dd className={day?.dinner ? "font-semibold" : "text-muted"}>{day?.dinner ?? "Not planned"}</dd>
-                </dl>
+                <MealList day={day} counts={counts} noCookMeals={noCookMeals} />
                 {noCook ? (
-                  <NoCookCard date={date} plan={day?.plan ?? "cook"} label={isToday ? "today" : `on ${formatShortDate(date)}`} />
+                  <NoCookCard
+                    date={date}
+                    plan={day?.plan ?? "cook"}
+                    label={noCookMeals.length === MEALS.length ? label : `for ${mealsPhrase(noCookMeals)} ${label}`}
+                  />
                 ) : null}
                 {canPlan && !past ? (
                   <Link
                     href={`/menu/${date}`}
                     className="-mx-2 inline-flex min-h-11 w-fit items-center rounded-full px-3 text-sm font-bold text-accent hover:bg-accent-tint"
                   >
-                    {day?.lunch || day?.dinner ? "Edit meals" : "Plan meals"}
+                    {day?.breakfast || day?.lunch || day?.dinner ? "Edit meals" : "Plan meals"}
                   </Link>
                 ) : null}
               </Card>

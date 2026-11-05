@@ -14,11 +14,23 @@ export type PresenceMember = {
   left_on: string | null;
 };
 
+/** Parts of a day someone can be out for. Each matches one meal. */
+export type AwaySlot = "morning" | "afternoon" | "night";
+export type Meal = "breakfast" | "lunch" | "dinner";
+
+export const SLOTS: readonly AwaySlot[] = ["morning", "afternoon", "night"];
+export const MEALS: readonly Meal[] = ["breakfast", "lunch", "dinner"];
+export const MEAL_SLOT: Record<Meal, AwaySlot> = { breakfast: "morning", lunch: "afternoon", dinner: "night" };
+export const SLOT_LABEL: Record<AwaySlot, string> = { morning: "Morning", afternoon: "Afternoon", night: "Night" };
+export const MEAL_LABEL: Record<Meal, string> = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner" };
+
 export type AwayPeriod = {
   member_id: string;
   start_date: string;
   end_date: string;
   full_day: boolean;
+  /** Part-day absences only: the slots missed. Missing or empty means every slot. */
+  slots?: readonly AwaySlot[] | null;
 };
 
 /** Absences this long or longer get the "Long away" badge. */
@@ -29,9 +41,32 @@ const covers = (p: AwayPeriod, date: string) => p.start_date <= date && date <= 
 const employed = (m: PresenceMember, date: string) =>
   m.joined_on <= date && (m.left_on === null || date <= m.left_on);
 
-/** isPresent = within [joined_on, left_on] and no away period covers the date. */
+/**
+ * isPresent = within [joined_on, left_on] and no full-day away period covers the date.
+ * Part-day absences only affect meals (see isPresentFor), so chores and money
+ * treat the person as home.
+ */
 export function isPresent(member: PresenceMember, date: string, periods: readonly AwayPeriod[]): boolean {
-  return employed(member, date) && !periods.some((p) => p.member_id === member.id && covers(p, date));
+  return employed(member, date) && !periods.some((p) => p.member_id === member.id && p.full_day && covers(p, date));
+}
+
+/** The slots a part-day period covers (all of them when it doesn't say). */
+export const periodSlots = (p: AwayPeriod): readonly AwaySlot[] => (p.full_day || !p.slots?.length ? SLOTS : p.slots);
+
+/** Present for a meal: present that day and not out for the meal's slot. */
+export function isPresentFor(member: PresenceMember, date: string, periods: readonly AwayPeriod[], meal: Meal): boolean {
+  const slot = MEAL_SLOT[meal];
+  return (
+    isPresent(member, date, periods) &&
+    !periods.some((p) => p.member_id === member.id && !p.full_day && covers(p, date) && periodSlots(p).includes(slot))
+  );
+}
+
+/** "in the morning", "in the afternoon and at night", ... for part-day absences. */
+export function slotsPhrase(slots: readonly AwaySlot[]): string {
+  const words: Record<AwaySlot, string> = { morning: "in the morning", afternoon: "in the afternoon", night: "at night" };
+  const parts = SLOTS.filter((s) => slots.includes(s)).map((s) => words[s]);
+  return parts.length <= 1 ? (parts[0] ?? "") : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
 
 /** Cook pay: a day is worked unless a full-day away period covers it. */
@@ -39,9 +74,16 @@ export function cookWorkedOn(member: PresenceMember, date: string, periods: read
   return employed(member, date) && !periods.some((p) => p.member_id === member.id && p.full_day && covers(p, date));
 }
 
-/** Number of present flatmates on a date (SPEC §5.2). */
-export function headcount(members: readonly PresenceMember[], date: string, periods: readonly AwayPeriod[]): number {
-  return members.filter((m) => m.role === "flatmate" && isPresent(m, date, periods)).length;
+/** Number of present flatmates on a date (SPEC §5.2), or eating a given meal. */
+export function headcount(
+  members: readonly PresenceMember[],
+  date: string,
+  periods: readonly AwayPeriod[],
+  meal?: Meal,
+): number {
+  return members.filter(
+    (m) => m.role === "flatmate" && (meal ? isPresentFor(m, date, periods, meal) : isPresent(m, date, periods)),
+  ).length;
 }
 
 /** Away periods that cover a date. */

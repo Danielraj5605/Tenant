@@ -12,9 +12,11 @@ import {
   monthOf,
   shiftMonth,
 } from "@/lib/engine/calendar";
-import { awayOn, headcount } from "@/lib/engine/presence";
+import { MEALS, awayOn, headcount } from "@/lib/engine/presence";
 import type { MemberRole } from "@/lib/supabase/types";
-import { AwayRow, DOT_CLASS, RoleDot, type AwayItem } from "@/components/away";
+import { AwayRow, DOT_CLASS, RoleDot, partLabel, type AwayItem } from "@/components/away";
+import { mealsPhrase } from "@/components/meals";
+import { cookStatusOn } from "@/lib/engine/menu";
 import { ScreenHeader } from "@/components/screen";
 import { Card, cx } from "@/components/ui";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
@@ -54,7 +56,9 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   const selectedAway = awayOn(selected, items);
   const flatmates = members.filter((m) => m.role === "flatmate" && m.joined_on <= selected && (!m.left_on || m.left_on >= selected));
   const home = headcount(members, selected, periods);
-  const noCook = selectedAway.some((p) => p.member.role === "cook");
+  const fullAway = selectedAway.filter((p) => p.full_day);
+  const partAway = selectedAway.filter((p) => !p.full_day);
+  const { noCookMeals } = cookStatusOn(members, selected, periods);
 
   const href = (q: Record<string, string>) => `/calendar?${new URLSearchParams(q).toString()}`;
 
@@ -157,16 +161,19 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
             {home} of {flatmates.length} home
           </p>
         </div>
-        {noCook ? (
-          <p className="text-sm font-semibold text-warn-ink">No cook this day.</p>
-        ) : null}
-        {selectedAway.length === 0 ? (
-          <p className="text-muted">Everyone is in.</p>
-        ) : (
-          <p className="text-muted">
-            Away: {selectedAway.map((p) => p.member.name).join(", ")}
+        {noCookMeals.length ? (
+          <p className="text-sm font-semibold text-warn-ink">
+            {noCookMeals.length === MEALS.length ? "No cook this day." : `No cook for ${mealsPhrase(noCookMeals)}.`}
           </p>
-        )}
+        ) : null}
+        {selectedAway.length === 0 ? <p className="text-muted">Everyone is in.</p> : null}
+        {fullAway.length ? <p className="text-muted">Away: {fullAway.map((p) => p.member.name).join(", ")}</p> : null}
+        {partAway.length ? (
+          <p className="text-muted">
+            Out part of the day:{" "}
+            {partAway.map((p) => `${p.member.name} (${partLabel(p.slots).replace(/ only$/, "").toLowerCase()})`).join(", ")}
+          </p>
+        ) : null}
       </section>
 
       <Link

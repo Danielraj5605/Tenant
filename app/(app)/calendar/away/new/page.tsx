@@ -20,7 +20,7 @@ export default async function NewAwayPage({ searchParams }: PageProps<"/calendar
       </header>
       <AwayForm
         members={members}
-        initial={{ memberId: me.id, startDate: date, endDate: date, fullDay: true, reason: "" }}
+        initial={{ memberId: me.id, startDate: date, endDate: date, fullDay: true, slots: [], reason: "" }}
       />
     </>
   );

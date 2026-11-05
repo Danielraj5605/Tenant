@@ -17,14 +17,51 @@ describe("AwayPeriodInput", () => {
       startDate: "2026-11-14",
       endDate: "2026-11-15",
       fullDay: true,
+      slots: null,
       reason: "Home for the weekend",
     });
   });
 
-  it("treats a missing checkbox as a partial day and an empty reason as none", () => {
-    const parsed = AwayPeriodInput.parse({ memberId: id, startDate: "2026-11-07", endDate: "2026-11-07", reason: "" });
+  it("treats a missing checkbox as a part day and an empty reason as none", () => {
+    const parsed = AwayPeriodInput.parse({
+      memberId: id,
+      startDate: "2026-11-07",
+      endDate: "2026-11-07",
+      slots: ["night"],
+      reason: "",
+    });
     expect(parsed.fullDay).toBe(false);
+    expect(parsed.slots).toEqual(["night"]);
     expect(parsed.reason).toBeNull();
+  });
+
+  it("orders slots, drops unknown ones and accepts a single value", () => {
+    const base = { memberId: id, startDate: "2026-11-07", endDate: "2026-11-07" };
+    expect(AwayPeriodInput.parse({ ...base, slots: ["night", "lunch", "morning", "night"] }).slots).toEqual(["morning", "night"]);
+    expect(AwayPeriodInput.parse({ ...base, slots: "afternoon" }).slots).toEqual(["afternoon"]);
+  });
+
+  it("a part day needs at least one slot", () => {
+    const r = AwayPeriodInput.safeParse({ memberId: id, startDate: "2026-11-07", endDate: "2026-11-07", slots: [] });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0].path).toEqual(["slots"]);
+  });
+
+  it("a part day must be a single day", () => {
+    const r = AwayPeriodInput.safeParse({ memberId: id, startDate: "2026-11-07", endDate: "2026-11-08", slots: ["night"] });
+    expect(r.success).toBe(false);
+    expect(r.error?.issues[0].path).toEqual(["endDate"]);
+  });
+
+  it("drops slots on a full day", () => {
+    const parsed = AwayPeriodInput.parse({
+      memberId: id,
+      startDate: "2026-11-07",
+      endDate: "2026-11-09",
+      fullDay: "true",
+      slots: ["night"],
+    });
+    expect(parsed.slots).toBeNull();
   });
 
   it("rejects an end date before the start date", () => {

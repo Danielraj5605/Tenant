@@ -26,7 +26,7 @@ async function notifyLeave(awayPeriodId: string) {
 
 export type AwayFormState = {
   error?: string;
-  fieldErrors?: Partial<Record<"memberId" | "startDate" | "endDate" | "reason", string>>;
+  fieldErrors?: Partial<Record<"memberId" | "startDate" | "endDate" | "slots" | "reason", string>>;
 };
 
 export async function saveAway(_prev: AwayFormState, form: FormData): Promise<AwayFormState> {
@@ -37,6 +37,7 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
     startDate: form.get("startDate") ?? "",
     endDate: form.get("endDate") ?? "",
     fullDay: form.get("fullDay") ?? undefined,
+    slots: form.getAll("slots").map(String),
     reason: form.get("reason") ?? "",
   });
   if (!parsed.success) {
@@ -46,6 +47,7 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
         memberId: fe.memberId?.[0],
         startDate: fe.startDate?.[0],
         endDate: fe.endDate?.[0],
+        slots: fe.slots?.[0],
         reason: fe.reason?.[0],
       },
     };
@@ -57,6 +59,7 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
     start_date: v.startDate,
     end_date: v.endDate,
     full_day: v.fullDay,
+    slots: v.slots,
     reason: v.reason,
   };
   const supabase = await createClient();

@@ -9,6 +9,7 @@ export type MemberRole = "flatmate" | "cook" | "maid";
 export type ChoreFrequency = "daily" | "weekly" | "custom";
 export type AssignmentStatus = "pending" | "done" | "skipped";
 export type MenuPlan = "cook" | "order_in" | "self_cook";
+export type AwaySlot = "morning" | "afternoon" | "night";
 
 /** Shorthand for tables queried without embedded joins. */
 type Table<Row, Required extends keyof Row> = {
@@ -42,6 +43,7 @@ type MenuDayRow = {
   id: string;
   flat_id: string;
   date: string;
+  breakfast: string | null;
   lunch: string | null;
   dinner: string | null;
   plan: MenuPlan;
@@ -175,6 +177,7 @@ export type Database = {
           start_date: string;
           end_date: string;
           full_day: boolean;
+          slots: AwaySlot[] | null;
           reason: string | null;
           created_by: string | null;
           created_at: string;
@@ -186,6 +189,7 @@ export type Database = {
           start_date: string;
           end_date: string;
           full_day?: boolean;
+          slots?: AwaySlot[] | null;
           reason?: string | null;
           created_by?: string | null;
           created_at?: string;

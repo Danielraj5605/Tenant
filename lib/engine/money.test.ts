@@ -161,6 +161,11 @@ describe("defaultParticipants (SPEC §5.4)", () => {
     expect(defaultParticipants("all_members", members, "2026-11-20", longAway)).toEqual(["a", "b", "c", "d", "e", "f6"]);
   });
 
+  it("a part-day absence keeps them in present-only splits", () => {
+    const night: AwayPeriod[] = [{ member_id: "a", start_date: "2026-11-20", end_date: "2026-11-20", full_day: false, slots: ["night"] }];
+    expect(defaultParticipants("present_only", members, "2026-11-20", night)).toContain("a");
+  });
+
   // SPEC §12 case 4
   it("WiFi ₹799, all_members, 6 members with one away → ₹133.17 × 4 and ₹133.16 × 2", () => {
     const ids = defaultParticipants("all_members", members, "2026-11-20", longAway);

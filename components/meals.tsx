@@ -1,0 +1,46 @@
+import { MEALS, MEAL_LABEL, type Meal } from "@/lib/engine/presence";
+import type { MenuDay } from "@/lib/supabase/types";
+import { UsersIcon } from "./icons";
+import { cx } from "./ui";
+
+/** "breakfast", "lunch and dinner", ... for sentences. */
+export function mealsPhrase(meals: readonly Meal[]): string {
+  const names = meals.map((m) => MEAL_LABEL[m].toLowerCase());
+  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+}
+
+/** Breakfast, lunch and dinner for one day, each with its own headcount (SPEC §4.4). */
+export function MealList({
+  day,
+  counts,
+  noCookMeals,
+}: {
+  day: Pick<MenuDay, Meal> | null | undefined;
+  counts: Record<Meal, number>;
+  noCookMeals: readonly Meal[];
+}) {
+  return (
+    <dl className="grid grid-cols-[5.5rem_1fr_auto] items-baseline gap-x-3 gap-y-2">
+      {MEALS.map((meal) => {
+        const dish = day?.[meal];
+        const noCook = noCookMeals.includes(meal);
+        return (
+          <div key={meal} className="contents">
+            <dt className="text-sm font-semibold text-muted">{MEAL_LABEL[meal]}</dt>
+            <dd className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className={cx("min-w-0", dish ? "font-semibold" : "text-muted")}>{dish ?? "Not planned"}</span>
+              {noCook ? (
+                <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-bold text-warn-ink">No cook</span>
+              ) : null}
+            </dd>
+            <dd className="inline-flex items-center gap-1 text-sm font-bold text-accent-dark">
+              <UsersIcon size={14} />
+              {counts[meal]}
+              <span className="sr-only"> eating</span>
+            </dd>
+          </div>
+        );
+      })}
+    </dl>
+  );
+}

@@ -1,6 +1,7 @@
 /** Shared Zod schemas for Phase 2 forms (used by server actions). */
 import { z } from "zod";
 import { isIsoDate } from "./dates";
+import { SLOTS, type AwaySlot } from "./presence";
 
 const isoDate = (label: string) => z.string().refine(isIsoDate, `Pick ${label}`);
 
@@ -24,12 +25,29 @@ export const AwayPeriodInput = z
       .union([z.literal("true"), z.literal("on"), z.literal("false"), z.boolean()])
       .optional()
       .transform((v) => v === true || v === "true" || v === "on"),
+    // Part-day slots, from repeated "slots" checkboxes (array) or one value.
+    slots: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .transform((v) => {
+        const picked = new Set(v === undefined ? [] : Array.isArray(v) ? v : [v]);
+        return SLOTS.filter((s) => picked.has(s)) as AwaySlot[];
+      }),
     reason: optionalText(120),
   })
   .refine((v) => v.endDate >= v.startDate, {
     path: ["endDate"],
     message: "The end date can't be before the start date",
-  });
+  })
+  .refine((v) => v.fullDay || v.startDate === v.endDate, {
+    path: ["endDate"],
+    message: "Part of the day works for a single day. Set Until to the same day, or tick Away the whole day",
+  })
+  .refine((v) => v.fullDay || v.slots.length > 0, {
+    path: ["slots"],
+    message: "Pick morning, afternoon or night",
+  })
+  .transform((v) => ({ ...v, slots: v.fullDay ? null : v.slots }));
 export type AwayPeriodInput = z.infer<typeof AwayPeriodInput>;
 
 export const StaffInput = z.object({

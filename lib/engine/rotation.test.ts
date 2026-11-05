@@ -52,6 +52,11 @@ describe("nextAssignee (SPEC §5.3)", () => {
     expect(nextAssignee(rotation, "a", "2026-11-14", members, [away("b", "2026-11-14", "2026-11-15")])).toBe("c");
   });
 
+  it("a part-day absence does not skip their duty", () => {
+    const night: AwayPeriod = { ...away("b", "2026-11-14", "2026-11-14"), full_day: false, slots: ["night"] };
+    expect(nextAssignee(rotation, "a", "2026-11-14", members, [night])).toBe("b");
+  });
+
   // SPEC §12 case 9
   it("returns null (skipped) when everyone in the rotation is away", () => {
     const periods = rotation.map((id) => away(id, "2026-11-14", "2026-11-14"));
