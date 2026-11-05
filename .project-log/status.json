@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
-  "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://tenant-plum.vercel.app",
+  "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
   "last_updated": "2026-11-05",
   "last_sync": "2026-11-05",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793884959-9ada"
+    "version": "1793885972-2573"
   },
   "sections": [
     {
@@ -116,6 +116,15 @@
       "date": "2026-11-05",
       "commits": [],
       "summary": "Live at https://tenant-plum.vercel.app. Vercel project linked to GitHub main, so every push deploys. Env vars set; all main pages checked signed in.",
+      "screenshots": false
+    },
+    {
+      "id": "domain-wecohabit",
+      "title": "Address: wecohabit.vercel.app",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [],
+      "summary": "Production moved to wecohabit.vercel.app (free Vercel subdomain). Site URL updated and redeployed.",
       "screenshots": false
     }
   ],
@@ -249,8 +258,9 @@
     "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
     "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
     "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
-    "Bill scanning and push notifications have not been tested on the production site yet."
+    "Bill scanning and push notifications have not been tested on the production site yet.",
+    "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
-  "production_url": "https://tenant-plum.vercel.app"
+  "production_url": "https://wecohabit.vercel.app"
 }

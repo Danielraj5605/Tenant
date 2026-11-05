@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-05 — New address: wecohabit.vercel.app
+
+- Production now at https://wecohabit.vercel.app; NEXT_PUBLIC_SITE_URL updated and redeployed. tenant-plum.vercel.app still works.
+- cohabit.vercel.app was taken by another Vercel project.
+- Seven test names (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit) are still attached to the project and must be removed in the Vercel dashboard.
+
 ## 2026-11-05 — Deployed to Vercel
 
 - Production: https://tenant-plum.vercel.app (project `tenant`, connected to GitHub `main`: every push deploys).
