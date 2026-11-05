@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-05 — Pushed to GitHub
+
+- Branch renamed master → main and pushed to https://github.com/Danielraj5605/Tenant. Secret scan of the tree and history found only placeholders.
+
 ## 2026-11-05 — Part-day away (Morning / Afternoon / Night) and breakfast
 
 - Away form: untick "Away the whole day" to pick Morning (breakfast), Afternoon (lunch) and/or Night (dinner). Single day only; Until locks to From.

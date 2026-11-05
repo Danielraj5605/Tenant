@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793882900-0454"
+    "version": "1793884220-5cbe"
   },
   "sections": [
     {
@@ -238,7 +238,7 @@
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",
     "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
-    "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
-    "Uncommitted: the first-run fix, part-day away and .project-log are not committed yet."
-  ]
+    "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal."
+  ],
+  "repo": "https://github.com/Danielraj5605/Tenant"
 }
