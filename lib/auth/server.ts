@@ -1,11 +1,14 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { sessionSecret } from "@/lib/supabase/env";
 import { SESSION_COOKIE, SESSION_DAYS, signSession, verifySession } from "./session";
 
 /** The signed-in user's id from the session cookie, or null. */
 export async function currentUserId(): Promise<string | null> {
+  // Verifying the session reads the clock (token expiry), so never prerender past this point.
+  await connection();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const session = await verifySession(token, sessionSecret());
   return session?.uid ?? null;
