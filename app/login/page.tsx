@@ -36,7 +36,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-      <Suspense fallback={<div className="h-[260px]" aria-hidden="true" />}>
+      <Suspense fallback={<div className="h-[340px]" aria-hidden="true" />}>
         <LoginForm />
       </Suspense>
     </main>

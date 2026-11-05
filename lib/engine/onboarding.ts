@@ -51,3 +51,25 @@ export function safeNextPath(next: string | null | undefined): string {
   }
   return next;
 }
+
+/**
+ * Username sign-in. Supabase Auth needs an email, so a username is stored as
+ * `<username>@<USERNAME_DOMAIN>`. No mail is ever sent there ("Confirm email"
+ * is off in Supabase).
+ */
+// RFC 2606 reserved TLD: can never deliver mail to a real person.
+export const USERNAME_DOMAIN = "users.tenant.invalid";
+
+export const Username = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9._-]{3,20}$/, "Use 3–20 letters, numbers, dots, dashes or underscores");
+
+export const Password = z.string().min(8, "Use at least 8 characters").max(72, "Keep it under 73 characters");
+
+/** "daniel" → "daniel@users.tenant.invalid"; a real email is used as typed. */
+export function loginEmail(usernameOrEmail: string): string {
+  const v = usernameOrEmail.trim().toLowerCase();
+  return v.includes("@") ? v : `${v}@${USERNAME_DOMAIN}`;
+}
