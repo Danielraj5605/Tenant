@@ -12,6 +12,14 @@ const PUBLIC_PATHS = ["/login", "/auth/", "/sw.js", "/manifest.webmanifest", "/i
  * visitors to /login. Authorization itself is enforced by RLS in Postgres.
  */
 export async function proxy(request: NextRequest) {
+  // Supabase falls back to the Site URL (/?code=…) when a redirect URL isn't
+  // allow-listed. Hand that code to the callback instead of dropping it.
+  if (request.nextUrl.pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const callback = new URL("/auth/callback", request.url);
+    callback.searchParams.set("code", request.nextUrl.searchParams.get("code")!);
+    return NextResponse.redirect(callback);
+  }
+
   let response = NextResponse.next({ request });
   const { url, publishableKey } = supabaseEnv();
 
