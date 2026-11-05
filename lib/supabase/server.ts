@@ -2,11 +2,14 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import type { Database } from "./types";
 import { supabaseEnv } from "./env";
 
 /** Supabase client for Server Components, Server Actions and Route Handlers. */
 export async function createClient() {
+  // Auth checks read the clock (token expiry), so never prerender past this point.
+  await connection();
   const { url, publishableKey } = supabaseEnv();
   const cookieStore = await cookies();
 
