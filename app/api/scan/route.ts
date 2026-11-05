@@ -1,44 +1,45 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { currentUserId } from "@/lib/auth/server";
 import { ScanUnavailableError, scanBill } from "@/lib/scan";
 
-const Body = z.object({ imagePath: z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/) });
-
-/** Max bill image size accepted (client compresses to ~200 KB). */
+/** Max bill photo size accepted (the browser compresses to ~200 KB). */
 const MAX_BYTES = 2 * 1024 * 1024;
 
 /**
- * POST /api/scan { imagePath } → parsed bill items for review (SPEC §10).
- * The only server route that talks to AI; keys never reach the browser.
- * Nothing is saved here.
+ * POST /api/scan (multipart, field "photo") → stores the photo privately at
+ * bills/<flat_id>/<uuid>.jpg and returns parsed items for review (SPEC §10).
+ * The only route that talks to AI; keys never reach the browser. Nothing is
+ * saved to the ledger here.
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
+  const userId = await currentUserId();
+  if (!userId) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+
   const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getClaims();
-  if (!auth?.claims?.sub) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
-
-  const parsed = Body.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Bad image path." }, { status: 400 });
-  const { imagePath } = parsed.data;
-
-  // The image must be in the caller's flat folder; storage RLS enforces it too.
-  const flatId = imagePath.split("/")[0];
   const { data: member } = await supabase
     .from("members")
-    .select("id")
-    .eq("flat_id", flatId)
-    .eq("user_id", auth.claims.sub)
+    .select("flat_id")
+    .eq("user_id", userId)
+    .is("left_on", null)
+    .limit(1)
     .maybeSingle();
-  if (!member) return NextResponse.json({ error: "This bill isn't in your flat." }, { status: 403 });
+  if (!member) return NextResponse.json({ error: "Join a flat first." }, { status: 403 });
 
-  const { data: file, error } = await supabase.storage.from("bills").download(imagePath);
-  if (error || !file) return NextResponse.json({ error: "The photo couldn't be found. Upload it again." }, { status: 404 });
-  if (file.size > MAX_BYTES) return NextResponse.json({ error: "The photo is too large." }, { status: 413 });
+  const form = await request.formData().catch(() => null);
+  const photo = form?.get("photo");
+  if (!(photo instanceof Blob) || photo.size === 0) return NextResponse.json({ error: "Attach a photo." }, { status: 400 });
+  if (photo.type !== "image/jpeg") return NextResponse.json({ error: "Upload a JPEG photo." }, { status: 415 });
+  if (photo.size > MAX_BYTES) return NextResponse.json({ error: "The photo is too large." }, { status: 413 });
+
+  const bytes = new Uint8Array(await photo.arrayBuffer());
+  const imagePath = `${member.flat_id}/${crypto.randomUUID()}.jpg`;
+  const { error: upErr } = await supabase.storage.from("bills").upload(imagePath, bytes, { contentType: "image/jpeg" });
+  if (upErr) return NextResponse.json({ error: "The photo couldn't be stored. Try again." }, { status: 500 });
 
   try {
-    const { scan, provider } = await scanBill(new Uint8Array(await file.arrayBuffer()));
-    return NextResponse.json({ ...scan, provider });
+    const { scan, provider } = await scanBill(bytes);
+    return NextResponse.json({ ...scan, imagePath, provider });
   } catch (err) {
     if (err instanceof ScanUnavailableError) {
       return NextResponse.json({ error: "Bill scanning isn't set up yet. Use New split for now." }, { status: 503 });

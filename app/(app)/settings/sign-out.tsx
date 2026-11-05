@@ -3,7 +3,7 @@
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui";
 import { LogOutIcon } from "@/components/icons";
-import { signOut } from "./actions";
+import { signOut } from "@/app/login/actions";
 
 function Submit() {
   const { pending } = useFormStatus();

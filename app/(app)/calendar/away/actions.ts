@@ -6,6 +6,23 @@ import { z } from "zod";
 import { requireFlat } from "@/lib/flat";
 import { createClient } from "@/lib/supabase/server";
 import { AwayPeriodInput } from "@/lib/engine/inputs";
+import { supabaseEnv } from "@/lib/supabase/env";
+
+/** Ask the notify Edge Function to alert the flat. Best-effort: never blocks saving. */
+async function notifyLeave(awayPeriodId: string) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return;
+  try {
+    await fetch(`${supabaseEnv().url}/functions/v1/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-cron-secret": secret },
+      body: JSON.stringify({ awayPeriodId }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
+    // Push is best-effort.
+  }
+}
 
 export type AwayFormState = {
   error?: string;
@@ -13,7 +30,7 @@ export type AwayFormState = {
 };
 
 export async function saveAway(_prev: AwayFormState, form: FormData): Promise<AwayFormState> {
-  const { flat } = await requireFlat();
+  const { flat, me } = await requireFlat();
   const id = z.uuid().safeParse(form.get("id"));
   const parsed = AwayPeriodInput.safeParse({
     memberId: form.get("memberId") ?? "",
@@ -49,17 +66,13 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
   } else {
     const { data, error } = await supabase
       .from("away_periods")
-      .insert({ ...row, flat_id: flat.id })
+      .insert({ ...row, flat_id: flat.id, created_by: me.id })
       .select("id")
       .single();
     if (error || !data) return { error: "This couldn't be saved. Check your connection and try again." };
     // New cook or maid leave: push an alert to the flat (SPEC 4.9). The Edge
     // Function ignores flatmates. A failed alert never blocks saving.
-    try {
-      await supabase.functions.invoke("notify", { body: { awayPeriodId: data.id } });
-    } catch {
-      // Push is best-effort.
-    }
+    await notifyLeave(data.id);
   }
 
   revalidatePath("/", "layout");

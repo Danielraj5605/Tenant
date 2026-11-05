@@ -27,14 +27,28 @@ export async function saveChore(_prev: ChoreFormState, form: FormData): Promise<
   }
   const v = parsed.data;
   const supabase = await createClient();
+
+  // Rotation members must be current flatmates of this flat.
+  const { data: valid } = await supabase
+    .from("members")
+    .select("id")
+    .eq("flat_id", flat.id)
+    .eq("role", "flatmate")
+    .in("id", v.rotation);
+  if ((valid ?? []).length !== v.rotation.length) return { error: "Someone in the rotation isn't in this flat." };
   const row = { name: v.name, frequency: v.frequency, days_of_week: v.days, due_time: v.dueTime };
 
   let choreId: string;
   if (id.success) {
-    const { error } = await supabase.from("chores").update(row).eq("id", id.data).eq("flat_id", flat.id);
-    if (error) return { error: "The chore couldn't be saved. Try again." };
+    const { data: updated, error } = await supabase
+      .from("chores")
+      .update(row)
+      .eq("id", id.data)
+      .eq("flat_id", flat.id)
+      .select("id");
+    if (error || !updated?.length) return { error: "The chore couldn't be saved. Try again." };
     choreId = id.data;
-    await supabase.from("chore_rotation").delete().eq("chore_id", choreId);
+    await supabase.from("chore_rotation").delete().eq("chore_id", choreId).eq("flat_id", flat.id);
   } else {
     const { data, error } = await supabase
       .from("chores")
@@ -67,11 +81,11 @@ export async function deleteChore(form: FormData) {
 
 /** Mark today's duty done (or undo). Only the owner can; enforced in SQL. */
 export async function setChoreDone(form: FormData) {
-  await requireFlat();
+  const { userId } = await requireFlat();
   const id = z.uuid().safeParse(form.get("assignmentId"));
   const done = form.get("done") === "true";
   if (!id.success) return;
   const supabase = await createClient();
-  await supabase.rpc("set_chore_done", { p_assignment_id: id.data, p_done: done });
+  await supabase.rpc("set_chore_done", { p_user_id: userId, p_assignment_id: id.data, p_done: done });
   revalidatePath("/", "layout");
 }

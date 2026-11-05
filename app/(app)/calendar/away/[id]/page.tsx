@@ -25,7 +25,7 @@ export default async function EditAwayPage({ params }: PageProps<"/calendar/away
     ? members
     : [
         ...members,
-        ...((await supabase.from("members").select("id, name, role").eq("id", period.member_id)).data ?? []),
+        ...((await supabase.from("members").select("id, name, role").eq("id", period.member_id).eq("flat_id", flat.id)).data ?? []),
       ];
 
   return (

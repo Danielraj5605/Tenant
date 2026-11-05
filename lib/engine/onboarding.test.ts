@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CreateFlatInput,
   Password,
-  USERNAME_DOMAIN,
   Username,
-  loginEmail,
   JoinFlatInput,
   defaultMemberName,
   inviteCodeFrom,
@@ -86,11 +84,6 @@ describe("usernames", () => {
     expect(Username.safeParse("has space").success).toBe(false);
     expect(Username.safeParse("x".repeat(21)).success).toBe(false);
     expect(Username.safeParse("priya_99").success).toBe(true);
-  });
-
-  it("maps a username to its sign-in email, and passes real emails through", () => {
-    expect(loginEmail("Daniel")).toBe(`daniel@${USERNAME_DOMAIN}`);
-    expect(loginEmail(" me@example.com ")).toBe("me@example.com");
   });
 
   it("requires passwords of at least 8 characters", () => {

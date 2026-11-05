@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { compressBillPhoto } from "@/lib/image";
 import { defaultParticipants, formatINR, paiseToInput, parseRupees, type ItemKind } from "@/lib/engine/money";
 import { isPresent, type AwayPeriod } from "@/lib/engine/presence";
@@ -23,7 +22,6 @@ type Phase =
 const KIND_LABEL: Record<ItemKind, string> = { item: "Item", fee: "Fee", tax: "Tax", discount: "Discount" };
 
 export function ScanFlow({
-  flatId,
   meId,
   today,
   members,
@@ -31,7 +29,6 @@ export function ScanFlow({
   categories,
   prorate,
 }: {
-  flatId: string;
   meId: string;
   today: string;
   members: SplitMember[];
@@ -63,20 +60,13 @@ export function ScanFlow({
       const blob = await compressBillPhoto(file);
       setPreview(URL.createObjectURL(blob));
 
-      setPhase({ kind: "working", label: "Uploading" });
-      const path = `${flatId}/${crypto.randomUUID()}.jpg`;
-      const { error: upErr } = await createClient().storage.from("bills").upload(path, blob, { contentType: "image/jpeg" });
-      if (upErr) throw new Error("The photo couldn't be uploaded. Check your connection and try again.");
-      setImagePath(path);
-
-      setPhase({ kind: "working", label: "Reading the bill" });
-      const res = await fetch("/api/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePath: path }),
-      });
-      const body = (await res.json().catch(() => ({}))) as Partial<NormalizedScan> & { error?: string };
-      if (!res.ok) throw new Error(body.error ?? "This bill couldn't be read. Try again.");
+      setPhase({ kind: "working", label: "Uploading and reading the bill" });
+      const data = new FormData();
+      data.append("photo", blob, "bill.jpg");
+      const res = await fetch("/api/scan", { method: "POST", body: data });
+      const body = (await res.json().catch(() => ({}))) as Partial<NormalizedScan> & { error?: string; imagePath?: string };
+      if (!res.ok || !body.imagePath) throw new Error(body.error ?? "This bill couldn't be read. Check your connection and try again.");
+      setImagePath(body.imagePath);
 
       const scan = body as NormalizedScan;
       const d = scan.date ?? today;

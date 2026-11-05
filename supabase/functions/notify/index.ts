@@ -1,23 +1,21 @@
-// Called by the app with the signed-in user's JWT right after the cook or
+// Called by the Tenant server (x-cron-secret header) right after the cook or
 // maid is marked on leave. Alerts the rest of the flat (SPEC §4.9).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
 import { sendToMembers } from "../_shared/push.ts";
 
-const url = Deno.env.get("SUPABASE_URL")!;
-const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+  auth: { persistSession: false },
+});
 
 Deno.serve(async (req) => {
-  const auth = req.headers.get("Authorization") ?? "";
+  const secret = Deno.env.get("CRON_SECRET");
+  if (!secret || req.headers.get("x-cron-secret") !== secret) return new Response("Forbidden", { status: 403 });
+
   const { awayPeriodId } = (await req.json().catch(() => ({}))) as { awayPeriodId?: string };
   if (!awayPeriodId) return new Response("Missing awayPeriodId", { status: 400 });
 
-  // Read as the caller: RLS proves they belong to this flat.
-  const asUser = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: auth } },
-    auth: { persistSession: false },
-  });
-  const { data: period } = await asUser
+  const { data: period } = await admin
     .from("away_periods")
     .select("flat_id, member_id, start_date, end_date, full_day, created_by")
     .eq("id", awayPeriodId)

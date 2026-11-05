@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getFlatContext } from "@/lib/flat";
-import { defaultMemberName, inviteCodeFrom } from "@/lib/engine/onboarding";
+import { inviteCodeFrom } from "@/lib/engine/onboarding";
 import { Card, Notice } from "@/components/ui";
 import { JoinForm } from "./join-form";
 
@@ -15,7 +15,7 @@ async function Invite({ params }: { params: Promise<{ code: string }> }) {
   const ctx = await getFlatContext();
 
   const supabase = await createClient();
-  const { data } = code ? await supabase.rpc("invite_preview", { p_code: code }) : { data: null };
+  const { data } = code ? await supabase.rpc("invite_preview", { p_code: code, p_user_id: ctx.userId }) : { data: null };
   const invite = data?.[0];
 
   if (!code || !invite) {
@@ -56,7 +56,7 @@ async function Invite({ params }: { params: Promise<{ code: string }> }) {
           </Link>
         </Card>
       ) : (
-        <JoinForm code={code} suggestedName={defaultMemberName(ctx.metadata, ctx.email)} />
+        <JoinForm code={code} suggestedName={ctx.user.display_name} />
       )}
     </div>
   );

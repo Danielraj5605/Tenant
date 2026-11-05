@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getFlatContext } from "@/lib/flat";
-import { defaultMemberName } from "@/lib/engine/onboarding";
 import { CreateFlatForm, OpenInviteForm } from "./forms";
 
 export const metadata = { title: "Set up your flat · Tenant" };
@@ -9,7 +8,7 @@ export const metadata = { title: "Set up your flat · Tenant" };
 async function Onboarding() {
   const ctx = await getFlatContext();
   if (ctx.me && ctx.flat) redirect("/today");
-  const suggestedName = defaultMemberName(ctx.metadata, ctx.email);
+  const suggestedName = ctx.user.display_name;
 
   return (
     <div className="flex flex-col gap-10">

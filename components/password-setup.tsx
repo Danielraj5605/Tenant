@@ -1,46 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Password } from "@/lib/engine/onboarding";
+import { useActionState } from "react";
+import { changePassword, resetMemberPassword, type SettingsFormState } from "@/app/(app)/settings/actions";
 import { Button, Field, Notice } from "./ui";
 
-/** Set or change the password for the signed-in account. */
-export function PasswordSetup({ signInName }: { signInName: string }) {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string>();
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    const p = Password.safeParse(password);
-    if (!p.success) return setError(p.error.issues[0]?.message);
-    setError(undefined);
-    setStatus("saving");
-    const { error: err } = await createClient().auth.updateUser({ password: p.data });
-    setStatus(err ? "failed" : "saved");
-    if (!err) setPassword("");
-  }
-
+/** Change the signed-in account's password. */
+export function PasswordSetup({ username }: { username: string }) {
+  const [state, action, pending] = useActionState(changePassword, {} as SettingsFormState);
   return (
-    <form onSubmit={save} noValidate className="flex flex-col gap-3">
+    <form action={action} noValidate className="flex flex-col gap-3" key={state.ok}>
       <p className="text-sm text-muted">
-        You sign in as <span className="font-bold text-ink">{signInName}</span>.
+        You sign in as <span className="font-bold text-ink">{username}</span>.
       </p>
-      {status === "saved" ? <Notice tone="success">Password saved. Use it next time you sign in.</Notice> : null}
-      {status === "failed" ? <Notice tone="warn">The password couldn&rsquo;t be saved. Try again.</Notice> : null}
+      {state.ok ? <Notice tone="success">{state.ok}</Notice> : null}
+      {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
+      <Field id="current" name="current" label="Current password" type="password" autoComplete="current-password" error={state.fieldErrors?.current} />
       <Field
         id="newPassword"
+        name="password"
         label="New password"
         hint="At least 8 characters."
         type="password"
         autoComplete="new-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        error={error}
+        error={state.fieldErrors?.password}
       />
-      <Button type="submit" variant="secondary" loading={status === "saving"}>
-        Save password
+      <Button type="submit" variant="secondary" loading={pending}>
+        Change password
+      </Button>
+    </form>
+  );
+}
+
+/** Admin: give a flatmate a new password. */
+export function ResetPasswordForm({ memberId, name }: { memberId: string; name: string }) {
+  const [state, action, pending] = useActionState(resetMemberPassword, {} as SettingsFormState);
+  return (
+    <form action={action} noValidate className="flex flex-col gap-3" key={state.ok}>
+      {state.ok ? <Notice tone="success">{state.ok}</Notice> : null}
+      {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
+      <input type="hidden" name="memberId" value={memberId} />
+      <Field
+        id="resetPassword"
+        name="password"
+        label={`New password for ${name}`}
+        hint="At least 8 characters. Share it with them in person."
+        type="text"
+        autoComplete="off"
+        error={state.fieldErrors?.password}
+      />
+      <Button type="submit" variant="secondary" loading={pending}>
+        Reset password
       </Button>
     </form>
   );

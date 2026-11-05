@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABEL } from "@/components/away";
 import { ChevronLeftIcon } from "@/components/icons";
 import { EditMemberForm } from "../../member-forms";
+import { ResetPasswordForm } from "@/components/password-setup";
+import { Card } from "@/components/ui";
 
 export const metadata = { title: "Edit member · Tenant" };
 
@@ -43,6 +45,12 @@ export default async function EditMemberPage({ params }: PageProps<"/settings/me
         </div>
       </header>
       <EditMemberForm member={member} />
+      {member.user_id && member.id !== me.id ? (
+        <Card className="mt-6 flex flex-col gap-3">
+          <h2 className="text-title font-bold">Forgot their password?</h2>
+          <ResetPasswordForm memberId={member.id} name={member.name} />
+        </Card>
+      ) : null}
     </>
   );
 }

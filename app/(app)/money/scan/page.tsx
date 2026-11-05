@@ -29,7 +29,6 @@ export default async function ScanPage() {
         <h1 className="text-display font-extrabold">Scan a bill</h1>
       </header>
       <ScanFlow
-        flatId={flat.id}
         meId={me.id}
         today={todayIn(flat.timezone)}
         members={members ?? []}

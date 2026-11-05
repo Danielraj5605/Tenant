@@ -21,9 +21,13 @@ cp .env.example .env.local   # then fill in the values
    ```bash
    npm run db:push
    ```
-3. In the Supabase dashboard:
-   - **Authentication → Sign In / Providers → Google**: enable it and paste the Google OAuth client ID and secret.
-   - **Authentication → URL Configuration**: Site URL `http://localhost:3000`, redirect URL `http://localhost:3000/**`.
+### Sign-in
+
+Tenant has its own accounts (no Supabase Auth): usernames and scrypt-hashed passwords in
+`public.app_users`, and a signed HTTP-only session cookie (`SESSION_SECRET`). The browser never talks
+to Supabase; the server uses `SUPABASE_SECRET_KEY` and checks permissions in code. Every table has
+RLS on with no policies, so the publishable/anon key can read nothing. Ten wrong passwords lock an
+account for 15 minutes; the flat admin can reset a flatmate's password from Settings → member.
 
 ### Push reminders and the daily job (Phase 3)
 
@@ -56,10 +60,9 @@ Optional: `GEMINI_MODEL` (default `gemini-2.5-flash`), `GROQ_MODEL` (default `me
 
 1. Push to a private GitHub repo: `gh repo create tenant --private --source . --remote origin --push`
 2. On https://vercel.com/new import the repo (framework: Next.js; build command comes from `package.json`).
-3. Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
-   `NEXT_PUBLIC_SITE_URL=https://<your-app>.vercel.app`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`.
-4. Supabase → Authentication → URL Configuration: Site URL `https://<your-app>.vercel.app`,
-   redirect URL `https://<your-app>.vercel.app/**`.
+3. Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SESSION_SECRET`,
+   `NEXT_PUBLIC_SITE_URL=https://<your-app>.vercel.app`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `CRON_SECRET`,
+   `GEMINI_API_KEY`, `GROQ_API_KEY`.
 
 ## Run
 

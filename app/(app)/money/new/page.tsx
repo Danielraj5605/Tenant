@@ -39,8 +39,8 @@ export default async function NewSplitPage({ searchParams }: PageProps<"/money/n
     if (!z.uuid().safeParse(edit).success) notFound();
     const [{ data: expense }, { data: items }, { data: shares }] = await Promise.all([
       supabase.from("expenses").select("*").eq("id", edit).eq("flat_id", flat.id).maybeSingle(),
-      supabase.from("expense_items").select("*").eq("expense_id", edit).order("sort_order"),
-      supabase.from("expense_shares").select("*").eq("expense_id", edit),
+      supabase.from("expense_items").select("*").eq("expense_id", edit).eq("flat_id", flat.id).order("sort_order"),
+      supabase.from("expense_shares").select("*").eq("expense_id", edit).eq("flat_id", flat.id),
     ]);
     if (!expense) notFound();
     if (expense.created_by !== me.id || expense.settled) redirect(`/money/${edit}`);

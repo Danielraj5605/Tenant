@@ -13,15 +13,13 @@ import { SignOutButton } from "./sign-out";
 import { AddStaffForm, MenuOwnerForm } from "./member-forms";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
-import { USERNAME_DOMAIN } from "@/lib/engine/onboarding";
 import { CategoryRules } from "./category-rules";
 
 export const metadata = { title: "Flat settings · Tenant" };
 
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
-  const { me, flat, email } = await requireFlat();
+  const { me, flat, user } = await requireFlat();
   const { created } = await searchParams;
-  const signInName = email?.endsWith(`@${USERNAME_DOMAIN}`) ? email.split("@")[0] : (email ?? "your account");
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
   const [{ data: members }, { data: periods }, { data: categories }] = await Promise.all([
@@ -153,7 +151,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
 
         <Card className="flex flex-col gap-3">
           <h2 className="text-title font-bold">Password</h2>
-          <PasswordSetup signInName={signInName} />
+          <PasswordSetup username={user.username} />
         </Card>
 
         <Card className="flex flex-col gap-3">

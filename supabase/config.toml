@@ -424,3 +424,7 @@ enabled = true
 # Called by pg_cron with x-cron-secret, not a user JWT.
 [functions.daily]
 verify_jwt = false
+
+# Called by the Tenant server with x-cron-secret, not a user JWT.
+[functions.notify]
+verify_jwt = false

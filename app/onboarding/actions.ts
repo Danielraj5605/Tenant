@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getFlatContext } from "@/lib/flat";
 import { CreateFlatInput, JoinFlatInput, inviteCodeFrom } from "@/lib/engine/onboarding";
 
 export type FormState = {
@@ -29,8 +30,10 @@ export async function createFlat(_prev: FormState, form: FormData): Promise<Form
     return { values, fieldErrors: { flatName: fe.flatName?.[0], memberName: fe.memberName?.[0] } };
   }
 
+  const { userId } = await getFlatContext();
   const supabase = await createClient();
   const { error } = await supabase.rpc("create_flat", {
+    p_user_id: userId,
     p_flat_name: parsed.data.flatName,
     p_member_name: parsed.data.memberName,
   });
@@ -50,8 +53,10 @@ export async function joinFlat(_prev: FormState, form: FormData): Promise<FormSt
     return { values, error: fe.code?.[0], fieldErrors: { memberName: fe.memberName?.[0] } };
   }
 
+  const { userId } = await getFlatContext();
   const supabase = await createClient();
   const { error } = await supabase.rpc("join_flat", {
+    p_user_id: userId,
     p_code: parsed.data.code,
     p_member_name: parsed.data.memberName,
   });

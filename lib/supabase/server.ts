@@ -1,31 +1,20 @@
 import "server-only";
 
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { connection } from "next/server";
 import type { Database } from "./types";
 import { supabaseEnv } from "./env";
 
-/** Supabase client for Server Components, Server Actions and Route Handlers. */
+/**
+ * Server-side database client using the secret (service role) key. It bypasses
+ * row-level security, so every query must be scoped to the signed-in member's
+ * flat; permission checks live in the server actions and pages.
+ */
 export async function createClient() {
-  // Auth checks read the clock (token expiry), so never prerender past this point.
+  // Never prerender past a database read.
   await connection();
-  const { url, publishableKey } = supabaseEnv();
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(url, publishableKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(toSet) {
-        try {
-          for (const { name, value, options } of toSet) cookieStore.set(name, value, options);
-        } catch {
-          // Called from a Server Component, where cookies are read-only.
-          // The proxy refreshes the session, so this is safe to ignore.
-        }
-      },
-    },
+  const { url, secretKey } = supabaseEnv();
+  return createSupabaseClient<Database>(url, secretKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 }

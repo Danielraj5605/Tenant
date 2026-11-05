@@ -87,6 +87,15 @@ type ExpenseShareRow = {
   reason: string | null;
   created_at: string;
 };
+type AppUserRow = {
+  id: string;
+  username: string;
+  display_name: string;
+  password_hash: string;
+  failed_attempts: number;
+  locked_until: string | null;
+  created_at: string;
+};
 type PushSubscriptionRow = {
   id: string;
   flat_id: string;
@@ -200,33 +209,21 @@ export type Database = {
       expenses: Table<ExpenseRow, "flat_id" | "category_id" | "title" | "paid_by" | "total_paise" | "expense_date" | "created_by">;
       expense_items: Table<ExpenseItemRow, "expense_id" | "flat_id" | "name" | "amount_paise" | "kind">;
       expense_shares: Table<ExpenseShareRow, "expense_id" | "member_id" | "flat_id" | "amount_paise">;
+      app_users: Table<AppUserRow, "username" | "display_name" | "password_hash">;
       push_subscriptions: Table<PushSubscriptionRow, "flat_id" | "member_id" | "endpoint" | "p256dh" | "auth">;
     };
     Views: { [_ in never]: never };
     Functions: {
-      create_flat: {
-        Args: { p_flat_name: string; p_member_name: string };
-        Returns: string;
-      };
-      join_flat: {
-        Args: { p_code: string; p_member_name: string };
-        Returns: string;
-      };
+      create_flat: { Args: { p_user_id: string; p_flat_name: string; p_member_name: string }; Returns: string };
+      join_flat: { Args: { p_user_id: string; p_code: string; p_member_name: string }; Returns: string };
       invite_preview: {
-        Args: { p_code: string };
-        Returns: {
-          flat_id: string;
-          flat_name: string;
-          flatmate_count: number;
-          already_member: boolean;
-        }[];
+        Args: { p_code: string; p_user_id: string };
+        Returns: { flat_id: string; flat_name: string; flatmate_count: number; already_member: boolean }[];
       };
-      save_expense: { Args: { p: Json }; Returns: string };
-      set_expense_settled: { Args: { p_expense_id: string }; Returns: undefined };
-      delete_expense: { Args: { p_expense_id: string }; Returns: undefined };
-      set_chore_done: { Args: { p_assignment_id: string; p_done: boolean }; Returns: undefined };
-      is_flat_member: { Args: { p_flat_id: string }; Returns: boolean };
-      is_flat_admin: { Args: { p_flat_id: string }; Returns: boolean };
+      set_chore_done: { Args: { p_user_id: string; p_assignment_id: string; p_done: boolean }; Returns: undefined };
+      save_expense: { Args: { p_user_id: string; p: Json }; Returns: string };
+      set_expense_settled: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
+      delete_expense: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
@@ -243,3 +240,4 @@ export type ExpenseCategory = ExpenseCategoryRow;
 export type Expense = ExpenseRow;
 export type ExpenseItemDb = ExpenseItemRow;
 export type ExpenseShare = ExpenseShareRow;
+export type AppUser = AppUserRow;

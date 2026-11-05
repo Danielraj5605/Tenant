@@ -25,7 +25,7 @@ export async function loadLedger(flatId: string, month: string, meId: string) {
   const ids = (expenses ?? []).map((e) => e.id);
   let shares: Pick<ExpenseShare, "expense_id" | "member_id" | "amount_paise">[] = [];
   if (ids.length) {
-    const { data } = await supabase.from("expense_shares").select("expense_id, member_id, amount_paise").in("expense_id", ids);
+    const { data } = await supabase.from("expense_shares").select("expense_id, member_id, amount_paise").eq("flat_id", flatId).in("expense_id", ids);
     shares = data ?? [];
   }
 

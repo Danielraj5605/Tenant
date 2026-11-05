@@ -30,9 +30,11 @@ export async function setPlan(form: FormData) {
   revalidatePath("/", "layout");
 }
 
-/** Lunch and dinner. Only the menu owner (or the admin while none is set); enforced in SQL. */
+/** Lunch and dinner. Only the menu owner (or the admin while none is set). */
 export async function saveDishes(_prev: MenuFormState, form: FormData): Promise<MenuFormState> {
-  const { flat } = await requireFlat();
+  const { flat, me } = await requireFlat();
+  const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
+  if (!canPlan) return { error: "Only the menu owner can plan meals." };
   const date = Date_.safeParse(form.get("date"));
   const lunch = Dish.safeParse(form.get("lunch") ?? "");
   const dinner = Dish.safeParse(form.get("dinner") ?? "");
@@ -49,13 +51,7 @@ export async function saveDishes(_prev: MenuFormState, form: FormData): Promise<
   const { error } = await supabase
     .from("menu_days")
     .upsert({ flat_id: flat.id, date: date.data, lunch: lunch.data, dinner: dinner.data }, { onConflict: "flat_id,date" });
-  if (error) {
-    return {
-      error: error.message.includes("menu owner")
-        ? "Only the menu owner can plan meals."
-        : "The menu couldn't be saved. Try again.",
-    };
-  }
+  if (error) return { error: "The menu couldn't be saved. Try again." };
   revalidatePath("/", "layout");
   redirect(`/menu?w=${weekStart(date.data)}`);
 }

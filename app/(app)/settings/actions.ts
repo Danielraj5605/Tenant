@@ -6,11 +6,50 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireFlat } from "@/lib/flat";
 import { MemberEditInput, StaffInput } from "@/lib/engine/inputs";
+import { Password } from "@/lib/engine/onboarding";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 
-export async function signOut() {
+/** Change your own password (needs the current one). */
+export async function changePassword(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
+  const { userId } = await requireFlat();
+  const current = String(form.get("current") ?? "");
+  const next = Password.safeParse(form.get("password") ?? "");
+  if (!next.success) return { fieldErrors: { password: next.error.issues[0]?.message } };
   const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/login");
+  const { data: user } = await supabase.from("app_users").select("password_hash").eq("id", userId).single();
+  if (!user || !(await verifyPassword(current, user.password_hash))) {
+    return { fieldErrors: { current: "That isn't your current password." } };
+  }
+  const { error } = await supabase
+    .from("app_users")
+    .update({ password_hash: await hashPassword(next.data) })
+    .eq("id", userId);
+  return error ? { error: "The password couldn't be saved. Try again." } : { ok: "Password changed." };
+}
+
+/** Admin: set a new password for a flatmate who forgot theirs. */
+export async function resetMemberPassword(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
+  const { me, flat } = await requireFlat();
+  if (!me.is_admin) return { error: ADMIN_ONLY };
+  const memberId = z.uuid().safeParse(form.get("memberId"));
+  const next = Password.safeParse(form.get("password") ?? "");
+  if (!memberId.success) return { error: "Pick a flatmate." };
+  if (!next.success) return { fieldErrors: { password: next.error.issues[0]?.message } };
+  const supabase = await createClient();
+  const { data: member } = await supabase
+    .from("members")
+    .select("user_id")
+    .eq("id", memberId.data)
+    .eq("flat_id", flat.id)
+    .maybeSingle();
+  if (!member?.user_id) return { error: "This member doesn't have an account." };
+  const { error } = await supabase
+    .from("app_users")
+    .update({ password_hash: await hashPassword(next.data), failed_attempts: 0, locked_until: null })
+    .eq("id", member.user_id);
+  return error
+    ? { error: "The password couldn't be reset. Try again." }
+    : { ok: "Password reset. Tell them the new password; they can change it in Settings." };
 }
 
 export type SettingsFormState = { error?: string; ok?: string; fieldErrors?: Record<string, string | undefined> };

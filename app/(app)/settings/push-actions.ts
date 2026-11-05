@@ -27,7 +27,7 @@ export async function savePushSubscription(raw: unknown): Promise<{ ok: boolean 
 }
 
 export async function deletePushSubscription(endpoint: string): Promise<void> {
-  await requireFlat();
+  const { me } = await requireFlat();
   const supabase = await createClient();
-  await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+  await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("member_id", me.id);
 }

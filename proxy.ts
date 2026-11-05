@@ -1,49 +1,23 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/lib/supabase/types";
-import { supabaseEnv } from "@/lib/supabase/env";
+import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
 import { safeNextPath } from "@/lib/engine/onboarding";
 
 /** Paths reachable without signing in. */
-const PUBLIC_PATHS = ["/login", "/auth/", "/sw.js", "/manifest.webmanifest", "/icons/"];
+const PUBLIC_PATHS = ["/login", "/sw.js", "/manifest.webmanifest", "/icons/"];
 
 /**
- * Refreshes the Supabase session cookie on every request and sends signed-out
- * visitors to /login. Authorization itself is enforced by RLS in Postgres.
+ * Sends signed-out visitors to /login and signed-in ones away from it. This is
+ * only the front door: every page and action checks the session again on the
+ * server before touching data.
  */
 export async function proxy(request: NextRequest) {
-  // Supabase falls back to the Site URL (/?code=…) when a redirect URL isn't
-  // allow-listed. Hand that code to the callback instead of dropping it.
-  if (request.nextUrl.pathname === "/" && request.nextUrl.searchParams.has("code")) {
-    const callback = new URL("/auth/callback", request.url);
-    callback.searchParams.set("code", request.nextUrl.searchParams.get("code")!);
-    return NextResponse.redirect(callback);
-  }
-
-  let response = NextResponse.next({ request });
-  const { url, publishableKey } = supabaseEnv();
-
-  const supabase = createServerClient<Database>(url, publishableKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(toSet, headers) {
-        for (const { name, value } of toSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
-        for (const { name, value, options } of toSet) response.cookies.set(name, value, options);
-        for (const [key, value] of Object.entries(headers ?? {})) response.headers.set(key, value);
-      },
-    },
-  });
-
-  // Must run before anything else so a refreshed token is written back.
-  const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims?.sub);
+  const secret = process.env.SESSION_SECRET ?? "";
+  const session = secret.length >= 32 ? await verifySession(request.cookies.get(SESSION_COOKIE)?.value, secret) : null;
   const { pathname, search } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p));
 
-  if (!signedIn && !isPublic) {
+  if (!session && !isPublic) {
+    if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
     const login = request.nextUrl.clone();
     login.pathname = "/login";
     login.search = "";
@@ -51,11 +25,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (signedIn && pathname === "/login") {
-    const next = safeNextPath(request.nextUrl.searchParams.get("next"));
-    return NextResponse.redirect(new URL(next, request.url));
+  if (session && pathname === "/login") {
+    return NextResponse.redirect(new URL(safeNextPath(request.nextUrl.searchParams.get("next")), request.url));
   }
 
+  const response = NextResponse.next();
   response.headers.set("Cache-Control", "private, no-store");
   return response;
 }

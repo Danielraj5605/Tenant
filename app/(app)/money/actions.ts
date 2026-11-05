@@ -14,7 +14,7 @@ export type SplitFormState = { error?: string };
 
 /** Save a New split (or an edit). Reasons and the rule note are written once, here, and frozen. */
 export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<SplitFormState> {
-  const { flat } = await requireFlat();
+  const { flat, userId } = await requireFlat();
   let raw: unknown;
   try {
     raw = JSON.parse(String(form.get("payload") ?? ""));
@@ -68,7 +68,11 @@ export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<
     personalTotals,
   });
 
+  // A scanned bill's photo must be in this flat's folder.
+  if (p.billImagePath && !p.billImagePath.startsWith(`${flat.id}/`)) return { error: "That bill photo isn't from this flat." };
+
   const { data: id, error } = await supabase.rpc("save_expense", {
+    p_user_id: userId,
     p: {
       id: p.id,
       category_id: p.categoryId,
@@ -109,20 +113,20 @@ export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<
 }
 
 export async function settleExpense(form: FormData) {
-  await requireFlat();
+  const { userId } = await requireFlat();
   const id = z.uuid().safeParse(form.get("id"));
   if (!id.success) return;
   const supabase = await createClient();
-  await supabase.rpc("set_expense_settled", { p_expense_id: id.data });
+  await supabase.rpc("set_expense_settled", { p_user_id: userId, p_expense_id: id.data });
   revalidatePath("/", "layout");
 }
 
 export async function deleteExpense(form: FormData) {
-  await requireFlat();
+  const { userId } = await requireFlat();
   const id = z.uuid().safeParse(form.get("id"));
   if (id.success) {
     const supabase = await createClient();
-    await supabase.rpc("delete_expense", { p_expense_id: id.data });
+    await supabase.rpc("delete_expense", { p_user_id: userId, p_expense_id: id.data });
     revalidatePath("/", "layout");
   }
   redirect("/money");

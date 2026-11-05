@@ -16,7 +16,7 @@ export default async function EditChorePage({ params }: PageProps<"/chores/[id]"
   const supabase = await createClient();
   const [{ data: chore }, { data: rotation }, flatmates] = await Promise.all([
     supabase.from("chores").select("*").eq("id", id).eq("flat_id", flat.id).maybeSingle(),
-    supabase.from("chore_rotation").select("member_id").eq("chore_id", id).order("position"),
+    supabase.from("chore_rotation").select("member_id").eq("chore_id", id).eq("flat_id", flat.id).order("position"),
     rotationCandidates(flat.id),
   ]);
   if (!chore) notFound();

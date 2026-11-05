@@ -22,12 +22,12 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
   const supabase = await createClient();
   const [{ data: e }, { data: items }, { data: shares }, { data: members }] = await Promise.all([
     supabase.from("expenses").select("*").eq("id", id).eq("flat_id", flat.id).maybeSingle(),
-    supabase.from("expense_items").select("*").eq("expense_id", id).order("sort_order"),
-    supabase.from("expense_shares").select("*").eq("expense_id", id).order("amount_paise", { ascending: false }),
+    supabase.from("expense_items").select("*").eq("expense_id", id).eq("flat_id", flat.id).order("sort_order"),
+    supabase.from("expense_shares").select("*").eq("expense_id", id).eq("flat_id", flat.id).order("amount_paise", { ascending: false }),
     supabase.from("members").select("id, name").eq("flat_id", flat.id),
   ]);
   if (!e) notFound();
-  const { data: category } = await supabase.from("expense_categories").select("name").eq("id", e.category_id).maybeSingle();
+  const { data: category } = await supabase.from("expense_categories").select("name").eq("id", e.category_id).eq("flat_id", flat.id).maybeSingle();
 
   const nameOf = new Map((members ?? []).map((m) => [m.id, m.name]));
   const who = (mid: string) => (mid === me.id ? "You" : (nameOf.get(mid) ?? "Former member"));
