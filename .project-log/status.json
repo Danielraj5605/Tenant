@@ -1,0 +1,244 @@
+{
+  "project": "Tenant",
+  "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six.",
+  "last_updated": "2026-11-05",
+  "last_sync": "2026-11-05",
+  "artifact": {
+    "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
+    "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
+    "version": "1793882900-0454"
+  },
+  "sections": [
+    {
+      "id": "phase-1-foundation",
+      "title": "Phase 1: Foundation",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [
+        "c009fca"
+      ],
+      "summary": "Next.js + Tailwind + Supabase setup, migrations, RLS, flat creation and invite link, design tokens, bottom nav shell.",
+      "screenshots": false
+    },
+    {
+      "id": "phase-2-members-availability",
+      "title": "Phase 2: Members and availability",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [
+        "25757d5",
+        "5f18855",
+        "6ab307d"
+      ],
+      "summary": "Members screen, cook and maid as no-login members, away periods, calendar, isPresent with tests.",
+      "screenshots": false
+    },
+    {
+      "id": "phase-3-chores-menu-pwa",
+      "title": "Phase 3: Chores, menu, PWA (v1 launch)",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [
+        "4945a59"
+      ],
+      "summary": "Chore rotation, daily job, menu with computed headcount and No-cook days, Serwist install, Web Push.",
+      "screenshots": false
+    },
+    {
+      "id": "phase-4-money",
+      "title": "Phase 4: Money ledger and New split",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [
+        "980a39b"
+      ],
+      "summary": "Categories and split rules, expense ledger, expense detail with items and shares, New split with editable per-person shares.",
+      "screenshots": false
+    },
+    {
+      "id": "phase-5-bill-scanning",
+      "title": "Phase 5: Bill scanning",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [
+        "534e590",
+        "ddc15a6"
+      ],
+      "summary": "Compress and upload, /api/scan with Gemini primary and Groq fallback, two-step review with item checkboxes, people chips and editable shares.",
+      "screenshots": false
+    },
+    {
+      "id": "auth-own-accounts",
+      "title": "Sign-in: Tenant's own accounts",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [
+        "2eb70d1",
+        "e5122e6",
+        "4f10506",
+        "fa73fd0",
+        "b8fb5d6"
+      ],
+      "summary": "Moved sign-in to username and password, then replaced Supabase Auth with Tenant's own accounts and sessions.",
+      "screenshots": false
+    },
+    {
+      "id": "project-log-setup",
+      "title": "Project log and test-case audit",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [],
+      "summary": "Set up .project-log (status, requests, changelog, renderer, status page). Ran npm run check: typecheck, lint and 131/131 tests pass. All 13 SPEC §12 cases map to a passing test.",
+      "screenshots": false
+    },
+    {
+      "id": "first-run-fixes",
+      "title": "First run fixes",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [],
+      "summary": "Pushed pending migrations, fixed the secret key in .env.local, fixed the Date.now() prerender error after the own-auth change. Sign-up works; Today, Calendar, Money, Chores and Menu load signed in.",
+      "screenshots": false
+    },
+    {
+      "id": "part-day-away",
+      "title": "Part-day away and breakfast",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [],
+      "summary": "Morning / Afternoon / Night for a single day. Slots only affect meals (per-meal headcount and No cook); chores and money treat the person as home. Breakfast added to the menu. Migration pushed, Edge Functions redeployed, browser-checked at 375/768/1440.",
+      "screenshots": true
+    }
+  ],
+  "current_section": null,
+  "next_section": {
+    "id": "real-world-checks",
+    "title": "Real-world acceptance checks",
+    "summary": "Checklist for each phase's done-when criterion in SPEC §11. Also waiting: the four open questions."
+  },
+  "changed_files": [
+    "supabase/migrations/20261110000001_away_slots_breakfast.sql",
+    "lib/engine/presence.ts",
+    "lib/engine/menu.ts",
+    "lib/engine/inputs.ts",
+    "app/(app)/calendar/away/away-form.tsx",
+    "app/(app)/calendar/away/actions.ts",
+    "app/(app)/calendar/page.tsx",
+    "app/(app)/menu/page.tsx",
+    "app/(app)/menu/actions.ts",
+    "app/(app)/menu/[date]/*",
+    "app/(app)/today/page.tsx",
+    "components/meals.tsx",
+    "components/away.tsx",
+    "supabase/functions/notify/index.ts",
+    "SPEC.md",
+    "tests"
+  ],
+  "test_coverage": [
+    {
+      "case": 1,
+      "text": "₹500 among 5 → ₹100 each",
+      "test": "lib/engine/money.test.ts:49"
+    },
+    {
+      "case": 2,
+      "text": "₹200 among 5, You locked at ₹64 → others ₹34",
+      "test": "lib/engine/money.test.ts:66"
+    },
+    {
+      "case": 3,
+      "text": "₹100 among 3 → ₹33.34, ₹33.33, ₹33.33",
+      "test": "lib/engine/money.test.ts:54"
+    },
+    {
+      "case": 4,
+      "text": "WiFi ₹799, 6 members, one away → ₹133.17 × 4, ₹133.16 × 2",
+      "test": "lib/engine/money.test.ts:165"
+    },
+    {
+      "case": 5,
+      "text": "Locked shares exceed total → Save disabled, amount over shown",
+      "test": "lib/engine/money.test.ts:74"
+    },
+    {
+      "case": 6,
+      "text": "Zepto ₹256, ₹40 unticked, 5 people → ₹43.20 each",
+      "test": "lib/engine/money.test.ts:129"
+    },
+    {
+      "case": 7,
+      "text": "Away 14–15 Nov → absent those days, present 13 and 16",
+      "test": "lib/engine/presence.test.ts:30"
+    },
+    {
+      "case": 8,
+      "text": "Next in rotation away → skips to next present member",
+      "test": "lib/engine/rotation.test.ts:51"
+    },
+    {
+      "case": 9,
+      "text": "Everyone in rotation away → skipped",
+      "test": "lib/engine/rotation.test.ts:56"
+    },
+    {
+      "case": 10,
+      "text": "Long-away member: out of groceries and gas, in rent and WiFi",
+      "test": "lib/engine/money.test.ts:159"
+    },
+    {
+      "case": 11,
+      "text": "Cook full-day leave on 7 Nov → unpaid",
+      "test": "lib/engine/presence.test.ts:70"
+    },
+    {
+      "case": 12,
+      "text": "Cook partial-day leave → paid in full",
+      "test": "lib/engine/presence.test.ts:75"
+    },
+    {
+      "case": 13,
+      "text": "Editing an away period after saving doesn't change shares",
+      "test": "lib/engine/money.test.ts:233"
+    },
+    {
+      "case": 14,
+      "text": "Out at night → dinner headcount −1; lunch, chores and splits unchanged",
+      "test": "lib/engine/presence.test.ts, rotation.test.ts, money.test.ts"
+    }
+  ],
+  "decisions": [
+    {
+      "date": "2026-11-05",
+      "text": "Design direction: the SPEC §6.1 mockup tokens (Manrope, #F5F4EF background, #0F6E64 accent, 16px cards, Lucide-style icons). design-taste-frontend is not installed, so this direction is kept for every later section."
+    },
+    {
+      "date": "2026-11-05",
+      "text": "Sign-in uses Tenant's own username and password accounts, not Supabase Auth."
+    },
+    {
+      "date": "2026-11-05",
+      "text": "Bill scanning runs on free tiers only: Gemini Flash first, Groq Llama 4 Scout as fallback."
+    },
+    {
+      "date": "2026-11-05",
+      "text": "Project log was set up by hand: the section-status-artifact and section-sync-check skills are not installed."
+    },
+    {
+      "date": "2026-11-05",
+      "text": "Part-day away: slots (morning/afternoon/night) for a single day; they only change meals. Chores and money treat the person as home. Breakfast added to the menu."
+    }
+  ],
+  "open_questions": [
+    "Should the ledger also show net 'who owes whom' balances (display only), or only each person's share per expense and per month?",
+    "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
+    "Maid's pay: reduced for leave days like the cook's, or fixed?",
+    "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?"
+  ],
+  "known_issues": [
+    "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
+    "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",
+    "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
+    "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
+    "Uncommitted: the first-run fix, part-day away and .project-log are not committed yet."
+  ]
+}
