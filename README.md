@@ -46,6 +46,21 @@ To run the daily job by hand (SQL Editor): `select public.call_daily_job('daily'
 Edge Functions import a copy of the engine in `supabase/functions/_shared/engine`.
 After changing `lib/engine`, run `npm run engine:sync` (a unit test fails if the copy is stale).
 
+### Bill scanning (Phase 5)
+
+Add to `.env.local` (and to Vercel): `GEMINI_API_KEY` from https://aistudio.google.com/apikey and
+`GROQ_API_KEY` from https://console.groq.com/keys. Either one alone works; with both, Groq is the fallback.
+Optional: `GEMINI_MODEL` (default `gemini-2.5-flash`), `GROQ_MODEL` (default `meta-llama/llama-4-scout-17b-16e-instruct`).
+
+## Deploy (Vercel Hobby)
+
+1. Push to a private GitHub repo: `gh repo create tenant --private --source . --remote origin --push`
+2. On https://vercel.com/new import the repo (framework: Next.js; build command comes from `package.json`).
+3. Environment variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+   `NEXT_PUBLIC_SITE_URL=https://<your-app>.vercel.app`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`.
+4. Supabase → Authentication → URL Configuration: Site URL `https://<your-app>.vercel.app`,
+   redirect URL `https://<your-app>.vercel.app/**`.
+
 ## Run
 
 ```bash
