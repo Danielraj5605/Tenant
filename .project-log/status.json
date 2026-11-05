@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
-  "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six.",
+  "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://tenant-plum.vercel.app",
   "last_updated": "2026-11-05",
   "last_sync": "2026-11-05",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793884220-5cbe"
+    "version": "1793884959-9ada"
   },
   "sections": [
     {
@@ -108,6 +108,15 @@
       "commits": [],
       "summary": "Morning / Afternoon / Night for a single day. Slots only affect meals (per-meal headcount and No cook); chores and money treat the person as home. Breakfast added to the menu. Migration pushed, Edge Functions redeployed, browser-checked at 375/768/1440.",
       "screenshots": true
+    },
+    {
+      "id": "deploy-vercel",
+      "title": "Deployed to Vercel",
+      "status": "done",
+      "date": "2026-11-05",
+      "commits": [],
+      "summary": "Live at https://tenant-plum.vercel.app. Vercel project linked to GitHub main, so every push deploys. Env vars set; all main pages checked signed in.",
+      "screenshots": false
     }
   ],
   "current_section": null,
@@ -238,7 +247,10 @@
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",
     "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
-    "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal."
+    "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
+    "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
+    "Bill scanning and push notifications have not been tested on the production site yet."
   ],
-  "repo": "https://github.com/Danielraj5605/Tenant"
+  "repo": "https://github.com/Danielraj5605/Tenant",
+  "production_url": "https://tenant-plum.vercel.app"
 }

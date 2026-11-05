@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-05 — Deployed to Vercel
+
+- Production: https://tenant-plum.vercel.app (project `tenant`, connected to GitHub `main`: every push deploys).
+- Env vars set in Vercel (secrets marked sensitive); `NEXT_PUBLIC_SITE_URL` points at the production URL.
+- Checked: /, /login, manifest, service worker; signed-in Today, Calendar, Away form, Chores, Menu, Money, Settings all 200 with no errors.
+- Not set: `GROQ_API_KEY` (bill scanning has no fallback).
+
 ## 2026-11-05 — Pushed to GitHub
 
 - Branch renamed master → main and pushed to https://github.com/Danielraj5605/Tenant. Secret scan of the tree and history found only placeholders.
