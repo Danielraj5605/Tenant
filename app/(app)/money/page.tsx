@@ -68,14 +68,13 @@ export default async function MoneyPage({ searchParams }: PageProps<"/money">) {
           <PlusIcon size={20} />
           New split
         </Link>
-        <span
-          aria-disabled="true"
-          title="Bill scanning is the next update"
-          className="inline-flex min-h-[52px] cursor-not-allowed items-center justify-center gap-2 rounded-full border border-line-strong px-4 font-bold text-muted"
+        <Link
+          href="/money/scan"
+          className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-4 font-bold hover:border-ink/40"
         >
           <CameraIcon size={20} />
           Scan a bill
-        </span>
+        </Link>
       </div>
 
       {rows.length === 0 ? (

@@ -37,6 +37,8 @@ export type SplitInitial = {
   items: Omit<ItemDraft, "key">[];
   included: string[] | null;
   locks: Record<string, string>;
+  /** Set for scanned bills (SPEC 4.7 step 2). */
+  scan?: { merchant: string | null; billImagePath: string; printedTotalPaise: number };
 };
 
 const withoutKey = (o: Record<string, string>, key: string) =>
@@ -100,7 +102,8 @@ export function SplitForm({
   const hasItems = items.length > 0;
   const itemsTotal = parsedItems.reduce((s, i) => s + (i.kind === "discount" ? -i.amountPaise : i.amountPaise), 0);
   const typedTotal = parseRupees(total);
-  const billTotal = hasItems ? itemsTotal : (typedTotal ?? 0);
+  // A scanned bill keeps its printed total; the split uses the ticked items.
+  const billTotal = initial.scan ? initial.scan.printedTotalPaise : hasItems ? itemsTotal : (typedTotal ?? 0);
   const { split: splitAmount, notSplit } = splitTotal(parsedItems, billTotal);
 
   // ---- cook pay helper
@@ -133,13 +136,13 @@ export function SplitForm({
   const payload = {
     id: initial.id,
     title: title.trim(),
-    merchant: null,
+    merchant: initial.scan?.merchant ?? null,
     categoryId,
     date,
     paidBy,
     totalPaise: billTotal,
-    source: "manual",
-    billImagePath: null,
+    source: initial.scan ? "scan" : "manual",
+    billImagePath: initial.scan?.billImagePath ?? null,
     items: parsedItems.map((i) => ({
       name: i.name,
       amountPaise: i.amountPaise,
@@ -232,7 +235,13 @@ export function SplitForm({
         <div className="flex flex-col gap-1">
           <span className="text-sm font-semibold">Total amount</span>
           <span className="text-2xl font-extrabold">{formatINR(billTotal)}</span>
-          <span className="text-sm text-muted">Adds up the line items below.</span>
+          <span className="text-sm text-muted">
+            {initial.scan
+              ? itemsTotal === billTotal
+                ? "Items add up to the bill total."
+                : `Items add up to ${formatINR(itemsTotal)}; the bill says ${formatINR(billTotal)}.`
+              : "Adds up the line items below."}
+          </span>
         </div>
       ) : (
         <Field

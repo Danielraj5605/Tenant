@@ -47,6 +47,9 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
     e.total_paise,
   );
   const isCreator = e.created_by === me.id;
+  const billUrl = e.bill_image_path
+    ? (await supabase.storage.from("bills").createSignedUrl(e.bill_image_path, 60 * 60)).data?.signedUrl
+    : null;
 
   const line = (key: string, label: React.ReactNode, amount: number, opts: { negative?: boolean; muted?: boolean } = {}) => (
     <div key={key} className={cx("flex min-h-10 items-baseline justify-between gap-3", opts.muted && "text-muted")}>
@@ -81,6 +84,12 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
       </header>
 
       <div className="flex flex-col gap-4">
+        {billUrl ? (
+          <a href={billUrl} target="_blank" rel="noreferrer" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL */}
+            <img src={billUrl} alt={`Photo of the ${e.title} bill`} className="max-h-64 w-full rounded-[var(--radius-card)] bg-surface object-contain" />
+          </a>
+        ) : null}
         {list.length ? (
           <Card className="flex flex-col">
             <h2 className="mb-1 text-title font-bold">Bill items</h2>
