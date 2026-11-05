@@ -1,5 +1,5 @@
 /**
- * Database types for the Phase 1 schema.
+ * Database types for the schema in supabase/migrations.
  * Hand-written to match supabase/migrations. Regenerate once the project is
  * linked with: npm run db:types
  */
@@ -68,6 +68,40 @@ export type Database = {
           },
         ];
       };
+      away_periods: {
+        Row: {
+          id: string;
+          flat_id: string;
+          member_id: string;
+          start_date: string;
+          end_date: string;
+          full_day: boolean;
+          reason: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          flat_id: string;
+          member_id: string;
+          start_date: string;
+          end_date: string;
+          full_day?: boolean;
+          reason?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["away_periods"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "away_periods_member_fk";
+            columns: ["member_id", "flat_id"];
+            isOneToOne: false;
+            referencedRelation: "members";
+            referencedColumns: ["id", "flat_id"];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -98,3 +132,4 @@ export type Database = {
 
 export type Flat = Database["public"]["Tables"]["flats"]["Row"];
 export type Member = Database["public"]["Tables"]["members"]["Row"];
+export type AwayPeriodRow = Database["public"]["Tables"]["away_periods"]["Row"];

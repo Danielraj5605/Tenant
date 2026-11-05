@@ -1,0 +1,77 @@
+/** Calendar-date arithmetic on ISO `yyyy-mm-dd` strings (no timezones involved). */
+
+const toUtc = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+};
+const fromUtc = (dt: Date) => dt.toISOString().slice(0, 10);
+
+export function addDays(iso: string, n: number): string {
+  const dt = toUtc(iso);
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return fromUtc(dt);
+}
+
+/** Number of days from `start` to `end`, counting both. */
+export function daysInclusive(start: string, end: string): number {
+  return Math.round((toUtc(end).getTime() - toUtc(start).getTime()) / 86_400_000) + 1;
+}
+
+/** `yyyy-mm` of a date. */
+export const monthOf = (iso: string) => iso.slice(0, 7);
+
+export const isMonth = (value: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(value);
+
+export function shiftMonth(month: string, n: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1 + n, 1));
+  return fromUtc(dt).slice(0, 7);
+}
+
+export type GridDay = { date: string; inMonth: boolean };
+
+/** Whole weeks (Monday first) covering the month. */
+export function monthGrid(month: string): GridDay[][] {
+  const first = `${month}-01`;
+  const last = addDays(`${shiftMonth(month, 1)}-01`, -1);
+  const mondayOffset = (toUtc(first).getUTCDay() + 6) % 7;
+  let day = addDays(first, -mondayOffset);
+  const weeks: GridDay[][] = [];
+  while (day <= last) {
+    const week: GridDay[] = [];
+    for (let i = 0; i < 7; i++) {
+      week.push({ date: day, inMonth: monthOf(day) === month });
+      day = addDays(day, 1);
+    }
+    weeks.push(week);
+  }
+  return weeks;
+}
+
+/** First and last date shown in the month grid. */
+export function gridRange(month: string): { start: string; end: string } {
+  const weeks = monthGrid(month);
+  return { start: weeks[0][0].date, end: weeks[weeks.length - 1][6].date };
+}
+
+const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", ...opts }).format(toUtc(iso)).replace(",", "");
+
+/** "Sat 7 Nov" */
+export const formatShortDate = (iso: string) => fmt(iso, { weekday: "short", day: "numeric", month: "short" });
+
+/** "November 2026" */
+export const formatMonth = (month: string) => fmt(`${month}-01`, { month: "long", year: "numeric" });
+
+/** "Sat 14 Nov", "Sat 14 – Sun 15 Nov", "Sat 28 Nov – Tue 1 Dec" or "5 Nov – 5 Feb" for long spans. */
+export function formatRange(start: string, end: string): string {
+  if (start === end) return formatShortDate(start);
+  if (daysInclusive(start, end) >= 30) {
+    const dm = (iso: string) => fmt(iso, { day: "numeric", month: "short" });
+    return `${dm(start)} – ${dm(end)}`;
+  }
+  if (monthOf(start) === monthOf(end)) {
+    return `${fmt(start, { weekday: "short", day: "numeric" })} – ${formatShortDate(end)}`;
+  }
+  return `${formatShortDate(start)} – ${formatShortDate(end)}`;
+}

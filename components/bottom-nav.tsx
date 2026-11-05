@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { CalendarIcon, ChoresIcon, HomeIcon, MenuIcon, MoneyIcon } from "./icons";
 import { cx } from "./ui";
@@ -13,9 +14,20 @@ const TABS = [
   { href: "/money", label: "Money", Icon: MoneyIcon },
 ] as const;
 
+/** Wrapped in Suspense: the active tab depends on the URL. */
 export function BottomNav() {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<NavBar pathname={null} />}>
+      <ActiveNav />
+    </Suspense>
+  );
+}
 
+function ActiveNav() {
+  return <NavBar pathname={usePathname()} />;
+}
+
+function NavBar({ pathname }: { pathname: string | null }) {
   return (
     <nav
       aria-label="Main"
@@ -23,7 +35,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex max-w-[430px] px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {TABS.map(({ href, label, Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const active = pathname !== null && (pathname === href || pathname.startsWith(`${href}/`));
           return (
             <li key={href} className="flex-1">
               <Link

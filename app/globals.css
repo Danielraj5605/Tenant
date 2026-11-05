@@ -19,6 +19,11 @@
   --color-line-strong: #d6d4cb;
   --color-danger: #a8321e;
 
+  /* Calendar dots (SPEC 4.2): cook amber, maid purple, flatmate blue */
+  --color-dot-cook: #b86e00;
+  --color-dot-maid: #7b4bc4;
+  --color-dot-flatmate: #3b5bc0;
+
   --radius-card: 16px;
 
   /* Type scale */
