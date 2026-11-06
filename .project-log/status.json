@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793966029-4433"
+    "version": "1793966855-f025"
   },
   "sections": [
     {
@@ -183,8 +183,10 @@
       "title": "Flow fixes from the audit",
       "status": "done",
       "date": "2026-11-06",
-      "commits": [],
-      "summary": "Sign-up goes straight to onboarding (no detour through Today) and a branded error page with one automatic retry replaces Next's bare one. Chore form no longer scrolls sideways; frequency options are one line (Daily / Weekly / Some days). Today states a decided no-cook day (\"No cook tomorrow: ordering in\") and cook alerts open that week's menu; Menu shows \"Ordering in\" on decided days. Away saves no longer wait for the leave alert (sent after the response, staff only): ~0.7–1.2 s instead of ~3.7 s. A part-day absence no longer shows as away in Settings. Cook's pay counts every cook employed that month (Lakshmi → Mary). Lakshmi marked as left on 5 Nov; Mary is the cook. E2E on a production build: 12 checks pass.",
+      "commits": [
+        "220a16e"
+      ],
+      "summary": "Sign-up goes straight to onboarding (no detour through Today) and a branded error page with one automatic retry replaces Next's bare one. Chore form no longer scrolls sideways; frequency options are one line (Daily / Weekly / Some days). Today states a decided no-cook day (\"No cook tomorrow: ordering in\") and cook alerts open that week's menu; Menu shows \"Ordering in\" on decided days. Away saves no longer wait for the leave alert (sent after the response, staff only): ~0.7–1.2 s instead of ~3.7 s. A part-day absence no longer shows as away in Settings. Cook's pay counts every cook employed that month (Lakshmi → Mary). Lakshmi marked as left on 5 Nov; Mary is the cook. E2E on a production build: 12 checks pass. Re-run on the live site after deploy: same 12 pass.",
       "screenshots": true
     }
   ],
