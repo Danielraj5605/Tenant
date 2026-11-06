@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-06 — Members admin: flat code, join requests, removing members
+
+- Migration `20261111000001_flat_code_join_requests.sql` (pushed): `flats.flat_code`, `join_requests`, RPCs `request_to_join`, `decide_join_request`, `remove_member`. Dropped `join_flat` and `invite_preview`.
+- Onboarding: "Ask to join" with flat code + name; waiting card reloads every 15 s and has Cancel; declined requests are shown.
+- Settings (admin): join requests with Accept / Decline, flat code with Copy / Share, Remove on each member page (confirm step), cook/maid role switch. Today shows "X wants to join".
+- Fixed: creating a flat bounced back to onboarding (stale 60 s tab cache from the speed change); now a full page load to Settings.
+- Fixed: old `/join/<code>` links now redirect to onboarding via next.config.
+- End-to-end on a production build: 22/22 checks (create, wrong code, request, accept, auto-refresh in, remove with history, decline, cancel, rejoin, staff edit and delete, no self-remove, old link). Test users and flat removed. 148/148 unit tests.
+
 ## 2026-11-06 — Faster pages and staying signed in
 
 - Cause: functions ran in iad1 (US East) while Supabase is in ap-southeast-1 (Singapore), ~220 ms per query, several queries per page in a row.
