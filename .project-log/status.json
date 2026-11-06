@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793954217-9949"
+    "version": "1793960684-41d5"
   },
   "sections": [
     {
@@ -135,17 +135,34 @@
       "commits": [],
       "summary": "Filled C2 102 with sample data via npm run seed:sample: Madan, Karthik, Rishab, Kishore and Barani (logins with a shared sample password), cook Lakshmi and maid Selvi. Barani away 1 Sep – 30 Nov. 12 away periods, 5 chores with 62 duties since 7 Oct, 20 menu days (the flat's own Mon–Sat weekly menu, 26 Oct – 14 Nov), 24 expenses Sep–Nov (shares computed by the engine). Checked live at 375/768/1440 signed in as Madan.",
       "screenshots": true
+    },
+    {
+      "id": "speed-sessions",
+      "title": "Faster pages and staying signed in",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [
+        "a6c8357"
+      ],
+      "summary": "Functions moved from iad1 (US) to sin1, next to the Supabase database in Singapore. User, member and flat load in one parallel query; the chores week in one. Visited tabs are reused for 60 s. Sessions now last 180 days and renew on use. Live from India: full page 1.5–2.6 s → 0.6–0.75 s; first tap on a tab ~0.35 s; revisited tab ~0.05 s. Sign-in survives a browser restart.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "real-world-checks",
-    "title": "Real-world acceptance checks",
-    "summary": "Checklist for each phase's done-when criterion in SPEC §11. Also waiting: the four open questions."
+    "id": "members-admin",
+    "title": "Members admin: flat code, join requests, remove members",
+    "summary": "Flat code replaces the invite link; new people request to join and the admin accepts or declines; admin edits and removes cook, maid and flatmates (marked as left, history kept; staff with no history deleted)."
   },
   "changed_files": [
-    "scripts/seed-sample.ts",
-    "package.json"
+    "vercel.json",
+    "next.config.ts",
+    "proxy.ts",
+    "lib/auth/session.ts",
+    "lib/auth/server.ts",
+    "lib/auth/auth.test.ts",
+    "lib/flat.ts",
+    "lib/chores.ts"
   ],
   "test_coverage": [
     {
@@ -243,6 +260,10 @@
     {
       "date": "2026-11-06",
       "text": "Sample data lives in the live flat (C2 102) because local and production share one Supabase project. Remove it with npm run seed:sample -- --remove (this also clears ALL chores, menu, away periods and expenses in that flat). Danielraj joined_on moved to 1 Aug 2026 so September bills include them."
+    },
+    {
+      "date": "2026-11-06",
+      "text": "Vercel functions run in sin1 (vercel.json) to sit next to Supabase ap-southeast-1. Sessions slide: 180 days, renewed by the proxy at most once a day."
     }
   ],
   "open_questions": [
@@ -262,7 +283,10 @@
     "Bill scanning and push notifications have not been tested on the production site yet.",
     "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",
     "Chores page banner says a member is \"away\" and their turns go to the next person even for part-day absences (e.g. Madan out at night on 6 Nov). The rotation itself is correct; only the banner text is wrong.",
-    "Sample logins use one shared sample password on the live site. Remove or change them before real use."
+    "Sample logins use one shared sample password on the live site. Remove or change them before real use.",
+    "First tap on a tab still waits for one server trip (~0.35 s). Prefetching signed-in data would need \"use cache: private\" data caching; not done.",
+    "A visited tab can show data up to 60 s old when another flatmate changes something (your own saves refresh at once).",
+    "If you were signed out on your phone, likely causes were switching between tenant-plum.vercel.app and wecohabit.vercel.app (separate cookies) or the 30-day expiry. Not reproduced on desktop Chromium."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

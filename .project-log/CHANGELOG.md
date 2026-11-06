@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-06 — Faster pages and staying signed in
+
+- Cause: functions ran in iad1 (US East) while Supabase is in ap-southeast-1 (Singapore), ~220 ms per query, several queries per page in a row.
+- `vercel.json` regions → sin1. `getFlatContext` and `loadChoreWeek` now query in parallel.
+- `staleTimes.dynamic = 60`: a visited tab is reused for a minute; saves still revalidate at once.
+- Sliding sessions: 180 days, renewed by the proxy on use (3 new tests, 147/147 pass).
+- Live from India: full page 1.5–2.6 s → 0.6–0.75 s; tab first tap ~0.35 s, revisit ~0.05 s. Sign-in survives a browser restart.
+
 ## 2026-11-06 — Sample data
 
 - New `scripts/seed-sample.ts` (`npm run seed:sample`, `-- --remove` to undo). Shares are computed with the app's own engine. Logins need `SEED_PASSWORD`.
