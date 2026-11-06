@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793960684-41d5"
+    "version": "1793962249-b431"
   },
   "sections": [
     {
@@ -152,8 +152,10 @@
       "title": "Members admin: flat code, join requests, remove members",
       "status": "done",
       "date": "2026-11-06",
-      "commits": [],
-      "summary": "A 6-character flat code (no look-alike characters) replaces the invite link. New people sign up, enter the code and wait; the admin accepts or declines in Settings (with a notice on Today). Admin can rename the cook or maid, switch them between cook and maid, and remove anyone but themselves: with history they are marked as left (bills kept), without history they are deleted. Old /join links go to onboarding. Also fixed: creating a flat bounced back to onboarding since the 60 s tab cache. End-to-end run on a production build: 22/22 checks pass.",
+      "commits": [
+        "63b6c17"
+      ],
+      "summary": "A 6-character flat code (no look-alike characters) replaces the invite link. New people sign up, enter the code and wait; the admin accepts or declines in Settings (with a notice on Today). Admin can rename the cook or maid, switch them between cook and maid, and remove anyone but themselves: with history they are marked as left (bills kept), without history they are deleted. Old /join links go to onboarding. Also fixed: creating a flat bounced back to onboarding since the 60 s tab cache. End-to-end run on a production build: 22/22 checks pass. Re-run against the live site after deploy: 22/22 pass.",
       "screenshots": true
     }
   ],
