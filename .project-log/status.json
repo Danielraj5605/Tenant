@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793967237-c4f2"
+    "version": "1793973366-49e5"
   },
   "sections": [
     {
@@ -205,8 +205,10 @@
       "title": "Admin and notification gaps",
       "status": "done",
       "date": "2026-11-06",
-      "commits": [],
-      "summary": "The admin gets a push when someone asks to join (notify Edge Function, sent after the response). The admin can hand admin rights to another current flatmate (hand_over_admin, one transaction). \"My meals\" in Settings: each person picks meals they usually skip; meal headcounts leave them out. Found and fixed: the live Edge Functions had never started because their secrets were never uploaded, so no push had ever been sent and the daily job failed; secrets uploaded, both functions now start. E2E on a production build: 12/12.",
+      "commits": [
+        "8373749"
+      ],
+      "summary": "The admin gets a push when someone asks to join (notify Edge Function, sent after the response). The admin can hand admin rights to another current flatmate (hand_over_admin, one transaction). \"My meals\" in Settings: each person picks meals they usually skip; meal headcounts leave them out. Found and fixed: the live Edge Functions had never started because their secrets were never uploaded, so no push had ever been sent and the daily job failed; secrets uploaded, both functions now start. E2E on a production build: 12/12. Re-run on the live site: 12/12.",
       "screenshots": true
     }
   ],
