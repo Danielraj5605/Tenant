@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-06 — Admin and notification gaps
+
+- Migration `20261113000001_hand_over_admin_usual_skips.sql` (pushed): `members.usual_skips`, `hand_over_admin` RPC.
+- Join requests push the admin: `notify` accepts `{ joinRequestId }`; the request action calls it with `after()`. `notify` and `daily` redeployed.
+- Edge Function secrets (VAPID keys, CRON_SECRET) were never set on the live project: both functions crashed on start, so no push had ever been sent. Uploaded with `npm run functions:secrets`; both start now.
+- Settings: "My meals" (usually skip breakfast/lunch/dinner); member page: "Make X the admin" with confirm.
+- Headcount leaves out people who usually skip that meal (2 new tests; engine synced to Edge Functions).
+- E2E on a production build: 12/12. 160/160 unit tests.
+
 ## 2026-11-06 — First-run guidance and Menu at today
 
 - New `components/get-started.tsx`: admin checklist on Today (flatmates, cook/maid, a chore, this week's meals), ticks from real data, hides when done. Replaces the old "Add flatmates" link in Who's home.

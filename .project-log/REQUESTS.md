@@ -8,8 +8,8 @@ and asks which to do now, later, or skip.
 ## Accepted
 
 - [x] 2026-11-06 Mary replaces Lakshmi as cook (small)
-- [ ] 2026-11-06 Seamless flow: full flow audit of every journey (new user, flatmate, admin) at phone size, then fix in sections (medium)
-- [ ] 2026-11-06 Admin and notification gaps: push the admin on a join request, hand admin rights to another flatmate, per-person "usually skips breakfast" (small)
+- [x] 2026-11-06 Seamless flow: full flow audit of every journey (new user, flatmate, admin) at phone size, then fix in sections (medium)
+- [x] 2026-11-06 Admin and notification gaps: push the admin on a join request, hand admin rights to another flatmate, per-person "usually skips breakfast" (small)
 - [x] 2026-11-06 Chores banner calls part-day absences "away" (small)
 - [x] 2026-11-06 Barani back 20 Nov: change his away end to 19 Nov; tapping "Back …" on Today opens the edit page (small)
 - [x] 2026-11-06 Own-data permissions: each flatmate edits only their own away days, splits and duties; the admin can edit anyone's (medium)

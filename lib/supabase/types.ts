@@ -157,6 +157,7 @@ export type Database = {
           joined_on: string;
           left_on: string | null;
           sort_order: number;
+          usual_skips: ("breakfast" | "lunch" | "dinner")[];
           created_at: string;
         };
         Insert: {
@@ -169,6 +170,7 @@ export type Database = {
           joined_on?: string;
           left_on?: string | null;
           sort_order?: number;
+          usual_skips?: ("breakfast" | "lunch" | "dinner")[];
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["members"]["Insert"]>;
@@ -253,6 +255,7 @@ export type Database = {
       request_to_join: { Args: { p_user_id: string; p_code: string; p_name: string }; Returns: string };
       decide_join_request: { Args: { p_user_id: string; p_request_id: string; p_accept: boolean }; Returns: undefined };
       remove_member: { Args: { p_user_id: string; p_member_id: string }; Returns: "left" | "deleted" };
+      hand_over_admin: { Args: { p_user_id: string; p_member_id: string }; Returns: undefined };
       set_chore_done: { Args: { p_user_id: string; p_assignment_id: string; p_done: boolean }; Returns: undefined };
       save_expense: { Args: { p_user_id: string; p: Json }; Returns: string };
       set_expense_settled: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };

@@ -169,6 +169,37 @@ export async function removeMember(_prev: SettingsFormState, form: FormData): Pr
   redirect(`/settings?removed=${data}`);
 }
 
+const MEAL_NAMES = ["breakfast", "lunch", "dinner"] as const;
+
+/** Your own meals you usually skip; meal headcounts leave you out of them. */
+export async function setUsualSkips(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
+  const { me } = await requireFlat();
+  const skips = MEAL_NAMES.filter((m) => form.getAll("skips").includes(m));
+  const supabase = await createClient();
+  const { error } = await supabase.from("members").update({ usual_skips: skips }).eq("id", me.id);
+  if (error) return { error: "That couldn't be saved. Try again." };
+  revalidatePath("/", "layout");
+  return { ok: skips.length ? "Saved. Meal counts leave you out of those." : "Saved. You're counted for every meal." };
+}
+
+/** Admin: make another current flatmate the admin (you stop being admin). */
+export async function handOverAdmin(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
+  const { me, userId } = await requireFlat();
+  if (!me.is_admin) return { error: ADMIN_ONLY };
+  const id = z.uuid().safeParse(form.get("memberId"));
+  if (!id.success) return { error: "Pick a flatmate." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("hand_over_admin", { p_user_id: userId, p_member_id: id.data });
+  if (error) {
+    return error.message.includes("current flatmate")
+      ? { error: "Only a flatmate who lives here and has a login can be the admin." }
+      : { error: "That didn't work. Try again." };
+  }
+  revalidatePath("/", "layout");
+  redirect("/settings?admin=handed");
+}
+
 export async function setMenuOwner(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
   const { me, flat } = await requireFlat();
   if (!me.is_admin) return { error: ADMIN_ONLY };

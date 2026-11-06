@@ -1,5 +1,6 @@
-// Called by the Tenant server (x-cron-secret header) right after the cook or
-// maid is marked on leave. Alerts the rest of the flat (SPEC §4.9).
+// Called by the Tenant server (x-cron-secret header):
+//   { awayPeriodId }  right after the cook or maid is marked on leave: alerts the rest of the flat (SPEC §4.9).
+//   { joinRequestId } right after someone asks to join with the flat code: alerts the flat admin.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
 import { MEALS, MEAL_LABEL, MEAL_SLOT, periodSlots, slotsPhrase } from "../_shared/engine/presence.ts";
@@ -13,8 +14,34 @@ Deno.serve(async (req) => {
   const secret = Deno.env.get("CRON_SECRET");
   if (!secret || req.headers.get("x-cron-secret") !== secret) return new Response("Forbidden", { status: 403 });
 
-  const { awayPeriodId } = (await req.json().catch(() => ({}))) as { awayPeriodId?: string };
-  if (!awayPeriodId) return new Response("Missing awayPeriodId", { status: 400 });
+  const { awayPeriodId, joinRequestId } = (await req.json().catch(() => ({}))) as {
+    awayPeriodId?: string;
+    joinRequestId?: string;
+  };
+
+  if (joinRequestId) {
+    const { data: request } = await admin
+      .from("join_requests")
+      .select("flat_id, name, status")
+      .eq("id", joinRequestId)
+      .maybeSingle();
+    if (!request || request.status !== "pending") return Response.json({ sent: 0 });
+    const { data: admins } = await admin
+      .from("members")
+      .select("id")
+      .eq("flat_id", request.flat_id)
+      .eq("is_admin", true)
+      .is("left_on", null);
+    const result = await sendToMembers(admin, (admins ?? []).map((m) => m.id), {
+      title: `${request.name} wants to join`,
+      body: "Accept or decline in Settings.",
+      url: "/settings#requests",
+      tag: `join-${joinRequestId}`,
+    });
+    return Response.json(result);
+  }
+
+  if (!awayPeriodId) return new Response("Missing awayPeriodId or joinRequestId", { status: 400 });
 
   const { data: period } = await admin
     .from("away_periods")

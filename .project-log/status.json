@@ -199,19 +199,32 @@
       ],
       "summary": "New \"Get started\" card on Today for the admin of a new flat: add flatmates, add the cook or maid, add a chore, plan this week's meals. Each step ticks itself off from real data and the card disappears when all four are done. Today's menu offers \"Plan today's meals\" to whoever plans. Menu starts at today on the current week, with earlier days folded under \"Earlier this week\"; the admin sees \"You plan meals until you pick a menu owner\" instead of being told to ask the admin. E2E on a production build: 15/15. Re-run on the live site: 15/15.",
       "screenshots": true
+    },
+    {
+      "id": "admin-gaps",
+      "title": "Admin and notification gaps",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "The admin gets a push when someone asks to join (notify Edge Function, sent after the response). The admin can hand admin rights to another current flatmate (hand_over_admin, one transaction). \"My meals\" in Settings: each person picks meals they usually skip; meal headcounts leave them out. Found and fixed: the live Edge Functions had never started because their secrets were never uploaded, so no push had ever been sent and the daily job failed; secrets uploaded, both functions now start. E2E on a production build: 12/12.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "admin-gaps",
-    "title": "Admin and notification gaps",
-    "summary": "Push the admin on a join request, hand admin rights to another flatmate, per-person \"usually skips breakfast\"."
+    "id": "real-world-checks",
+    "title": "Real-world acceptance checks",
+    "summary": "Use the app for a week; turn on reminders on a phone; check the deferred items (who owes whom, per-meal menu plan)."
   },
   "changed_files": [
-    "components/get-started.tsx",
-    "app/(app)/today/page.tsx",
-    "app/(app)/menu/page.tsx",
-    "app/(app)/settings/page.tsx"
+    "supabase/migrations/20261113000001_hand_over_admin_usual_skips.sql",
+    "supabase/functions/notify/index.ts",
+    "supabase/functions/_shared/engine/presence.ts",
+    "lib/engine/presence.ts",
+    "lib/engine/presence.test.ts",
+    "lib/supabase/types.ts",
+    "app/onboarding/actions.ts",
+    "app/(app)/settings/*"
   ],
   "test_coverage": [
     {
@@ -333,14 +346,17 @@
     {
       "date": "2026-11-06",
       "text": "Mary replaces Lakshmi as cook from 6 Nov (Lakshmi left 5 Nov). Cook's pay adds up days worked across every cook employed in the month."
+    },
+    {
+      "date": "2026-11-06",
+      "text": "Usual skips are per person (breakfast/lunch/dinner), set by each person for themselves; only meal headcounts use them. Admin hand-over is one transaction: the new admin gains, the old one loses admin."
     }
   ],
   "open_questions": [
     "Should the ledger also show net 'who owes whom' balances (display only), or only each person's share per expense and per month?",
     "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
     "Maid's pay: reduced for leave days like the cook's, or fixed?",
-    "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?",
-    "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?"
+    "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?"
   ],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
@@ -348,17 +364,17 @@
     "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
     "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
     "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
-    "Bill scanning and push notifications have not been tested on the production site yet.",
+    "Bill scanning has not been tested on the production site. Push: functions now start (secrets uploaded 6 Nov) but no phone has subscribed yet, so delivery is untested.",
     "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",
     "Sample logins use one shared sample password on the live site. Remove or change them before real use.",
     "First tap on a tab still waits for one server trip (~0.35 s). Prefetching signed-in data would need \"use cache: private\" data caching; not done.",
     "A visited tab can show data up to 60 s old when another flatmate changes something (your own saves refresh at once).",
     "If you were signed out on your phone, likely causes were switching between tenant-plum.vercel.app and wecohabit.vercel.app (separate cookies) or the 30-day expiry. Not reproduced on desktop Chromium.",
-    "The admin gets no push notification for a join request; it shows on Today and in Settings only.",
-    "Admin rights can't be handed to another flatmate yet, and the admin can't remove themselves.",
     "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
     "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
-    "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work."
+    "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
+    "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
+    "VAPID_SUBJECT is still the placeholder mailto:you@example.com."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

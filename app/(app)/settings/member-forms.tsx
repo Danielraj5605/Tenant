@@ -6,7 +6,9 @@ import { Button, Field, Notice, cx } from "@/components/ui";
 import {
   addStaff,
   decideJoinRequest,
+  handOverAdmin,
   removeMember,
+  setUsualSkips,
   setMenuOwner,
   updateMember,
   type SettingsFormState,
@@ -211,5 +213,83 @@ export function JoinRequestItem({ id, name, username, when }: { id: string; name
         </SubmitButton>
       </form>
     </li>
+  );
+}
+
+const MEALS = [
+  { value: "breakfast", label: "Breakfast" },
+  { value: "lunch", label: "Lunch" },
+  { value: "dinner", label: "Dinner" },
+] as const;
+
+/** "I usually skip": meal headcounts leave you out of these. */
+export function UsualSkipsForm({ current }: { current: readonly string[] }) {
+  const [state, action] = useActionState(setUsualSkips, initial);
+  const [skips, setSkips] = useState<string[]>([...current]);
+  return (
+    <form action={action} className="flex flex-col gap-3">
+      {state.ok ? <Notice tone="success">{state.ok}</Notice> : null}
+      {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
+      <fieldset className="flex min-w-0 flex-col gap-2">
+        <legend className="mb-2 text-sm font-semibold">I usually skip</legend>
+        <div className="grid grid-cols-3 gap-2">
+          {MEALS.map((m) => {
+            const on = skips.includes(m.value);
+            return (
+              <label
+                key={m.value}
+                className={cx(
+                  "flex min-h-11 cursor-pointer items-center justify-center rounded-full border text-sm font-semibold",
+                  "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
+                  on ? "border-accent bg-accent-tint text-accent-dark" : "border-line-strong hover:border-ink/40",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  name="skips"
+                  value={m.value}
+                  checked={on}
+                  onChange={() => setSkips((s) => (on ? s.filter((x) => x !== m.value) : [...s, m.value]))}
+                  className="sr-only"
+                />
+                {m.label}
+              </label>
+            );
+          })}
+        </div>
+        <p className="text-sm text-muted">The cook sees fewer people for those meals. For a one-off, mark yourself away for part of the day instead.</p>
+      </fieldset>
+      <SubmitButton>Save</SubmitButton>
+    </form>
+  );
+}
+
+/** Admin: hand admin rights to this flatmate, with a confirm step. */
+export function HandOverAdminButton({ memberId, name }: { memberId: string; name: string }) {
+  const [state, action] = useActionState(handOverAdmin, initial);
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <Button variant="secondary" onClick={() => setConfirming(true)}>
+        Make {name} the admin
+      </Button>
+    );
+  }
+  return (
+    <form action={action} className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-4">
+      {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
+      <p className="font-semibold">Make {name} the admin?</p>
+      <p className="text-sm text-muted">
+        {name} will accept join requests, manage members and fix anyone&rsquo;s entries. You&rsquo;ll become a regular
+        flatmate.
+      </p>
+      <input type="hidden" name="memberId" value={memberId} />
+      <div className="flex gap-3">
+        <Button type="button" variant="secondary" onClick={() => setConfirming(false)}>
+          Cancel
+        </Button>
+        <SubmitButton variant="primary">Yes, hand over</SubmitButton>
+      </div>
+    </form>
   );
 }

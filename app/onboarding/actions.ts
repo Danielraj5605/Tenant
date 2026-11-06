@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { supabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getFlatContext } from "@/lib/flat";
 import { CreateFlatInput, JoinRequestInput } from "@/lib/engine/onboarding";
@@ -69,8 +71,33 @@ export async function requestToJoin(_prev: FormState, form: FormData): Promise<F
     return msg.startsWith("No flat") ? { values, fieldErrors: { code: msg } } : { values, error: msg };
   }
 
+  // Tell the flat admin on their phone, after the response so the request never waits for it.
+  const { data: pending } = await supabase
+    .from("join_requests")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (pending) after(() => notifyAdmin(pending.id));
+
   revalidatePath("/onboarding");
   return {};
+}
+
+/** Ask the notify Edge Function to push the flat admin. Best-effort. */
+async function notifyAdmin(joinRequestId: string) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return;
+  try {
+    await fetch(`${supabaseEnv().url}/functions/v1/notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-cron-secret": secret },
+      body: JSON.stringify({ joinRequestId }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
+    // Push is best-effort; the request still shows in Settings and on Today.
+  }
 }
 
 /** Withdraw your pending join request. */

@@ -10,7 +10,7 @@ import { Badge, ROLE_LABEL } from "@/components/away";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { FlatCode } from "./flat-code";
 import { SignOutButton } from "./sign-out";
-import { AddStaffForm, JoinRequestItem, MenuOwnerForm } from "./member-forms";
+import { AddStaffForm, JoinRequestItem, MenuOwnerForm, UsualSkipsForm } from "./member-forms";
 import { formatFlatCode } from "@/lib/engine/onboarding";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
@@ -20,7 +20,7 @@ export const metadata = { title: "Flat settings · Tenant" };
 
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
   const { me, flat, user } = await requireFlat();
-  const { created, removed, request } = await searchParams;
+  const { created, removed, request, admin } = await searchParams;
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
   const [{ data: members }, { data: periods }, { data: categories }, { data: requests }] = await Promise.all([
@@ -66,6 +66,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
 
       <div className="flex flex-col gap-4">
         {created ? <Notice tone="success">Your flat is ready. Send the flat code to your flatmates.</Notice> : null}
+        {admin === "handed" ? <Notice tone="success">Done. You&rsquo;re a regular flatmate now.</Notice> : null}
         {request === "accepted" ? (
           <Notice tone="success">Accepted. They&rsquo;re in the flat now.</Notice>
         ) : request === "declined" ? (
@@ -185,6 +186,11 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             </Card>
           </>
         ) : null}
+
+        <Card className="flex flex-col gap-3">
+          <h2 className="text-title font-bold">My meals</h2>
+          <UsualSkipsForm current={me.usual_skips ?? []} />
+        </Card>
 
         <Card className="flex flex-col gap-3">
           <h2 className="text-title font-bold">Password</h2>

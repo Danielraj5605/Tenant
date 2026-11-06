@@ -177,3 +177,18 @@ describe("isPresentFor and per-meal headcount (part-day slots)", () => {
     expect(slotsPhrase(["morning", "afternoon", "night"])).toBe("in the morning, in the afternoon and at night");
   });
 });
+
+describe("usual skips", () => {
+  const a: PresenceMember = { id: "a", role: "flatmate", joined_on: "2026-01-01", left_on: null, usual_skips: ["breakfast"] };
+  const b: PresenceMember = { id: "b", role: "flatmate", joined_on: "2026-01-01", left_on: null };
+  const c: PresenceMember = { id: "c", role: "flatmate", joined_on: "2026-01-01", left_on: null, usual_skips: [] };
+
+  it("someone who usually skips breakfast isn't counted for breakfast", () => {
+    expect(headcount([a, b, c], "2026-11-09", [], "breakfast")).toBe(2);
+  });
+
+  it("they still count for other meals and as home", () => {
+    expect(headcount([a, b, c], "2026-11-09", [], "lunch")).toBe(3);
+    expect(headcount([a, b, c], "2026-11-09", [])).toBe(3);
+  });
+});

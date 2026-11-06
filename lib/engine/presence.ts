@@ -11,6 +11,8 @@ export type PresenceMember = {
   role: MemberRole;
   joined_on: string;
   left_on: string | null;
+  /** Meals this person usually skips (e.g. no breakfast). Only meal headcounts use it. */
+  usual_skips?: readonly string[] | null;
 };
 
 /** Parts of a day someone can be out for. Each matches one meal. */
@@ -73,7 +75,10 @@ export function cookWorkedOn(member: PresenceMember, date: string, periods: read
   return employed(member, date) && !periods.some((p) => p.member_id === member.id && p.full_day && covers(p, date));
 }
 
-/** Number of present flatmates on a date (SPEC §5.2), or eating a given meal. */
+/**
+ * Number of present flatmates on a date (SPEC §5.2), or eating a given meal:
+ * present for it and not someone who usually skips it.
+ */
 export function headcount(
   members: readonly PresenceMember[],
   date: string,
@@ -81,7 +86,9 @@ export function headcount(
   meal?: Meal,
 ): number {
   return members.filter(
-    (m) => m.role === "flatmate" && (meal ? isPresentFor(m, date, periods, meal) : isPresent(m, date, periods)),
+    (m) =>
+      m.role === "flatmate" &&
+      (meal ? isPresentFor(m, date, periods, meal) && !(m.usual_skips ?? []).includes(meal) : isPresent(m, date, periods)),
   ).length;
 }
 
