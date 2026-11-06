@@ -8,9 +8,10 @@ import { awayOn, isLongAway } from "@/lib/engine/presence";
 import { Avatar, Card, Notice } from "@/components/ui";
 import { Badge, ROLE_LABEL } from "@/components/away";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
-import { InviteLink } from "./invite-link";
+import { FlatCode } from "./flat-code";
 import { SignOutButton } from "./sign-out";
-import { AddStaffForm, MenuOwnerForm } from "./member-forms";
+import { AddStaffForm, JoinRequestItem, MenuOwnerForm } from "./member-forms";
+import { formatFlatCode } from "@/lib/engine/onboarding";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
 import { CategoryRules } from "./category-rules";
@@ -19,10 +20,10 @@ export const metadata = { title: "Flat settings · Tenant" };
 
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
   const { me, flat, user } = await requireFlat();
-  const { created } = await searchParams;
+  const { created, removed, request } = await searchParams;
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
-  const [{ data: members }, { data: periods }, { data: categories }] = await Promise.all([
+  const [{ data: members }, { data: periods }, { data: categories }, { data: requests }] = await Promise.all([
     supabase
       .from("members")
       .select("*")
@@ -31,7 +32,18 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       .order("sort_order"),
     supabase.from("away_periods").select("*").eq("flat_id", flat.id).lte("start_date", today).gte("end_date", today),
     supabase.from("expense_categories").select("id, name, default_rule").eq("flat_id", flat.id).order("created_at"),
+    me.is_admin
+      ? supabase
+          .from("join_requests")
+          .select("id, name, created_at, user:app_users(username)")
+          .eq("flat_id", flat.id)
+          .eq("status", "pending")
+          .order("created_at")
+      : Promise.resolve({ data: [] }),
   ]);
+  const pending = (requests ?? []) as { id: string; name: string; created_at: string; user: { username: string } | null }[];
+  const askedOn = (iso: string) =>
+    new Intl.DateTimeFormat("en-IN", { timeZone: flat.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
 
   const people = members ?? [];
   const awayToday = awayOn(today, periods ?? []);
@@ -53,7 +65,31 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       </header>
 
       <div className="flex flex-col gap-4">
-        {created ? <Notice tone="success">Your flat is ready. Send the invite link to your flatmates.</Notice> : null}
+        {created ? <Notice tone="success">Your flat is ready. Send the flat code to your flatmates.</Notice> : null}
+        {request === "accepted" ? (
+          <Notice tone="success">Accepted. They&rsquo;re in the flat now.</Notice>
+        ) : request === "declined" ? (
+          <Notice tone="success">Request declined.</Notice>
+        ) : null}
+        {removed === "left" ? (
+          <Notice tone="success">Removed. Their past bills and history are kept.</Notice>
+        ) : removed === "deleted" ? (
+          <Notice tone="success">Removed. They had no history, so nothing else changed.</Notice>
+        ) : null}
+
+        {me.is_admin && pending.length ? (
+          <Card className="flex flex-col gap-1">
+            <h2 id="requests" className="scroll-mt-6 text-title font-bold">
+              {pending.length === 1 ? "1 person wants to join" : `${pending.length} people want to join`}
+            </h2>
+            <p className="text-sm text-muted">Accept only people you know. They&rsquo;ll see the flat&rsquo;s chores, menu and money.</p>
+            <ul className="flex flex-col">
+              {pending.map((r) => (
+                <JoinRequestItem key={r.id} id={r.id} name={r.name} username={r.user?.username ?? "unknown"} when={askedOn(r.created_at)} />
+              ))}
+            </ul>
+          </Card>
+        ) : null}
 
         <Card className="flex flex-col gap-2 px-3">
           <div className="flex items-baseline justify-between px-2">
@@ -115,11 +151,11 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
               <div className="flex flex-col gap-1">
                 <h2 className="text-title font-bold">Add a flatmate</h2>
                 <p className="text-sm text-muted">
-                  Send this link. Anyone who opens it can sign in and join {flat.name}, so share it only with
-                  flatmates.
+                  They sign up at {siteUrl.replace(/^https?:\/\//, "")} and enter this code. You&rsquo;ll see their
+                  request here to accept or decline.
                 </p>
               </div>
-              <InviteLink url={`${siteUrl}/join/${flat.invite_code}`} flatName={flat.name} />
+              <FlatCode code={flat.flat_code} shown={formatFlatCode(flat.flat_code)} flatName={flat.name} siteUrl={siteUrl} />
             </Card>
 
             <Card className="flex flex-col gap-3">

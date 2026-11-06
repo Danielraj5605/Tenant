@@ -98,6 +98,17 @@ type AppUserRow = {
   locked_until: string | null;
   created_at: string;
 };
+export type JoinRequestStatus = "pending" | "accepted" | "declined" | "cancelled";
+type JoinRequestRow = {
+  id: string;
+  flat_id: string;
+  user_id: string;
+  name: string;
+  status: JoinRequestStatus;
+  decided_by: string | null;
+  decided_at: string | null;
+  created_at: string;
+};
 type PushSubscriptionRow = {
   id: string;
   flat_id: string;
@@ -119,6 +130,7 @@ export type Database = {
           menu_owner_id: string | null;
           prorate_monthly: boolean;
           invite_code: string;
+          flat_code: string;
           created_at: string;
         };
         Insert: {
@@ -128,6 +140,7 @@ export type Database = {
           menu_owner_id?: string | null;
           prorate_monthly?: boolean;
           invite_code?: string;
+          flat_code?: string;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["flats"]["Insert"]>;
@@ -215,15 +228,31 @@ export type Database = {
       expense_shares: Table<ExpenseShareRow, "expense_id" | "member_id" | "flat_id" | "amount_paise">;
       app_users: Table<AppUserRow, "username" | "display_name" | "password_hash">;
       push_subscriptions: Table<PushSubscriptionRow, "flat_id" | "member_id" | "endpoint" | "p256dh" | "auth">;
+      join_requests: Omit<Table<JoinRequestRow, "flat_id" | "user_id" | "name">, "Relationships"> & {
+        Relationships: [
+          {
+            foreignKeyName: "join_requests_flat_id_fkey";
+            columns: ["flat_id"];
+            isOneToOne: false;
+            referencedRelation: "flats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "join_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "app_users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
       create_flat: { Args: { p_user_id: string; p_flat_name: string; p_member_name: string }; Returns: string };
-      join_flat: { Args: { p_user_id: string; p_code: string; p_member_name: string }; Returns: string };
-      invite_preview: {
-        Args: { p_code: string; p_user_id: string };
-        Returns: { flat_id: string; flat_name: string; flatmate_count: number; already_member: boolean }[];
-      };
+      request_to_join: { Args: { p_user_id: string; p_code: string; p_name: string }; Returns: string };
+      decide_join_request: { Args: { p_user_id: string; p_request_id: string; p_accept: boolean }; Returns: undefined };
+      remove_member: { Args: { p_user_id: string; p_member_id: string }; Returns: "left" | "deleted" };
       set_chore_done: { Args: { p_user_id: string; p_assignment_id: string; p_done: boolean }; Returns: undefined };
       save_expense: { Args: { p_user_id: string; p: Json }; Returns: string };
       set_expense_settled: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
@@ -245,3 +274,4 @@ export type Expense = ExpenseRow;
 export type ExpenseItemDb = ExpenseItemRow;
 export type ExpenseShare = ExpenseShareRow;
 export type AppUser = AppUserRow;
+export type JoinRequest = JoinRequestRow;

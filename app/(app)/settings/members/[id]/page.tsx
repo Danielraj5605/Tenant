@@ -5,7 +5,7 @@ import { requireFlat } from "@/lib/flat";
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_LABEL } from "@/components/away";
 import { ChevronLeftIcon } from "@/components/icons";
-import { EditMemberForm } from "../../member-forms";
+import { EditMemberForm, RemoveMemberButton } from "../../member-forms";
 import { ResetPasswordForm } from "@/components/password-setup";
 import { Card } from "@/components/ui";
 
@@ -50,6 +50,11 @@ export default async function EditMemberPage({ params }: PageProps<"/settings/me
           <h2 className="text-title font-bold">Forgot their password?</h2>
           <ResetPasswordForm memberId={member.id} name={member.name} />
         </Card>
+      ) : null}
+      {member.id !== me.id ? (
+        <div className="mt-6">
+          <RemoveMemberButton memberId={member.id} name={member.name} hasLogin={Boolean(member.user_id)} />
+        </div>
       ) : null}
     </>
   );

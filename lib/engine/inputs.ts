@@ -59,6 +59,12 @@ export type StaffInput = z.infer<typeof StaffInput>;
 export const MemberEditInput = z.object({
   memberId: z.uuid(),
   name: memberName,
+  /** Only sent for the cook or maid: they can be switched between the two. */
+  role: z
+    .string()
+    .optional()
+    .transform((v) => (v ? v : undefined))
+    .pipe(z.enum(["cook", "maid"], "Choose cook or maid").optional()),
   leftOn: z
     .string()
     .optional()

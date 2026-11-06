@@ -1,7 +1,16 @@
 import { z } from "zod";
 
-/** Invite codes are 12 URL-safe characters (see new_invite_code() in SQL). */
-const INVITE_CODE = /^[A-Za-z0-9_-]{8,32}$/;
+/** Flat codes: 6 characters without look-alikes (see new_flat_code() in SQL). */
+const FLAT_CODE = /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/;
+
+/** "k7m-4qx " → "K7M4QX"; null if it can't be a flat code. */
+export function normalizeFlatCode(input: string): string | null {
+  const code = input.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return FLAT_CODE.test(code) ? code : null;
+}
+
+/** "K7M4QX" → "K7M-4QX", easier to read out and type. */
+export const formatFlatCode = (code: string) => `${code.slice(0, 3)}-${code.slice(3)}`;
 
 const name = (max: number, label: string) =>
   z
@@ -16,11 +25,17 @@ export const CreateFlatInput = z.object({
 });
 export type CreateFlatInput = z.infer<typeof CreateFlatInput>;
 
-export const JoinFlatInput = z.object({
-  code: z.string().trim().regex(INVITE_CODE, "This invite link is not valid"),
+export const JoinRequestInput = z.object({
+  code: z
+    .string()
+    .transform((v, ctx) => {
+      const code = normalizeFlatCode(v);
+      if (!code) ctx.addIssue({ code: "custom", message: "Enter the 6-character flat code, e.g. K7M-4QX" });
+      return code ?? "";
+    }),
   memberName: name(40, "your name"),
 });
-export type JoinFlatInput = z.infer<typeof JoinFlatInput>;
+export type JoinRequestInput = z.infer<typeof JoinRequestInput>;
 
 /** First name from the auth profile, else the email's local part. */
 export function defaultMemberName(
@@ -34,14 +49,6 @@ export function defaultMemberName(
   const first = raw.trim().split(/\s+/)[0] ?? "";
   const fallback = email ? email.split("@")[0] : "";
   return (first || fallback).slice(0, 40);
-}
-
-/** Accepts a bare invite code or a full `/join/<code>` link. */
-export function inviteCodeFrom(input: string): string | null {
-  const value = input.trim();
-  if (INVITE_CODE.test(value)) return value;
-  const match = value.match(/\/join\/([A-Za-z0-9_-]+)/);
-  return match && INVITE_CODE.test(match[1]) ? match[1] : null;
 }
 
 /** Only same-site absolute paths; anything else goes to Today. */

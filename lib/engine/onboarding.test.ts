@@ -3,9 +3,10 @@ import {
   CreateFlatInput,
   Password,
   Username,
-  JoinFlatInput,
+  JoinRequestInput,
   defaultMemberName,
-  inviteCodeFrom,
+  formatFlatCode,
+  normalizeFlatCode,
   safeNextPath,
 } from "./onboarding";
 
@@ -25,20 +26,23 @@ describe("defaultMemberName", () => {
   });
 });
 
-describe("inviteCodeFrom", () => {
-  it("accepts a bare code", () => {
-    expect(inviteCodeFrom("Ab3_x-9QwErT")).toBe("Ab3_x-9QwErT");
+describe("flat codes", () => {
+  it("accepts any case, spaces and dashes", () => {
+    expect(normalizeFlatCode("K7M4QX")).toBe("K7M4QX");
+    expect(normalizeFlatCode(" k7m-4qx ")).toBe("K7M4QX");
+    expect(normalizeFlatCode("k7m 4qx")).toBe("K7M4QX");
   });
 
-  it("extracts the code from a full invite link", () => {
-    expect(inviteCodeFrom("https://tenant.app/join/Ab3_x-9QwErT")).toBe("Ab3_x-9QwErT");
-    expect(inviteCodeFrom("  http://localhost:3000/join/Ab3_x-9QwErT?x=1 ")).toBe("Ab3_x-9QwErT");
+  it("rejects look-alike characters and wrong lengths", () => {
+    expect(normalizeFlatCode("K7M4Q0")).toBeNull(); // zero
+    expect(normalizeFlatCode("K7M4QI")).toBeNull(); // I
+    expect(normalizeFlatCode("K7M4Q")).toBeNull();
+    expect(normalizeFlatCode("K7M4QXX")).toBeNull();
+    expect(normalizeFlatCode("")).toBeNull();
   });
 
-  it("rejects anything else", () => {
-    expect(inviteCodeFrom("")).toBeNull();
-    expect(inviteCodeFrom("not a code!")).toBeNull();
-    expect(inviteCodeFrom("https://tenant.app/settings")).toBeNull();
+  it("shows codes as three and three", () => {
+    expect(formatFlatCode("K7M4QX")).toBe("K7M-4QX");
   });
 });
 
@@ -68,12 +72,12 @@ describe("form schemas", () => {
 
   it("limits name lengths to match the database checks", () => {
     expect(CreateFlatInput.safeParse({ flatName: "x".repeat(61), memberName: "D" }).success).toBe(false);
-    expect(JoinFlatInput.safeParse({ code: "Ab3_x-9QwErT", memberName: "x".repeat(41) }).success).toBe(false);
+    expect(JoinRequestInput.safeParse({ code: "K7M4QX", memberName: "x".repeat(41) }).success).toBe(false);
   });
 
-  it("validates the invite code shape", () => {
-    expect(JoinFlatInput.safeParse({ code: "bad code", memberName: "Priya" }).success).toBe(false);
-    expect(JoinFlatInput.parse({ code: "Ab3_x-9QwErT", memberName: "Priya" }).code).toBe("Ab3_x-9QwErT");
+  it("normalises the flat code in a join request", () => {
+    expect(JoinRequestInput.safeParse({ code: "bad code", memberName: "Priya" }).success).toBe(false);
+    expect(JoinRequestInput.parse({ code: "k7m-4qx", memberName: " Priya " })).toEqual({ code: "K7M4QX", memberName: "Priya" });
   });
 });
 

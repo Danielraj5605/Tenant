@@ -103,6 +103,12 @@ describe("MemberEditInput", () => {
     });
     expect(MemberEditInput.parse({ memberId: id, name: "Arun", leftOn: "2026-12-31" }).leftOn).toBe("2026-12-31");
   });
+
+  it("takes an optional cook/maid role and rejects anything else", () => {
+    expect(MemberEditInput.parse({ memberId: id, name: "Selvi", leftOn: "", role: "cook" }).role).toBe("cook");
+    expect(MemberEditInput.parse({ memberId: id, name: "Selvi", leftOn: "", role: "" }).role).toBeUndefined();
+    expect(MemberEditInput.safeParse({ memberId: id, name: "Selvi", leftOn: "", role: "flatmate" }).success).toBe(false);
+  });
 });
 
 describe("ChoreInput", () => {

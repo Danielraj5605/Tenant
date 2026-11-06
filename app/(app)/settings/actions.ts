@@ -93,16 +93,26 @@ export async function updateMember(_prev: SettingsFormState, form: FormData): Pr
     memberId: form.get("memberId") ?? "",
     name: form.get("name") ?? "",
     leftOn: form.get("leftOn") ?? "",
+    role: form.get("role") ?? "",
   });
   if (!parsed.success) {
     const fe = z.flattenError(parsed.error).fieldErrors;
-    return { fieldErrors: { name: fe.name?.[0], leftOn: fe.leftOn?.[0] } };
+    return { fieldErrors: { name: fe.name?.[0], leftOn: fe.leftOn?.[0], role: fe.role?.[0] } };
   }
 
   const supabase = await createClient();
+  const { data: member } = await supabase
+    .from("members")
+    .select("role")
+    .eq("id", parsed.data.memberId)
+    .eq("flat_id", flat.id)
+    .maybeSingle();
+  if (!member) return { error: "This member isn't in your flat." };
+  // Only the cook and maid can switch roles; flatmates stay flatmates.
+  const role = member.role !== "flatmate" && parsed.data.role ? parsed.data.role : member.role;
   const { error } = await supabase
     .from("members")
-    .update({ name: parsed.data.name, left_on: parsed.data.leftOn })
+    .update({ name: parsed.data.name, left_on: parsed.data.leftOn, role })
     .eq("id", parsed.data.memberId)
     .eq("flat_id", flat.id);
   if (error) {
@@ -113,6 +123,50 @@ export async function updateMember(_prev: SettingsFormState, form: FormData): Pr
 
   revalidatePath("/", "layout");
   redirect("/settings");
+}
+
+/** Admin: accept or decline someone asking to join with the flat code. */
+export async function decideJoinRequest(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
+  const { me, userId } = await requireFlat();
+  if (!me.is_admin) return { error: ADMIN_ONLY };
+  const id = z.uuid().safeParse(form.get("requestId"));
+  const accept = form.get("decision") === "accept";
+  if (!id.success) return { error: "That request wasn't found." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("decide_join_request", {
+    p_user_id: userId,
+    p_request_id: id.data,
+    p_accept: accept,
+  });
+  if (error) {
+    if (error.message.includes("already belong")) return { error: "They joined another flat in the meantime." };
+    if (error.message.includes("already handled")) return { error: "This request was already handled." };
+    return { error: "That didn't work. Try again." };
+  }
+
+  // The request card disappears once handled, so the result shows at the top of Settings.
+  revalidatePath("/", "layout");
+  redirect(`/settings?request=${accept ? "accepted" : "declined"}`);
+}
+
+/**
+ * Admin: remove a member. With history (bills, duties, away days) they are marked
+ * as left from yesterday; without, they're deleted.
+ */
+export async function removeMember(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
+  const { me, userId } = await requireFlat();
+  if (!me.is_admin) return { error: ADMIN_ONLY };
+  const id = z.uuid().safeParse(form.get("memberId"));
+  if (!id.success) return { error: "Pick a member." };
+  if (id.data === me.id) return { error: "You can't remove yourself." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("remove_member", { p_user_id: userId, p_member_id: id.data });
+  if (error || !data) return { error: "They couldn't be removed. Try again." };
+
+  revalidatePath("/", "layout");
+  redirect(`/settings?removed=${data}`);
 }
 
 export async function setMenuOwner(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {

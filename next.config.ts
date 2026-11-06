@@ -12,7 +12,11 @@ const nextConfig: NextConfig = {
   // Lets phones on the home Wi-Fi open the dev server by LAN IP.
   allowedDevOrigins: ["192.168.*.*"],
   async redirects() {
-    return [{ source: "/", destination: "/today", permanent: false }];
+    return [
+      { source: "/", destination: "/today", permanent: false },
+      // Old invite links: joining now uses the flat code and the admin's approval.
+      { source: "/join/:code", destination: "/onboarding", permanent: false },
+    ];
   },
   turbopack: {
     rules: {

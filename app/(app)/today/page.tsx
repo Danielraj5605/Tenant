@@ -12,12 +12,11 @@ import { DutyButton } from "@/components/chore-duty";
 import { InstallCard } from "@/components/install-card";
 import { NoCookCard } from "@/components/no-cook";
 import { MealList, mealsPhrase } from "@/components/meals";
-import { CheckIcon } from "@/components/icons";
 import { formatLongDate, greetingFor, hourIn, todayIn } from "@/lib/engine/dates";
 import { addDays, formatShortDate } from "@/lib/engine/calendar";
 import { awayOn, isPresent, returnDate } from "@/lib/engine/presence";
 import { Avatar, Card } from "@/components/ui";
-import { AlertIcon, ChevronRightIcon } from "@/components/icons";
+import { AlertIcon, CheckIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Today · Tenant" };
 
@@ -32,12 +31,16 @@ export default async function TodayPage() {
   const today = todayIn(flat.timezone, now);
   const horizon = addDays(today, ALERT_DAYS - 1);
   const supabase = await createClient();
-  const [{ members, periods }, { views }, { data: menu }, myShare] = await Promise.all([
+  const [{ members, periods }, { views }, { data: menu }, myShare, { data: requests }] = await Promise.all([
     loadAvailability(flat.id, today, horizon),
     loadChoreWeek(flat.id, today, 1),
     supabase.from("menu_days").select("*").eq("flat_id", flat.id).eq("date", today).maybeSingle(),
     myShareThisMonth(flat.id, monthOf(today), me.id),
+    me.is_admin
+      ? supabase.from("join_requests").select("name").eq("flat_id", flat.id).eq("status", "pending").order("created_at")
+      : Promise.resolve({ data: [] as { name: string }[] }),
   ]);
+  const joinNames = (requests ?? []).map((r) => r.name);
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
   const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, today, periods, m)])) as Record<Meal, number>;
   const { noCook, noCookMeals } = cookStatusOn(members, today, periods);
@@ -123,11 +126,25 @@ export default async function TodayPage() {
               href="/settings"
               className="-mx-2 flex min-h-11 items-center justify-between rounded-xl px-2 font-bold text-accent hover:bg-accent-tint"
             >
-              Invite flatmates
+              Add flatmates
               <ChevronRightIcon size={20} />
             </Link>
           ) : null}
         </Card>
+
+        {joinNames.length ? (
+          <Link
+            href="/settings#requests"
+            className="flex min-h-14 items-center gap-3 rounded-[var(--radius-card)] bg-info-bg px-4 py-3 font-semibold text-info-ink"
+          >
+            <UsersIcon size={20} className="shrink-0" />
+            <span className="flex-1">
+              {joinNames.length === 1 ? `${joinNames[0]} wants to join the flat.` : `${joinNames.length} people want to join the flat.`}{" "}
+              Review
+            </span>
+            <ChevronRightIcon size={20} className="shrink-0" />
+          </Link>
+        ) : null}
 
         {alerts.length ? (
           <section aria-label="Alerts" className="flex flex-col gap-2">
