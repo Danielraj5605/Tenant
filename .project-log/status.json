@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793962269-36f3"
+    "version": "1793964075-13fa"
   },
   "sections": [
     {
@@ -163,8 +163,10 @@
       "title": "Own-data permissions, chores banner, Barani back 20 Nov",
       "status": "done",
       "date": "2026-11-06",
-      "commits": [],
-      "summary": "Each flatmate changes only their own away days (plus the cook's and maid's leave), their own splits and their own duties; the admin can change anyone's. Someone else's away period opens read-only. Server actions and database functions enforce the same rules (lib/engine/permissions.ts). Chores banner now lists only full-day absences. Tapping an away flatmate on Today opens their away period. Barani's away now ends 19 Nov (back 20 Nov). E2E on a production build: 17/17, including a forged request that the server refuses.",
+      "commits": [
+        "9a7bed4"
+      ],
+      "summary": "Each flatmate changes only their own away days (plus the cook's and maid's leave), their own splits and their own duties; the admin can change anyone's. Someone else's away period opens read-only. Server actions and database functions enforce the same rules (lib/engine/permissions.ts). Chores banner now lists only full-day absences. Tapping an away flatmate on Today opens their away period. Barani's away now ends 19 Nov (back 20 Nov). E2E on a production build: 17/17, including a forged request that the server refuses. Re-run on the live site after deploy: 17/17.",
       "screenshots": true
     }
   ],
