@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-06 — Sample data
+
+- New `scripts/seed-sample.ts` (`npm run seed:sample`, `-- --remove` to undo). Shares are computed with the app's own engine. Logins need `SEED_PASSWORD`.
+- Seeded C2 102: 5 flatmates with logins (shared sample password, not logged here), cook Lakshmi, maid Selvi; Barani away 1 Sep – 30 Nov.
+- 12 away periods (incl. part-day and cook/maid leave), 5 chores with 62 duties since 7 Oct, menu 26 Oct – 14 Nov from the user's weekly Mon–Sat menu (piece counts kept, headcounts left to the app), 24 expenses Sep – Nov (Sep and early Oct settled).
+- Checked live at 375/768/1440 as Madan: Today, Calendar, Money, Chores, Menu, Settings load with no errors. `npm run check` passes.
+- Found: the Chores banner calls part-day absences "away" (text only).
+
 ## 2026-11-05 — New address: wecohabit.vercel.app
 
 - Production now at https://wecohabit.vercel.app; NEXT_PUBLIC_SITE_URL updated and redeployed. tenant-plum.vercel.app still works.

@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
   "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
-  "last_updated": "2026-11-05",
-  "last_sync": "2026-11-05",
+  "last_updated": "2026-11-06",
+  "last_sync": "2026-11-06",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793885972-2573"
+    "version": "1793954217-9949"
   },
   "sections": [
     {
@@ -126,6 +126,15 @@
       "commits": [],
       "summary": "Production moved to wecohabit.vercel.app (free Vercel subdomain). Site URL updated and redeployed.",
       "screenshots": false
+    },
+    {
+      "id": "sample-data",
+      "title": "Sample data",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "Filled C2 102 with sample data via npm run seed:sample: Madan, Karthik, Rishab, Kishore and Barani (logins with a shared sample password), cook Lakshmi and maid Selvi. Barani away 1 Sep – 30 Nov. 12 away periods, 5 chores with 62 duties since 7 Oct, 20 menu days (the flat's own Mon–Sat weekly menu, 26 Oct – 14 Nov), 24 expenses Sep–Nov (shares computed by the engine). Checked live at 375/768/1440 signed in as Madan.",
+      "screenshots": true
     }
   ],
   "current_section": null,
@@ -135,22 +144,8 @@
     "summary": "Checklist for each phase's done-when criterion in SPEC §11. Also waiting: the four open questions."
   },
   "changed_files": [
-    "supabase/migrations/20261110000001_away_slots_breakfast.sql",
-    "lib/engine/presence.ts",
-    "lib/engine/menu.ts",
-    "lib/engine/inputs.ts",
-    "app/(app)/calendar/away/away-form.tsx",
-    "app/(app)/calendar/away/actions.ts",
-    "app/(app)/calendar/page.tsx",
-    "app/(app)/menu/page.tsx",
-    "app/(app)/menu/actions.ts",
-    "app/(app)/menu/[date]/*",
-    "app/(app)/today/page.tsx",
-    "components/meals.tsx",
-    "components/away.tsx",
-    "supabase/functions/notify/index.ts",
-    "SPEC.md",
-    "tests"
+    "scripts/seed-sample.ts",
+    "package.json"
   ],
   "test_coverage": [
     {
@@ -244,13 +239,19 @@
     {
       "date": "2026-11-05",
       "text": "Part-day away: slots (morning/afternoon/night) for a single day; they only change meals. Chores and money treat the person as home. Breakfast added to the menu."
+    },
+    {
+      "date": "2026-11-06",
+      "text": "Sample data lives in the live flat (C2 102) because local and production share one Supabase project. Remove it with npm run seed:sample -- --remove (this also clears ALL chores, menu, away periods and expenses in that flat). Danielraj joined_on moved to 1 Aug 2026 so September bills include them."
     }
   ],
   "open_questions": [
     "Should the ledger also show net 'who owes whom' balances (display only), or only each person's share per expense and per month?",
     "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
     "Maid's pay: reduced for leave days like the cook's, or fixed?",
-    "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?"
+    "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?",
+    "Barani's return date was not given; the seed uses 30 Nov (back 1 Dec). Change it?",
+    "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?"
   ],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
@@ -259,7 +260,9 @@
     "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
     "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
     "Bill scanning and push notifications have not been tested on the production site yet.",
-    "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains."
+    "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",
+    "Chores page banner says a member is \"away\" and their turns go to the next person even for part-day absences (e.g. Madan out at night on 6 Nov). The rotation itself is correct; only the banner text is wrong.",
+    "Sample logins use one shared sample password on the live site. Remove or change them before real use."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

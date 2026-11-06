@@ -18,7 +18,8 @@
     "push:keys": "node scripts/make-push-keys.mjs",
     "functions:deploy": "npm run engine:sync && supabase functions deploy daily --no-verify-jwt && supabase functions deploy notify --no-verify-jwt",
     "functions:secrets": "supabase secrets set --env-file supabase/.env.functions",
-    "session:secret": "node -e \"console.log(require('crypto').randomBytes(48).toString('base64url'))\""
+    "session:secret": "node -e \"console.log(require('crypto').randomBytes(48).toString('base64url'))\"",
+    "seed:sample": "esbuild scripts/seed-sample.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/seed-sample.mjs && node node_modules/.cache/seed-sample.mjs"
   },
   "dependencies": {
     "@serwist/next": "^9.5.13",
