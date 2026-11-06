@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hashPassword, verifyPassword } from "./password";
-import { signSession, verifySession } from "./session";
+import { newSessionPayload, shouldRenew, signSession, verifySession } from "./session";
 
 describe("passwords", () => {
   it("verifies the right password and rejects others", async () => {
@@ -39,5 +39,22 @@ describe("sessions", () => {
     expect(await verifySession(await signSession({ uid, exp: 1 }, secret), secret)).toBeNull();
     expect(await verifySession(undefined, secret)).toBeNull();
     expect(await verifySession("garbage", secret)).toBeNull();
+  });
+});
+
+describe("sliding sessions", () => {
+  const t0 = Date.UTC(2026, 10, 6);
+  const day = 24 * 60 * 60 * 1000;
+
+  it("a fresh session lasts 180 days", () => {
+    expect(newSessionPayload("u", t0).exp).toBe(t0 / 1000 + 180 * 24 * 60 * 60);
+  });
+
+  it("is not renewed on the same day", () => {
+    expect(shouldRenew(newSessionPayload("u", t0), t0 + day - 1000)).toBe(false);
+  });
+
+  it("is renewed on a visit more than a day later", () => {
+    expect(shouldRenew(newSessionPayload("u", t0), t0 + day + 1000)).toBe(true);
   });
 });

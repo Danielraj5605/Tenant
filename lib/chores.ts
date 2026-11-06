@@ -26,31 +26,33 @@ export async function loadChoreWeek(
   const supabase = await createClient();
   const end = addDays(today, days - 1);
 
-  const [{ data: chores }, { data: rotationRows }, availability] = await Promise.all([
+  const fetchToday = async () =>
+    (await supabase.from("chore_assignments").select("*").eq("flat_id", flatId).eq("due_date", today)).data ?? [];
+
+  // Everything the week view needs, in one parallel round trip.
+  const [{ data: chores }, { data: rotationRows }, availability, { data: history }, firstTodays] = await Promise.all([
     supabase.from("chores").select("*").eq("flat_id", flatId).order("created_at"),
     supabase.from("chore_rotation").select("*").eq("flat_id", flatId).order("position"),
     loadAvailability(flatId, today, end),
+    supabase
+      .from("chore_assignments")
+      .select("chore_id, member_id, due_date")
+      .eq("flat_id", flatId)
+      .not("member_id", "is", null)
+      .lt("due_date", today)
+      .order("due_date", { ascending: false })
+      .limit(500),
+    fetchToday(),
   ]);
   const list = chores ?? [];
 
   const rotations: Record<string, string[]> = {};
   for (const r of rotationRows ?? []) (rotations[r.chore_id] ??= []).push(r.member_id);
 
-  const { data: history } = await supabase
-    .from("chore_assignments")
-    .select("chore_id, member_id, due_date")
-    .eq("flat_id", flatId)
-    .not("member_id", "is", null)
-    .lt("due_date", today)
-    .order("due_date", { ascending: false })
-    .limit(500);
   const lastAssignees: Record<string, string | null> = {};
   for (const h of history ?? []) if (!(h.chore_id in lastAssignees)) lastAssignees[h.chore_id] = h.member_id;
 
-  const fetchToday = async () =>
-    (await supabase.from("chore_assignments").select("*").eq("flat_id", flatId).eq("due_date", today)).data ?? [];
-
-  let todays = await fetchToday();
+  let todays = firstTodays;
   const missing = planToday({
     date: today,
     chores: list,

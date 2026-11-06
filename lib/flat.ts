@@ -19,27 +19,27 @@ export const getFlatContext = cache(async (): Promise<FlatContext> => {
   if (!userId) redirect("/login");
 
   const supabase = await createClient();
-  const { data: user } = await supabase
-    .from("app_users")
-    .select("id, username, display_name")
-    .eq("id", userId)
-    .maybeSingle();
+  // One round trip: the user and their member row (with its flat) in parallel.
+  const [{ data: user }, { data: row }] = await Promise.all([
+    supabase.from("app_users").select("id, username, display_name").eq("id", userId).maybeSingle(),
+    supabase
+      .from("members")
+      .select("*, flat:flats!members_flat_id_fkey(*)")
+      .eq("user_id", userId)
+      .is("left_on", null)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
+  ]);
   // Account deleted while a cookie was still around.
   if (!user) redirect("/login?error=signed-out");
 
-  const { data: me } = await supabase
-    .from("members")
-    .select("*")
-    .eq("user_id", userId)
-    .is("left_on", null)
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
-
+  let me: Member | null = null;
   let flat: Flat | null = null;
-  if (me) {
-    const { data } = await supabase.from("flats").select("*").eq("id", me.flat_id).single();
-    flat = data;
+  if (row) {
+    const { flat: joined, ...member } = row as Member & { flat: Flat | null };
+    me = member;
+    flat = joined;
   }
 
   return { userId, user, me, flat };

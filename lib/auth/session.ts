@@ -5,7 +5,29 @@
 export type SessionPayload = { uid: string; exp: number };
 
 export const SESSION_COOKIE = "tenant_session";
-export const SESSION_DAYS = 30;
+/** Sessions slide: any visit after a day renews them for this long again. */
+export const SESSION_DAYS = 180;
+const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
+const RENEW_AFTER_SECONDS = 24 * 60 * 60;
+
+export const newSessionPayload = (uid: string, now = Date.now()): SessionPayload => ({
+  uid,
+  exp: Math.floor(now / 1000) + SESSION_SECONDS,
+});
+
+/** True when the session was issued more than a day ago and should be renewed. */
+export const shouldRenew = (s: SessionPayload, now = Date.now()) =>
+  s.exp - Math.floor(now / 1000) < SESSION_SECONDS - RENEW_AFTER_SECONDS;
+
+export function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://"),
+    path: "/",
+    maxAge: SESSION_SECONDS,
+  };
+}
 
 const enc = new TextEncoder();
 const b64url = (bytes: Uint8Array) => Buffer.from(bytes).toString("base64url");

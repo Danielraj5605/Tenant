@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // Reuse a visited tab for 60 s on the phone instead of refetching it. Saving
+    // anything calls revalidatePath, which clears this cache straight away.
+    staleTimes: { dynamic: 60 },
+  },
   // Lets phones on the home Wi-Fi open the dev server by LAN IP.
   allowedDevOrigins: ["192.168.*.*"],
   async redirects() {

@@ -3,7 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { sessionSecret } from "@/lib/supabase/env";
-import { SESSION_COOKIE, SESSION_DAYS, signSession, verifySession } from "./session";
+import { SESSION_COOKIE, newSessionPayload, sessionCookieOptions, signSession, verifySession } from "./session";
 
 /** The signed-in user's id from the session cookie, or null. */
 export async function currentUserId(): Promise<string | null> {
@@ -15,15 +15,8 @@ export async function currentUserId(): Promise<string | null> {
 }
 
 export async function startSession(userId: string) {
-  const exp = Math.floor(Date.now() / 1000) + SESSION_DAYS * 24 * 60 * 60;
-  const token = await signSession({ uid: userId, exp }, sessionSecret());
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http://"),
-    path: "/",
-    maxAge: SESSION_DAYS * 24 * 60 * 60,
-  });
+  const token = await signSession(newSessionPayload(userId), sessionSecret());
+  (await cookies()).set(SESSION_COOKIE, token, sessionCookieOptions());
 }
 
 export async function endSession() {

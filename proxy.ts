@@ -1,5 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
+import {
+  SESSION_COOKIE,
+  newSessionPayload,
+  sessionCookieOptions,
+  shouldRenew,
+  signSession,
+  verifySession,
+} from "@/lib/auth/session";
 import { safeNextPath } from "@/lib/engine/onboarding";
 
 /** Paths reachable without signing in. */
@@ -31,6 +38,11 @@ export async function proxy(request: NextRequest) {
 
   const response = NextResponse.next();
   response.headers.set("Cache-Control", "private, no-store");
+  // Sliding session: keep people signed in for as long as they keep using the app.
+  if (session && shouldRenew(session)) {
+    const token = await signSession(newSessionPayload(session.uid), secret);
+    response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+  }
   return response;
 }
 
