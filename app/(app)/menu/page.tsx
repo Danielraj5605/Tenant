@@ -80,6 +80,12 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
                   </span>
                 </div>
                 <MealList day={day} counts={counts} noCookMeals={noCookMeals} />
+                {!noCook && day && day.plan !== "cook" ? (
+                  // Decided earlier (e.g. while the cook was on leave): still show it.
+                  <p className="w-fit rounded-full bg-info-bg px-3 py-1 text-sm font-bold text-info-ink">
+                    {day.plan === "order_in" ? "Ordering in" : "We’re cooking"}
+                  </p>
+                ) : null}
                 {noCook ? (
                   <NoCookCard
                     date={date}

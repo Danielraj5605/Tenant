@@ -100,7 +100,8 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           </div>
           <ul className="flex flex-col">
             {sorted.map((m) => {
-              const away = awayToday.find((p) => p.member_id === m.id);
+              // Out for a meal or two still counts as home.
+              const away = awayToday.find((p) => p.member_id === m.id && p.full_day);
               const badges = (
                 <span className="flex flex-wrap justify-end gap-1.5">
                   {m.is_admin ? <Badge>Admin</Badge> : null}

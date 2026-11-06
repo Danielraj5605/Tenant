@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import { requireFlat } from "@/lib/flat";
 import { createClient } from "@/lib/supabase/server";
@@ -11,8 +12,8 @@ import { canEditAwayFor, type Actor } from "@/lib/engine/permissions";
 
 const NOT_YOURS = "You can only change your own away days and the cook's or maid's leave. Ask the admin.";
 
-/** May `me` change away days for this member of the flat? */
-async function mayEditFor(me: Actor, flatId: string, memberId: string): Promise<boolean> {
+/** The member, if `me` may change their away days; null otherwise. */
+async function editableMember(me: Actor, flatId: string, memberId: string) {
   const supabase = await createClient();
   const { data: person } = await supabase
     .from("members")
@@ -20,8 +21,10 @@ async function mayEditFor(me: Actor, flatId: string, memberId: string): Promise<
     .eq("id", memberId)
     .eq("flat_id", flatId)
     .maybeSingle();
-  return Boolean(person && canEditAwayFor(me, person));
+  return person && canEditAwayFor(me, person) ? person : null;
 }
+
+const mayEditFor = async (me: Actor, flatId: string, memberId: string) => Boolean(await editableMember(me, flatId, memberId));
 
 /** The member an existing away period belongs to, if it's in this flat. */
 async function periodOwner(flatId: string, id: string): Promise<string | null> {
@@ -84,7 +87,8 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
     slots: v.slots,
     reason: v.reason,
   };
-  if (!(await mayEditFor(me, flat.id, v.memberId))) return { error: NOT_YOURS };
+  const person = await editableMember(me, flat.id, v.memberId);
+  if (!person) return { error: NOT_YOURS };
   const supabase = await createClient();
   if (id.success) {
     const owner = await periodOwner(flat.id, id.data);
@@ -99,9 +103,9 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
       .select("id")
       .single();
     if (error || !data) return { error: "This couldn't be saved. Check your connection and try again." };
-    // New cook or maid leave: push an alert to the flat (SPEC 4.9). The Edge
-    // Function ignores flatmates. A failed alert never blocks saving.
-    await notifyLeave(data.id);
+    // New cook or maid leave: push an alert to the flat (SPEC 4.9), after the
+    // response so saving never waits for it. Flatmates' away days send nothing.
+    if (person.role !== "flatmate") after(() => notifyLeave(data.id));
   }
 
   revalidatePath("/", "layout");

@@ -7,7 +7,7 @@ import { formatINR } from "@/lib/engine/money";
 import { formatMonth, monthOf } from "@/lib/engine/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { MEALS, headcount, slotsPhrase, type Meal } from "@/lib/engine/presence";
-import { cookStatusOn } from "@/lib/engine/menu";
+import { cookStatusOn, weekStart } from "@/lib/engine/menu";
 import { DutyButton } from "@/components/chore-duty";
 import { InstallCard } from "@/components/install-card";
 import { NoCookCard } from "@/components/no-cook";
@@ -23,7 +23,7 @@ export const metadata = { title: "Today · Tenant" };
 /** Days ahead to look for cook and maid leave. */
 const ALERT_DAYS = 7;
 
-type Alert = { key: string; tone: "warn" | "info"; text: string; date: string };
+type Alert = { key: string; tone: "warn" | "info"; text: string; date: string; href: string };
 
 export default async function TodayPage() {
   const { me, flat } = await requireFlat();
@@ -31,16 +31,19 @@ export default async function TodayPage() {
   const today = todayIn(flat.timezone, now);
   const horizon = addDays(today, ALERT_DAYS - 1);
   const supabase = await createClient();
-  const [{ members, periods }, { views }, { data: menu }, myShare, { data: requests }] = await Promise.all([
+  const [{ members, periods }, { views }, { data: menuWeek }, myShare, { data: requests }] = await Promise.all([
     loadAvailability(flat.id, today, horizon),
     loadChoreWeek(flat.id, today, 1),
-    supabase.from("menu_days").select("*").eq("flat_id", flat.id).eq("date", today).maybeSingle(),
+    // Today's meals, and the plan for each day an alert might cover.
+    supabase.from("menu_days").select("*").eq("flat_id", flat.id).gte("date", today).lte("date", horizon),
     myShareThisMonth(flat.id, monthOf(today), me.id),
     me.is_admin
       ? supabase.from("join_requests").select("name").eq("flat_id", flat.id).eq("status", "pending").order("created_at")
       : Promise.resolve({ data: [] as { name: string }[] }),
   ]);
   const joinNames = (requests ?? []).map((r) => r.name);
+  const menu = (menuWeek ?? []).find((d) => d.date === today) ?? null;
+  const planOn = new Map((menuWeek ?? []).map((d) => [d.date, d.plan]));
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
   const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, today, periods, m)])) as Record<Meal, number>;
   const { noCook, noCookMeals } = cookStatusOn(members, today, periods);
@@ -64,15 +67,25 @@ export default async function TodayPage() {
       const date = addDays(today, i);
       const period = awayOn(date, periods).find((p) => p.member_id === staff.id);
       if (!period || (i === 0 && staff.role === "cook")) continue;
+      // Leave of someone who no longer works for the flat doesn't matter.
+      if (staff.joined_on > date || (staff.left_on && staff.left_on < date)) continue;
       const when = i === 0 ? "today" : i === 1 ? "tomorrow" : `on ${formatShortDate(date)}`;
       if (staff.role === "cook") {
         const meals = cookStatusOn(members, date, periods).noCookMeals;
         if (meals.length === 0) continue;
         const forMeals = meals.length === MEALS.length ? "" : ` for ${mealsPhrase(meals)}`;
-        alerts.push({ key: `${staff.id}-${date}`, tone: "warn", date, text: `No cook${forMeals} ${when}. Order in or cook yourselves?` });
+        const plan = planOn.get(date) ?? "cook";
+        // The Order in / We'll cook buttons are on that week's menu.
+        const menuHref = `/menu?w=${weekStart(date)}`;
+        // Once the flat has decided, say what was decided instead of asking again.
+        alerts.push(
+          plan === "cook"
+            ? { key: `${staff.id}-${date}`, tone: "warn", date, href: menuHref, text: `No cook${forMeals} ${when}. Order in or cook yourselves?` }
+            : { key: `${staff.id}-${date}`, tone: "info", date, href: menuHref, text: `No cook${forMeals} ${when}: ${plan === "order_in" ? "ordering in" : "you're cooking"}.` },
+        );
       } else {
         const part = period.full_day ? "" : ` ${slotsPhrase(period.slots ?? [])}`.trimEnd();
-        alerts.push({ key: `${staff.id}-${date}`, tone: "info", date, text: `No maid ${when}${part}. Cleaning is on us.` });
+        alerts.push({ key: `${staff.id}-${date}`, tone: "info", date, href: `/calendar?d=${date}`, text: `No maid ${when}${part}. Cleaning is on us.` });
       }
     }
   }
@@ -169,7 +182,7 @@ export default async function TodayPage() {
             {alerts.map((a) => (
               <Link
                 key={a.key}
-                href={`/calendar?d=${a.date}`}
+                href={a.href}
                 className={
                   a.tone === "warn"
                     ? "flex min-h-14 items-center gap-3 rounded-[var(--radius-card)] bg-warn-bg px-4 py-3 font-semibold text-warn-ink"

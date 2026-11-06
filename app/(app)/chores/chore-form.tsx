@@ -8,9 +8,9 @@ import { saveChore, type ChoreFormState } from "./actions";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const FREQUENCIES: { value: ChoreFrequency; label: string }[] = [
-  { value: "daily", label: "Every day" },
-  { value: "weekly", label: "Once a week" },
-  { value: "custom", label: "Chosen days" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "custom", label: "Some days" },
 ];
 
 export type ChoreFormValues = {
@@ -127,7 +127,7 @@ export function ChoreForm({
         error={state.fieldErrors?.dueTime}
       />
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="mb-1 text-sm font-semibold">Who takes turns, in order</legend>
         <p className="mb-2 text-sm text-muted">Away people are skipped automatically.</p>
         {order.length ? (
@@ -136,7 +136,7 @@ export function ChoreForm({
               <li key={id} className="flex min-h-14 items-center gap-2 border-b border-line px-3 last:border-b-0">
                 <span className="w-5 text-sm font-bold text-muted">{i + 1}</span>
                 <Avatar name={nameOf.get(id) ?? "?"} size={32} />
-                <span className="flex-1 truncate font-semibold">{nameOf.get(id) ?? "Former member"}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold">{nameOf.get(id) ?? "Former member"}</span>
                 <button
                   type="button"
                   onClick={() => move(i, -1)}

@@ -65,7 +65,6 @@ export async function signUp(_prev: LoginState, form: FormData): Promise<LoginSt
   const name = String(form.get("name") ?? "").trim();
   const u = Username.safeParse(form.get("username") ?? "");
   const p = Password.safeParse(form.get("password") ?? "");
-  const next = safeNextPath(String(form.get("next") ?? ""));
   const values = { name, username: String(form.get("username") ?? "") };
   const fieldErrors = {
     name: name ? (name.length > 40 ? "Keep your name under 41 characters" : undefined) : "Enter your name",
@@ -87,7 +86,8 @@ export async function signUp(_prev: LoginState, form: FormData): Promise<LoginSt
   }
 
   await startSession(user.id);
-  redirect(next);
+  // A new account never has a flat yet: go straight to setting one up.
+  redirect("/onboarding");
 }
 
 export async function signOut() {

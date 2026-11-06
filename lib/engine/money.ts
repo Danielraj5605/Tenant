@@ -176,6 +176,25 @@ export function cookPay(ratePaise: number, cook: PresenceMember, month: string, 
   return { daysWorked, days: days.length, totalPaise: ratePaise * daysWorked };
 }
 
+/**
+ * Cook's pay for a month across every cook employed in it, e.g. when one cook
+ * replaces another mid-month: daily rate × all days worked. `days` counts the
+ * days any cook was employed. Null when no cook worked for the flat that month.
+ */
+export function cooksPay(ratePaise: number, members: readonly PresenceMember[], month: string, periods: readonly AwayPeriod[]) {
+  const cooks = members.filter((m) => m.role === "cook");
+  const employed = new Set<string>();
+  let daysWorked = 0;
+  for (const cook of cooks) {
+    const pay = cookPay(ratePaise, cook, month, periods);
+    if (pay.days === 0) continue;
+    daysWorked += pay.daysWorked;
+    for (const d of monthDays(month)) if (cook.joined_on <= d && (!cook.left_on || d <= cook.left_on)) employed.add(d);
+  }
+  if (employed.size === 0) return null;
+  return { daysWorked, days: employed.size, totalPaise: ratePaise * daysWorked };
+}
+
 // ---------------------------------------------------------------- explanations
 
 const andList = (names: string[]) =>

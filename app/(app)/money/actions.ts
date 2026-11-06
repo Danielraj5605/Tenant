@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ExpensePayload } from "@/lib/engine/inputs";
 import { monthOf } from "@/lib/engine/calendar";
 import { isPresent } from "@/lib/engine/presence";
-import { cookPay, ruleNote, shareReasons } from "@/lib/engine/money";
+import { cooksPay, ruleNote, shareReasons } from "@/lib/engine/money";
 
 export type SplitFormState = { error?: string };
 
@@ -39,11 +39,9 @@ export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<
     (m) => m.role === "flatmate" && m.joined_on <= p.date && (!m.left_on || p.date <= m.left_on),
   );
   const awayNames = flatmatesOnDate.filter((m) => !isPresent(m, p.date, away)).map((m) => m.name);
-  const cook = all.find((m) => m.role === "cook");
-  const cookInfo =
-    category.default_rule === "per_day_worked" && cook && p.dailyRatePaise
-      ? { ...cookPay(p.dailyRatePaise, cook, monthOf(p.date), away), ratePaise: p.dailyRatePaise }
-      : undefined;
+  // Every cook employed that month counts (e.g. one replaced another mid-month).
+  const pay = category.default_rule === "per_day_worked" && p.dailyRatePaise ? cooksPay(p.dailyRatePaise, all, monthOf(p.date), away) : null;
+  const cookInfo = pay && p.dailyRatePaise ? { ...pay, ratePaise: p.dailyRatePaise } : undefined;
 
   const note = ruleNote({
     rule: category.default_rule,

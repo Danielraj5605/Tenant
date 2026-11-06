@@ -6,7 +6,7 @@ import { monthOf, formatMonth } from "@/lib/engine/calendar";
 import { isPresent, type AwayPeriod, type PresenceMember } from "@/lib/engine/presence";
 import {
   computeShares,
-  cookPay,
+  cooksPay,
   daysPresentInMonth,
   defaultParticipants,
   formatINR,
@@ -108,9 +108,9 @@ export function SplitForm({
 
   // ---- cook pay helper
   const month = monthOf(date);
-  const cook = members.find((m) => m.role === "cook");
   const ratePaise = parseRupees(rate);
-  const cookInfo = rule === "per_day_worked" && cook ? cookPay(ratePaise ?? 0, cook, month, periods) : null;
+  // Every cook employed that month counts (e.g. one replaced another mid-month).
+  const cookInfo = rule === "per_day_worked" ? cooksPay(ratePaise ?? 0, members, month, periods) : null;
   const weighted = rule === "per_day_worked" && prorate;
 
   // ---- shares

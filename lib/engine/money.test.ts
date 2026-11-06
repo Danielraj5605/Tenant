@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeShares,
   cookPay,
+  cooksPay,
   daysPresentInMonth,
   defaultParticipants,
   formatINR,
@@ -244,5 +245,25 @@ describe("split snapshot (SPEC §5.5)", () => {
     const after: AwayPeriod[] = []; // the away period is deleted later
     expect(defaultParticipants("present_only", members, "2026-11-11", after)).toEqual(["a", "b", "c"]);
     expect(saved).toEqual({ a: 15000, b: 15000 });
+  });
+});
+
+describe("cooksPay", () => {
+  const lakshmi: PresenceMember = { id: "l", role: "cook", joined_on: "2026-08-01", left_on: "2026-11-05" };
+  const mary: PresenceMember = { id: "y", role: "cook", joined_on: "2026-11-06", left_on: null };
+  const flatmate: PresenceMember = { id: "f", role: "flatmate", joined_on: "2026-08-01", left_on: null };
+
+  it("adds up the days of a cook who left and the one who replaced her", () => {
+    // Lakshmi 1–5 Nov (5 days) + Mary 6–30 Nov (25 days), Mary off on 8 Nov.
+    const periods: AwayPeriod[] = [{ member_id: "y", start_date: "2026-11-08", end_date: "2026-11-08", full_day: true }];
+    expect(cooksPay(30000, [lakshmi, mary, flatmate], "2026-11", periods)).toEqual({ daysWorked: 29, days: 30, totalPaise: 870000 });
+  });
+
+  it("ignores a cook who wasn't employed that month", () => {
+    expect(cooksPay(30000, [lakshmi, mary], "2026-10", [])).toEqual({ daysWorked: 31, days: 31, totalPaise: 930000 });
+  });
+
+  it("is null with no cook that month", () => {
+    expect(cooksPay(30000, [flatmate], "2026-11", [])).toBeNull();
   });
 });
