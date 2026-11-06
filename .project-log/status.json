@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793966855-f025"
+    "version": "1793967237-c4f2"
   },
   "sections": [
     {
@@ -194,8 +194,10 @@
       "title": "First-run guidance and Menu at today",
       "status": "done",
       "date": "2026-11-06",
-      "commits": [],
-      "summary": "New \"Get started\" card on Today for the admin of a new flat: add flatmates, add the cook or maid, add a chore, plan this week's meals. Each step ticks itself off from real data and the card disappears when all four are done. Today's menu offers \"Plan today's meals\" to whoever plans. Menu starts at today on the current week, with earlier days folded under \"Earlier this week\"; the admin sees \"You plan meals until you pick a menu owner\" instead of being told to ask the admin. E2E on a production build: 15/15.",
+      "commits": [
+        "fa8027e"
+      ],
+      "summary": "New \"Get started\" card on Today for the admin of a new flat: add flatmates, add the cook or maid, add a chore, plan this week's meals. Each step ticks itself off from real data and the card disappears when all four are done. Today's menu offers \"Plan today's meals\" to whoever plans. Menu starts at today on the current week, with earlier days folded under \"Earlier this week\"; the admin sees \"You plan meals until you pick a menu owner\" instead of being told to ask the admin. E2E on a production build: 15/15. Re-run on the live site: 15/15.",
       "screenshots": true
     }
   ],
