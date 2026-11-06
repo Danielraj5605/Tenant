@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ExpensePayload } from "@/lib/engine/inputs";
 import { monthOf } from "@/lib/engine/calendar";
 import { isPresent } from "@/lib/engine/presence";
-import { cooksPay, ruleNote, shareReasons } from "@/lib/engine/money";
+import { ruleNote, shareReasons, staffPay } from "@/lib/engine/money";
 
 export type SplitFormState = { error?: string };
 
@@ -39,16 +39,18 @@ export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<
     (m) => m.role === "flatmate" && m.joined_on <= p.date && (!m.left_on || p.date <= m.left_on),
   );
   const awayNames = flatmatesOnDate.filter((m) => !isPresent(m, p.date, away)).map((m) => m.name);
-  // Every cook employed that month counts (e.g. one replaced another mid-month).
-  const pay = category.default_rule === "per_day_worked" && p.dailyRatePaise ? cooksPay(p.dailyRatePaise, all, monthOf(p.date), away) : null;
-  const cookInfo = pay && p.dailyRatePaise ? { ...pay, ratePaise: p.dailyRatePaise } : undefined;
+  // Pay by days worked: the cook's or maid's (from the category), counting everyone
+  // in that role employed that month (e.g. one cook replaced another mid-month).
+  const staffRole = category.staff_role ?? "cook";
+  const pay = category.default_rule === "per_day_worked" && p.dailyRatePaise ? staffPay(staffRole, p.dailyRatePaise, all, monthOf(p.date), away) : null;
+  const payInfo = pay && p.dailyRatePaise ? { ...pay, ratePaise: p.dailyRatePaise, role: staffRole } : undefined;
 
   const note = ruleNote({
     rule: category.default_rule,
     awayNames,
     edited: p.shares.some((s) => s.isCustom),
     prorated: category.default_rule === "per_day_worked" && flat.prorate_monthly,
-    cook: cookInfo,
+    pay: payInfo,
   });
 
   const items = p.items.map((i) => ({ ...i }));

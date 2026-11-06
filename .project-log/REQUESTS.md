@@ -7,6 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-06 Maid's pay by days worked: a Maid's pay category that works like the cook's (daily rate × days worked) (small)
 - [x] 2026-11-06 Mary replaces Lakshmi as cook (small)
 - [x] 2026-11-06 Seamless flow: full flow audit of every journey (new user, flatmate, admin) at phone size, then fix in sections (medium)
 - [x] 2026-11-06 Admin and notification gaps: push the admin on a join request, hand admin rights to another flatmate, per-person "usually skips breakfast" (small)

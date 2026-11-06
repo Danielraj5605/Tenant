@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — Maid's pay by days worked
+
+- Migration `20261114000001_maid_pay.sql` (pushed): `expense_categories.staff_role`; Cook's pay marked cook; "Maid's pay" (pay by days worked, maid) added to every flat and to new flats.
+- Engine: `cooksPay` → `staffPay(role, …)`; rule note says "Maid's pay: 28 of 30 days worked at ₹150/day". 2 new tests (162/162).
+- Split form: "The maid worked X of Y days" with the daily-rate helper. Settings rule label: "Pay by days worked".
+- E2E on a production build: 9/9.
+
 ## 2026-11-06 — Admin and notification gaps
 
 - Migration `20261113000001_hand_over_admin_usual_skips.sql` (pushed): `members.usual_skips`, `hand_over_admin` RPC.

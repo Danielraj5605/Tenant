@@ -50,7 +50,15 @@ type MenuDayRow = {
   created_at: string;
 };
 export type SplitRule = "all_members" | "present_only" | "per_day_worked" | "custom";
-type ExpenseCategoryRow = { id: string; flat_id: string; name: string; default_rule: SplitRule; created_at: string };
+type ExpenseCategoryRow = {
+  id: string;
+  flat_id: string;
+  name: string;
+  default_rule: SplitRule;
+  /** Whose days worked a "per_day_worked" split counts. */
+  staff_role: "cook" | "maid" | null;
+  created_at: string;
+};
 type ExpenseRow = {
   id: string;
   flat_id: string;

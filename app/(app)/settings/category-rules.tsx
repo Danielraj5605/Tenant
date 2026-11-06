@@ -7,7 +7,7 @@ import { setCategoryRule } from "@/app/(app)/money/actions";
 const RULES: { value: SplitRule; label: string }[] = [
   { value: "all_members", label: "Everyone, away or not" },
   { value: "present_only", label: "Only people at home" },
-  { value: "per_day_worked", label: "Cook's pay: days worked" },
+  { value: "per_day_worked", label: "Pay by days worked" },
   { value: "custom", label: "Set amounts each time" },
 ];
 

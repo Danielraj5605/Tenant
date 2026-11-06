@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeShares,
   cookPay,
-  cooksPay,
+  staffPay,
   daysPresentInMonth,
   defaultParticipants,
   formatINR,
@@ -210,7 +210,7 @@ describe("explanations", () => {
       "Present-only rule: everyone was home. Some amounts were set by hand",
     );
     expect(
-      ruleNote({ rule: "per_day_worked", awayNames: [], cook: { daysWorked: 29, days: 30, ratePaise: 50000 }, prorated: true }),
+      ruleNote({ rule: "per_day_worked", awayNames: [], pay: { daysWorked: 29, days: 30, ratePaise: 50000 }, prorated: true }),
     ).toBe("Cook's pay: 29 of 30 days worked at ₹500/day, split by days each person was home");
   });
 
@@ -248,7 +248,7 @@ describe("split snapshot (SPEC §5.5)", () => {
   });
 });
 
-describe("cooksPay", () => {
+describe("staffPay", () => {
   const lakshmi: PresenceMember = { id: "l", role: "cook", joined_on: "2026-08-01", left_on: "2026-11-05" };
   const mary: PresenceMember = { id: "y", role: "cook", joined_on: "2026-11-06", left_on: null };
   const flatmate: PresenceMember = { id: "f", role: "flatmate", joined_on: "2026-08-01", left_on: null };
@@ -256,14 +256,34 @@ describe("cooksPay", () => {
   it("adds up the days of a cook who left and the one who replaced her", () => {
     // Lakshmi 1–5 Nov (5 days) + Mary 6–30 Nov (25 days), Mary off on 8 Nov.
     const periods: AwayPeriod[] = [{ member_id: "y", start_date: "2026-11-08", end_date: "2026-11-08", full_day: true }];
-    expect(cooksPay(30000, [lakshmi, mary, flatmate], "2026-11", periods)).toEqual({ daysWorked: 29, days: 30, totalPaise: 870000 });
+    expect(staffPay("cook", 30000, [lakshmi, mary, flatmate], "2026-11", periods)).toEqual({ daysWorked: 29, days: 30, totalPaise: 870000 });
   });
 
   it("ignores a cook who wasn't employed that month", () => {
-    expect(cooksPay(30000, [lakshmi, mary], "2026-10", [])).toEqual({ daysWorked: 31, days: 31, totalPaise: 930000 });
+    expect(staffPay("cook", 30000, [lakshmi, mary], "2026-10", [])).toEqual({ daysWorked: 31, days: 31, totalPaise: 930000 });
   });
 
   it("is null with no cook that month", () => {
-    expect(cooksPay(30000, [flatmate], "2026-11", [])).toBeNull();
+    expect(staffPay("cook", 30000, [flatmate], "2026-11", [])).toBeNull();
+  });
+});
+
+describe("maid's pay", () => {
+  const selvi: PresenceMember = { id: "s", role: "maid", joined_on: "2026-08-01", left_on: null };
+  const cook: PresenceMember = { id: "c", role: "cook", joined_on: "2026-08-01", left_on: null };
+
+  it("counts the maid's days worked, not the cook's", () => {
+    // Selvi off 20–21 Oct; the cook's leave doesn't matter here.
+    const periods: AwayPeriod[] = [
+      { member_id: "s", start_date: "2026-10-20", end_date: "2026-10-21", full_day: true },
+      { member_id: "c", start_date: "2026-10-13", end_date: "2026-10-13", full_day: true },
+    ];
+    expect(staffPay("maid", 15000, [selvi, cook], "2026-10", periods)).toEqual({ daysWorked: 29, days: 31, totalPaise: 435000 });
+  });
+
+  it("explains it as the maid's pay", () => {
+    expect(ruleNote({ rule: "per_day_worked", awayNames: [], pay: { daysWorked: 29, days: 31, ratePaise: 15000, role: "maid" } })).toBe(
+      "Maid's pay: 29 of 31 days worked at ₹150/day, split among those at home",
+    );
   });
 });

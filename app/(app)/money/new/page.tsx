@@ -18,7 +18,7 @@ export default async function NewSplitPage({ searchParams }: PageProps<"/money/n
   const [{ data: members }, { data: periods }, { data: categories }] = await Promise.all([
     supabase.from("members").select("id, name, role, joined_on, left_on").eq("flat_id", flat.id).order("sort_order"),
     supabase.from("away_periods").select("member_id, start_date, end_date, full_day").eq("flat_id", flat.id),
-    supabase.from("expense_categories").select("id, name, default_rule").eq("flat_id", flat.id).order("created_at"),
+    supabase.from("expense_categories").select("id, name, default_rule, staff_role").eq("flat_id", flat.id).order("created_at"),
   ]);
   if (!categories?.length) {
     return <p className="text-muted">No expense categories yet. Ask the admin to apply the latest database update.</p>;

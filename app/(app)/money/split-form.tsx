@@ -6,7 +6,7 @@ import { monthOf, formatMonth } from "@/lib/engine/calendar";
 import { isPresent, type AwayPeriod, type PresenceMember } from "@/lib/engine/presence";
 import {
   computeShares,
-  cooksPay,
+  staffPay,
   daysPresentInMonth,
   defaultParticipants,
   formatINR,
@@ -23,7 +23,7 @@ import { PlusIcon } from "@/components/icons";
 import { saveSplit, type SplitFormState } from "./actions";
 
 export type SplitMember = PresenceMember & { name: string };
-export type SplitCategory = { id: string; name: string; default_rule: SplitRule };
+export type SplitCategory = { id: string; name: string; default_rule: SplitRule; staff_role: "cook" | "maid" | null };
 
 type ItemDraft = { key: number; name: string; amount: string; kind: ItemKind; included: boolean; personal: string };
 
@@ -109,8 +109,10 @@ export function SplitForm({
   // ---- cook pay helper
   const month = monthOf(date);
   const ratePaise = parseRupees(rate);
-  // Every cook employed that month counts (e.g. one replaced another mid-month).
-  const cookInfo = rule === "per_day_worked" ? cooksPay(ratePaise ?? 0, members, month, periods) : null;
+  // The cook's or maid's days worked (from the category); everyone in that role
+  // employed that month counts (e.g. one cook replaced another mid-month).
+  const staffRole = categories.find((c) => c.id === categoryId)?.staff_role ?? "cook";
+  const cookInfo = rule === "per_day_worked" ? staffPay(staffRole, ratePaise ?? 0, members, month, periods) : null;
   const weighted = rule === "per_day_worked" && prorate;
 
   // ---- shares
@@ -211,7 +213,7 @@ export function SplitForm({
       {cookInfo ? (
         <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-accent-tint p-4 text-accent-dark">
           <p className="font-bold">
-            The cook worked {cookInfo.daysWorked} of {cookInfo.days} days in {formatMonth(month)}.
+            The {staffRole} worked {cookInfo.daysWorked} of {cookInfo.days} days in {formatMonth(month)}.
           </p>
           <p className="text-sm">Full days off are unpaid; part days are paid in full.</p>
           <div className="flex items-end gap-2">

@@ -326,7 +326,7 @@ async function seed() {
     const awayNames = flatmates
       .filter((m) => m.joined_on <= e.date && !isPresent(m, e.date, away))
       .map((m) => m.name);
-    const note = ruleNote({ rule, awayNames, prorated: weighted, cook: cookInfo });
+    const note = ruleNote({ rule, awayNames, prorated: weighted, pay: cookInfo });
     const reasons = shareReasons({ items, shares, locked: new Set(), personalTotals });
 
     const id = must(

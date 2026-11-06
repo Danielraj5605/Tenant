@@ -176,20 +176,30 @@ export function cookPay(ratePaise: number, cook: PresenceMember, month: string, 
   return { daysWorked, days: days.length, totalPaise: ratePaise * daysWorked };
 }
 
+export type StaffRole = "cook" | "maid";
+
 /**
- * Cook's pay for a month across every cook employed in it, e.g. when one cook
- * replaces another mid-month: daily rate × all days worked. `days` counts the
- * days any cook was employed. Null when no cook worked for the flat that month.
+ * The cook's or maid's pay for a month across everyone in that role employed in
+ * it, e.g. when one cook replaces another mid-month: daily rate × all days worked.
+ * `days` counts the days anyone in the role was employed. Full days off are
+ * unpaid; part days are paid. Null when nobody in the role worked that month.
  */
-export function cooksPay(ratePaise: number, members: readonly PresenceMember[], month: string, periods: readonly AwayPeriod[]) {
-  const cooks = members.filter((m) => m.role === "cook");
+export function staffPay(
+  role: StaffRole,
+  ratePaise: number,
+  members: readonly PresenceMember[],
+  month: string,
+  periods: readonly AwayPeriod[],
+) {
+  const staff = members.filter((m) => m.role === role);
   const employed = new Set<string>();
   let daysWorked = 0;
-  for (const cook of cooks) {
-    const pay = cookPay(ratePaise, cook, month, periods);
+  for (const person of staff) {
+    // cookPay only looks at employment and full days off, so it fits the maid too.
+    const pay = cookPay(ratePaise, person, month, periods);
     if (pay.days === 0) continue;
     daysWorked += pay.daysWorked;
-    for (const d of monthDays(month)) if (cook.joined_on <= d && (!cook.left_on || d <= cook.left_on)) employed.add(d);
+    for (const d of monthDays(month)) if (person.joined_on <= d && (!person.left_on || d <= person.left_on)) employed.add(d);
   }
   if (employed.size === 0) return null;
   return { daysWorked, days: employed.size, totalPaise: ratePaise * daysWorked };
@@ -205,9 +215,10 @@ export function ruleNote(input: {
   awayNames: string[];
   edited?: boolean;
   prorated?: boolean;
-  cook?: { daysWorked: number; days: number; ratePaise: number };
+  /** Pay by days worked: whose pay (cook by default) and the numbers. */
+  pay?: { daysWorked: number; days: number; ratePaise: number; role?: StaffRole };
 }): string {
-  const { rule, awayNames, edited, prorated, cook } = input;
+  const { rule, awayNames, edited, prorated, pay } = input;
   let note: string;
   switch (rule) {
     case "custom":
@@ -223,9 +234,10 @@ export function ruleNote(input: {
         : "Present-only rule: everyone was home";
       break;
     case "per_day_worked":
-      note = cook
-        ? `Cook's pay: ${cook.daysWorked} of ${cook.days} days worked at ${formatINR(cook.ratePaise)}/day`
-        : "Cook's pay";
+      {
+        const label = pay?.role === "maid" ? "Maid's pay" : "Cook's pay";
+        note = pay ? `${label}: ${pay.daysWorked} of ${pay.days} days worked at ${formatINR(pay.ratePaise)}/day` : label;
+      }
       note += prorated ? ", split by days each person was home" : ", split among those at home";
       break;
   }

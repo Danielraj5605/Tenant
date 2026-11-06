@@ -210,6 +210,15 @@
       ],
       "summary": "The admin gets a push when someone asks to join (notify Edge Function, sent after the response). The admin can hand admin rights to another current flatmate (hand_over_admin, one transaction). \"My meals\" in Settings: each person picks meals they usually skip; meal headcounts leave them out. Found and fixed: the live Edge Functions had never started because their secrets were never uploaded, so no push had ever been sent and the daily job failed; secrets uploaded, both functions now start. E2E on a production build: 12/12. Re-run on the live site: 12/12.",
       "screenshots": true
+    },
+    {
+      "id": "maid-pay",
+      "title": "Maid's pay by days worked",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "Every flat now has a \"Maid's pay\" category that works like the cook's: daily rate × days worked (full days off unpaid, part days paid), split by days each person was home. Categories carry a staff role (cook or maid); pay counts everyone in that role employed that month. The rule label in Settings is now \"Pay by days worked\". E2E on a production build: 9/9.",
+      "screenshots": true
     }
   ],
   "current_section": null,
@@ -219,14 +228,16 @@
     "summary": "Use the app for a week; turn on reminders on a phone; check the deferred items (who owes whom, per-meal menu plan)."
   },
   "changed_files": [
-    "supabase/migrations/20261113000001_hand_over_admin_usual_skips.sql",
-    "supabase/functions/notify/index.ts",
-    "supabase/functions/_shared/engine/presence.ts",
-    "lib/engine/presence.ts",
-    "lib/engine/presence.test.ts",
+    "supabase/migrations/20261114000001_maid_pay.sql",
+    "lib/engine/money.ts",
+    "lib/engine/money.test.ts",
     "lib/supabase/types.ts",
-    "app/onboarding/actions.ts",
-    "app/(app)/settings/*"
+    "app/(app)/money/actions.ts",
+    "app/(app)/money/split-form.tsx",
+    "app/(app)/money/new/page.tsx",
+    "app/(app)/money/scan/page.tsx",
+    "app/(app)/settings/category-rules.tsx",
+    "scripts/seed-sample.ts"
   ],
   "test_coverage": [
     {
@@ -352,12 +363,15 @@
     {
       "date": "2026-11-06",
       "text": "Usual skips are per person (breakfast/lunch/dinner), set by each person for themselves; only meal headcounts use them. Admin hand-over is one transaction: the new admin gains, the old one loses admin."
+    },
+    {
+      "date": "2026-11-06",
+      "text": "Maid's pay is cut for full days off, like the cook's (user's choice). expense_categories.staff_role says whose days a pay-by-days split counts."
     }
   ],
   "open_questions": [
     "Should the ledger also show net 'who owes whom' balances (display only), or only each person's share per expense and per month?",
     "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
-    "Maid's pay: reduced for leave days like the cook's, or fixed?",
     "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?"
   ],
   "known_issues": [
