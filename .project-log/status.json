@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793973366-49e5"
+    "version": "1793973989-da9f"
   },
   "sections": [
     {
@@ -216,8 +216,10 @@
       "title": "Maid's pay by days worked",
       "status": "done",
       "date": "2026-11-06",
-      "commits": [],
-      "summary": "Every flat now has a \"Maid's pay\" category that works like the cook's: daily rate × days worked (full days off unpaid, part days paid), split by days each person was home. Categories carry a staff role (cook or maid); pay counts everyone in that role employed that month. The rule label in Settings is now \"Pay by days worked\". E2E on a production build: 9/9.",
+      "commits": [
+        "ebaa0c3"
+      ],
+      "summary": "Every flat now has a \"Maid's pay\" category that works like the cook's: daily rate × days worked (full days off unpaid, part days paid), split by days each person was home. Categories carry a staff role (cook or maid); pay counts everyone in that role employed that month. The rule label in Settings is now \"Pay by days worked\". E2E on a production build: 9/9. Re-run on the live site: 9/9.",
       "screenshots": true
     }
   ],
