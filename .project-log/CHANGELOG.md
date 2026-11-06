@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 — First-run guidance and Menu at today
+
+- New `components/get-started.tsx`: admin checklist on Today (flatmates, cook/maid, a chore, this week's meals), ticks from real data, hides when done. Replaces the old "Add flatmates" link in Who's home.
+- Today's menu: "Plan today's meals" for the menu owner (or the admin when there is none) until something is planned.
+- Menu: on the current week, earlier days fold under "Earlier this week (N days)" and Today is the first card. Admin's note: "You plan meals until you pick a menu owner in Settings."
+- E2E on a production build: 15/15. 158/158 unit tests.
+
 ## 2026-11-06 — Flow fixes from the audit
 
 - #1 Sign-up redirects straight to /onboarding; new `app/error.tsx` (app-styled, one auto-retry per 15 s, Try again / Go to Today).

@@ -188,26 +188,28 @@
       ],
       "summary": "Sign-up goes straight to onboarding (no detour through Today) and a branded error page with one automatic retry replaces Next's bare one. Chore form no longer scrolls sideways; frequency options are one line (Daily / Weekly / Some days). Today states a decided no-cook day (\"No cook tomorrow: ordering in\") and cook alerts open that week's menu; Menu shows \"Ordering in\" on decided days. Away saves no longer wait for the leave alert (sent after the response, staff only): ~0.7–1.2 s instead of ~3.7 s. A part-day absence no longer shows as away in Settings. Cook's pay counts every cook employed that month (Lakshmi → Mary). Lakshmi marked as left on 5 Nov; Mary is the cook. E2E on a production build: 12 checks pass. Re-run on the live site after deploy: same 12 pass.",
       "screenshots": true
+    },
+    {
+      "id": "first-run-menu",
+      "title": "First-run guidance and Menu at today",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "New \"Get started\" card on Today for the admin of a new flat: add flatmates, add the cook or maid, add a chore, plan this week's meals. Each step ticks itself off from real data and the card disappears when all four are done. Today's menu offers \"Plan today's meals\" to whoever plans. Menu starts at today on the current week, with earlier days folded under \"Earlier this week\"; the admin sees \"You plan meals until you pick a menu owner\" instead of being told to ask the admin. E2E on a production build: 15/15.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "first-run-menu",
-    "title": "First-run guidance and Menu opening at today",
-    "summary": "Audit #4 and #5: next steps on a new flat's Today, tappable \"Not planned\" meals, Menu starts at today, no menu-owner nag for the admin."
+    "id": "admin-gaps",
+    "title": "Admin and notification gaps",
+    "summary": "Push the admin on a join request, hand admin rights to another flatmate, per-person \"usually skips breakfast\"."
   },
   "changed_files": [
-    "app/error.tsx",
-    "app/login/actions.ts",
-    "app/(app)/chores/chore-form.tsx",
+    "components/get-started.tsx",
     "app/(app)/today/page.tsx",
     "app/(app)/menu/page.tsx",
-    "app/(app)/calendar/away/actions.ts",
-    "app/(app)/settings/page.tsx",
-    "app/(app)/money/actions.ts",
-    "app/(app)/money/split-form.tsx",
-    "lib/engine/money.ts",
-    "lib/engine/money.test.ts"
+    "app/(app)/settings/page.tsx"
   ],
   "test_coverage": [
     {
@@ -353,8 +355,6 @@
     "The admin gets no push notification for a join request; it shows on Today and in Settings only.",
     "Admin rights can't be handed to another flatmate yet, and the admin can't remove themselves.",
     "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
-    "Audit #4: a new flat's Today has no next steps; \"Not planned\" meals aren't tappable.",
-    "Audit #5: Menu opens on Monday (today far down); the admin is told to pick a menu owner although they can already plan.",
     "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work."
   ],

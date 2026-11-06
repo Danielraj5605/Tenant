@@ -12,6 +12,7 @@ import { DutyButton } from "@/components/chore-duty";
 import { InstallCard } from "@/components/install-card";
 import { NoCookCard } from "@/components/no-cook";
 import { MealList, mealsPhrase } from "@/components/meals";
+import { GetStarted } from "@/components/get-started";
 import { formatLongDate, greetingFor, hourIn, todayIn } from "@/lib/engine/dates";
 import { addDays, formatShortDate } from "@/lib/engine/calendar";
 import { awayOn, isPresent, returnDate } from "@/lib/engine/presence";
@@ -44,6 +45,8 @@ export default async function TodayPage() {
   const joinNames = (requests ?? []).map((r) => r.name);
   const menu = (menuWeek ?? []).find((d) => d.date === today) ?? null;
   const planOn = new Map((menuWeek ?? []).map((d) => [d.date, d.plan]));
+  const hasDishes = (d: { breakfast: string | null; lunch: string | null; dinner: string | null }) => Boolean(d.breakfast || d.lunch || d.dinner);
+  const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
   const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, today, periods, m)])) as Record<Meal, number>;
   const { noCook, noCookMeals } = cookStatusOn(members, today, periods);
@@ -59,6 +62,17 @@ export default async function TodayPage() {
       const period = awayToday.find((p) => p.member_id === m.id);
       return { member: m, back: period ? returnDate(period) : null, periodId: period?.id ?? null };
     });
+
+  // First-run checklist for the admin; each step ticks itself off from real data.
+  const employedToday = (m: { joined_on: string; left_on: string | null }) => m.joined_on <= today && (!m.left_on || m.left_on >= today);
+  const setupSteps = me.is_admin
+    ? [
+        { key: "flatmates", label: "Add your flatmates", hint: "Share the flat code; you accept each request.", href: "/settings#add-flatmate", done: members.filter((m) => m.role === "flatmate" && employedToday(m)).length >= 2 },
+        { key: "staff", label: "Add the cook or maid", hint: "Meals and leave alerts follow them.", href: "/settings#add-staff", done: members.some((m) => m.role !== "flatmate" && employedToday(m)) },
+        { key: "chores", label: "Add a chore", hint: "Trash, kitchen, water cans: turns rotate by themselves.", href: "/chores/new", done: views.length > 0 },
+        { key: "menu", label: "Plan this week's meals", hint: "Everyone sees what's cooking and who's eating.", href: "/menu", done: (menuWeek ?? []).some(hasDishes) },
+      ]
+    : [];
 
   // One alert per staff member per day of leave in the next week.
   const alerts: Alert[] = [];
@@ -110,6 +124,7 @@ export default async function TodayPage() {
 
       <div className="flex flex-col gap-4">
         <InstallCard />
+        <GetStarted steps={setupSteps} />
         <Card className="flex flex-col gap-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-title font-bold">Who&rsquo;s home</h2>
@@ -152,15 +167,7 @@ export default async function TodayPage() {
               );
             })}
           </ul>
-          {flatmates.length < 2 && me.is_admin ? (
-            <Link
-              href="/settings"
-              className="-mx-2 flex min-h-11 items-center justify-between rounded-xl px-2 font-bold text-accent hover:bg-accent-tint"
-            >
-              Add flatmates
-              <ChevronRightIcon size={20} />
-            </Link>
-          ) : null}
+          {/* Adding flatmates is a step in Get started for the admin. */}
         </Card>
 
         {joinNames.length ? (
@@ -233,6 +240,15 @@ export default async function TodayPage() {
               plan={menu?.plan ?? "cook"}
               label={noCookMeals.length === MEALS.length ? "today" : `for ${mealsPhrase(noCookMeals)} today`}
             />
+          ) : null}
+          {canPlan && !(menu && hasDishes(menu)) ? (
+            <Link
+              href={`/menu/${today}`}
+              className="-mx-2 inline-flex min-h-11 w-fit items-center gap-1 rounded-full px-3 text-sm font-bold text-accent hover:bg-accent-tint"
+            >
+              Plan today&rsquo;s meals
+              <ChevronRightIcon size={16} />
+            </Link>
           ) : null}
         </Card>
 

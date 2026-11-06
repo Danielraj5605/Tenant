@@ -30,35 +30,11 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
   const owner = members.find((m) => m.id === flat.menu_owner_id);
   const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
 
-  return (
-    <>
-      <header className="mb-5 flex flex-col gap-1">
-        <h1 className="text-display font-extrabold">Menu</h1>
-        <p className="font-medium text-muted">
-          {owner ? `Planned by ${owner.id === me.id ? "you" : owner.name}` : "No menu owner yet. The admin can pick one in Settings."}
-        </p>
-      </header>
+  // On the current week, start at today: earlier days are folded away.
+  const earlier = dates.filter((d) => d < today && monday <= today && today <= sunday);
+  const upcoming = dates.filter((d) => !earlier.includes(d));
 
-      <div className="mb-4 flex items-center justify-between">
-        <Link
-          href={`/menu?w=${addDays(monday, -7)}`}
-          aria-label="Previous week"
-          className="flex size-11 items-center justify-center rounded-full hover:bg-surface"
-        >
-          <ChevronLeftIcon size={22} />
-        </Link>
-        <h2 className="font-bold">{formatRange(monday, sunday)}</h2>
-        <Link
-          href={`/menu?w=${addDays(monday, 7)}`}
-          aria-label="Next week"
-          className="flex size-11 items-center justify-center rounded-full hover:bg-surface"
-        >
-          <ChevronRightIcon size={22} />
-        </Link>
-      </div>
-
-      <ul className="flex flex-col gap-3">
-        {dates.map((date) => {
+  const dayCard = (date: string) => {
           const day = byDate.get(date);
           const home = headcount(members, date, periods);
           const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, date, periods, m)])) as Record<Meal, number>;
@@ -104,7 +80,52 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
               </Card>
             </li>
           );
-        })}
+};
+
+  return (
+    <>
+      <header className="mb-5 flex flex-col gap-1">
+        <h1 className="text-display font-extrabold">Menu</h1>
+        <p className="font-medium text-muted">
+          {owner
+            ? `Planned by ${owner.id === me.id ? "you" : owner.name}`
+            : me.is_admin
+              ? "You plan meals until you pick a menu owner in Settings."
+              : "No menu owner yet. The admin can pick one in Settings."}
+        </p>
+      </header>
+
+      <div className="mb-4 flex items-center justify-between">
+        <Link
+          href={`/menu?w=${addDays(monday, -7)}`}
+          aria-label="Previous week"
+          className="flex size-11 items-center justify-center rounded-full hover:bg-surface"
+        >
+          <ChevronLeftIcon size={22} />
+        </Link>
+        <h2 className="font-bold">{formatRange(monday, sunday)}</h2>
+        <Link
+          href={`/menu?w=${addDays(monday, 7)}`}
+          aria-label="Next week"
+          className="flex size-11 items-center justify-center rounded-full hover:bg-surface"
+        >
+          <ChevronRightIcon size={22} />
+        </Link>
+      </div>
+
+      <ul className="flex flex-col gap-3">
+        {earlier.length ? (
+          <li>
+            <details className="group rounded-[var(--radius-card)] bg-surface/60">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between rounded-[var(--radius-card)] px-5 font-semibold text-muted hover:text-ink">
+                Earlier this week ({earlier.length} {earlier.length === 1 ? "day" : "days"})
+                <ChevronRightIcon size={20} className="transition-transform group-open:rotate-90" />
+              </summary>
+              <ul className="flex flex-col gap-3 pt-1">{earlier.map(dayCard)}</ul>
+            </details>
+          </li>
+        ) : null}
+        {upcoming.map(dayCard)}
       </ul>
     </>
   );

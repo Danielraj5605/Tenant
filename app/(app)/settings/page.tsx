@@ -150,7 +150,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           <>
             <Card className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <h2 className="text-title font-bold">Add a flatmate</h2>
+                <h2 id="add-flatmate" className="scroll-mt-6 text-title font-bold">Add a flatmate</h2>
                 <p className="text-sm text-muted">
                   They sign up at {siteUrl.replace(/^https?:\/\//, "")} and enter this code. You&rsquo;ll see their
                   request here to accept or decline.
@@ -161,7 +161,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
 
             <Card className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <h2 className="text-title font-bold">Add the cook or maid</h2>
+                <h2 id="add-staff" className="scroll-mt-6 text-title font-bold">Add the cook or maid</h2>
                 <p className="text-sm text-muted">
                   They don&rsquo;t sign in. Any flatmate can mark their leave on the calendar.
                 </p>
