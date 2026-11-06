@@ -177,28 +177,35 @@
       "commits": [],
       "summary": "Walked every journey on the live site at 375 px: a new person (sign up, create flat, every empty tab, add chore, plan menu, add split, scan page, mark away) and an existing flatmate (Madan: all tabs, day view, rotation, menu day, bills, settings). Found 8 issues, ranked in open questions / next sections. Screenshots at 375 px only (this was an audit, not a UI change).",
       "screenshots": true
+    },
+    {
+      "id": "flow-fixes",
+      "title": "Flow fixes from the audit",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "Sign-up goes straight to onboarding (no detour through Today) and a branded error page with one automatic retry replaces Next's bare one. Chore form no longer scrolls sideways; frequency options are one line (Daily / Weekly / Some days). Today states a decided no-cook day (\"No cook tomorrow: ordering in\") and cook alerts open that week's menu; Menu shows \"Ordering in\" on decided days. Away saves no longer wait for the leave alert (sent after the response, staff only): ~0.7–1.2 s instead of ~3.7 s. A part-day absence no longer shows as away in Settings. Cook's pay counts every cook employed that month (Lakshmi → Mary). Lakshmi marked as left on 5 Nov; Mary is the cook. E2E on a production build: 12 checks pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "flow-fixes",
-    "title": "Flow fixes from the audit",
-    "summary": "Sign-up error and detour, chore form overflow, cook-leave question already answered, away save speed, part-day avatars, chore option wrapping; then first-run guidance and menu opening at today."
+    "id": "first-run-menu",
+    "title": "First-run guidance and Menu opening at today",
+    "summary": "Audit #4 and #5: next steps on a new flat's Today, tappable \"Not planned\" meals, Menu starts at today, no menu-owner nag for the admin."
   },
   "changed_files": [
-    "lib/engine/permissions.ts",
-    "lib/engine/permissions.test.ts",
-    "supabase/migrations/20261112000001_admin_overrides.sql",
-    "app/(app)/calendar/away/*",
-    "app/(app)/calendar/page.tsx",
-    "components/away.tsx",
-    "components/chore-duty.tsx",
-    "app/(app)/chores/page.tsx",
-    "app/(app)/money/[id]/page.tsx",
-    "app/(app)/money/new/page.tsx",
-    "app/(app)/money/actions.ts",
+    "app/error.tsx",
+    "app/login/actions.ts",
+    "app/(app)/chores/chore-form.tsx",
     "app/(app)/today/page.tsx",
-    "scripts/seed-sample.ts"
+    "app/(app)/menu/page.tsx",
+    "app/(app)/calendar/away/actions.ts",
+    "app/(app)/settings/page.tsx",
+    "app/(app)/money/actions.ts",
+    "app/(app)/money/split-form.tsx",
+    "lib/engine/money.ts",
+    "lib/engine/money.test.ts"
   ],
   "test_coverage": [
     {
@@ -316,6 +323,10 @@
     {
       "date": "2026-11-06",
       "text": "Own-data permissions: away days (own + cook/maid leave), splits (creator) and duties (person on duty); the admin can change anyone's. Chores themselves (add/edit/delete) are still open to every flatmate."
+    },
+    {
+      "date": "2026-11-06",
+      "text": "Mary replaces Lakshmi as cook from 6 Nov (Lakshmi left 5 Nov). Cook's pay adds up days worked across every cook employed in the month."
     }
   ],
   "open_questions": [
@@ -323,8 +334,7 @@
     "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
     "Maid's pay: reduced for leave days like the cook's, or fixed?",
     "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?",
-    "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?",
-    "The flat has two cooks (Lakshmi and Mary). Cook's pay counts only the first. Is Mary a second cook, a replacement, or a mistake?"
+    "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?"
   ],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
@@ -341,14 +351,10 @@
     "The admin gets no push notification for a join request; it shows on Today and in Settings only.",
     "Admin rights can't be handed to another flatmate yet, and the admin can't remove themselves.",
     "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
-    "Audit #1: once, right after sign-up, Next's bare \"This page couldn't load\" showed (network error on /onboarding); not reproducible in 8 retries. Sign-up also detours via /today.",
-    "Audit #2: Add/Edit chore form overflows sideways at 375 px (rotation row).",
-    "Audit #3: Today still asks \"Order in or cook yourselves?\" when the day's plan is already set; the Menu card shows \"Not planned\" instead of the plan.",
     "Audit #4: a new flat's Today has no next steps; \"Not planned\" meals aren't tappable.",
     "Audit #5: Menu opens on Monday (today far down); the admin is told to pick a menu owner although they can already plan.",
-    "Audit #6: saving an away day takes ~3.7 s (waits for the leave alert even for flatmates).",
-    "Audit #7: a part-day absence shows the dashed \"away\" avatar in Settings and the Calendar list, while Today counts the person as home.",
-    "Audit #8: chore \"How often\" options wrap to two lines at 375 px."
+    "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
+    "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

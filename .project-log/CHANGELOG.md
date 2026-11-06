@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-06 — Flow fixes from the audit
+
+- #1 Sign-up redirects straight to /onboarding; new `app/error.tsx` (app-styled, one auto-retry per 15 s, Try again / Go to Today).
+- #2 Chore form: rotation fieldset `min-w-0` (fieldsets don't shrink by default); #8 options renamed Daily / Weekly / Some days.
+- #3 Today: cook alerts state the decided plan ("ordering in" / "you're cooking") and open that week's menu; alerts skip staff who have left. Menu shows "Ordering in" / "We're cooking" on decided days.
+- #6 Away save: leave alert sent with `after()` and only for cook/maid. ~3.7 s → ~0.7–1.2 s.
+- #7 Settings: a part-day absence isn't drawn as away.
+- Cook's pay: new `cooksPay` (3 tests) counts every cook employed that month. Lakshmi marked as left 5 Nov; Mary is the cook.
+- E2E on a production build: 12/12 functional checks. 158/158 unit tests.
+
 ## 2026-11-06 — Flow audit
 
 - Walked every journey on the live site at phone size as a new person and as Madan; screenshots in `.project-log/shots/flow-audit/`.
