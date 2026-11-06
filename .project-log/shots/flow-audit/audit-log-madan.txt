@@ -1,0 +1,21 @@
+01-new-landing.png  /login?next=%2Ftoday  3629 ms
+02-new-signup-form.png  /login?next=%2Ftoday
+03-new-after-signup.png  /today  3768 ms
+[new] PAGE ERROR https://wecohabit.vercel.app/onboarding: network error
+[new] FLOW STOPPED: page.fill: Timeout 30000ms exceeded.
+04-madan-after-login.png  /today  2901 ms
+05-madan-today.png  /today
+06-madan-tab-calendar.png  /calendar  1178 ms
+07-madan-tab-chores.png  /chores  1207 ms
+08-madan-tab-menu.png  /menu  1154 ms
+09-madan-tab-money.png  /money  1174 ms
+10-madan-tab-today.png  /today  355 ms
+11-madan-calendar-day.png  /calendar?d=2026-11-06  1208 ms
+12-madan-chores-rotation.png  /chores?tab=rotation  1460 ms
+13-madan-menu-day.png  /menu?w=2026-11-02  1646 ms
+14-madan-money.png  /money  1118 ms
+15-madan-expense-detail.png  /money/42822511-0ddf-4180-8adf-77c531ebfeb2  1154 ms
+16-madan-split-new.png  /money/new  1771 ms
+17-madan-settings.png  /settings  1383 ms
+18-madan-money-september.png  /money?m=2026-09  1198 ms
+cleanup: ok

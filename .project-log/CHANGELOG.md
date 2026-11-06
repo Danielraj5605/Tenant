@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-06 — Flow audit
+
+- Walked every journey on the live site at phone size as a new person and as Madan; screenshots in `.project-log/shots/flow-audit/`.
+- 8 findings, ranked: sign-up error page and detour; chore form overflow; Today asking about a cook day that's already planned; no first-run guidance; Menu opening on Monday; slow away save; part-day avatars; chore options wrapping.
+- No code changed in this section.
+
 ## 2026-11-06 — Own-data permissions, chores banner, Barani back 20 Nov
 
 - New `lib/engine/permissions.ts` (7 tests): away days, splits, duties; admin overrides.

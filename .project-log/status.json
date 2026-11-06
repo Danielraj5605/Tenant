@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793964075-13fa"
+    "version": "1793966029-4433"
   },
   "sections": [
     {
@@ -168,13 +168,22 @@
       ],
       "summary": "Each flatmate changes only their own away days (plus the cook's and maid's leave), their own splits and their own duties; the admin can change anyone's. Someone else's away period opens read-only. Server actions and database functions enforce the same rules (lib/engine/permissions.ts). Chores banner now lists only full-day absences. Tapping an away flatmate on Today opens their away period. Barani's away now ends 19 Nov (back 20 Nov). E2E on a production build: 17/17, including a forged request that the server refuses. Re-run on the live site after deploy: 17/17.",
       "screenshots": true
+    },
+    {
+      "id": "flow-audit",
+      "title": "Flow audit (live site, phone size)",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "Walked every journey on the live site at 375 px: a new person (sign up, create flat, every empty tab, add chore, plan menu, add split, scan page, mark away) and an existing flatmate (Madan: all tabs, day view, rotation, menu day, bills, settings). Found 8 issues, ranked in open questions / next sections. Screenshots at 375 px only (this was an audit, not a UI change).",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "real-world-checks",
-    "title": "Real-world acceptance checks",
-    "summary": "Checklist for each phase's done-when criterion in SPEC §11, plus the open questions."
+    "id": "flow-fixes",
+    "title": "Flow fixes from the audit",
+    "summary": "Sign-up error and detour, chore form overflow, cook-leave question already answered, away save speed, part-day avatars, chore option wrapping; then first-run guidance and menu opening at today."
   },
   "changed_files": [
     "lib/engine/permissions.ts",
@@ -314,7 +323,8 @@
     "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
     "Maid's pay: reduced for leave days like the cook's, or fixed?",
     "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?",
-    "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?"
+    "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?",
+    "The flat has two cooks (Lakshmi and Mary). Cook's pay counts only the first. Is Mary a second cook, a replacement, or a mistake?"
   ],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
@@ -330,7 +340,15 @@
     "If you were signed out on your phone, likely causes were switching between tenant-plum.vercel.app and wecohabit.vercel.app (separate cookies) or the 30-day expiry. Not reproduced on desktop Chromium.",
     "The admin gets no push notification for a join request; it shows on Today and in Settings only.",
     "Admin rights can't be handed to another flatmate yet, and the admin can't remove themselves.",
-    "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data."
+    "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
+    "Audit #1: once, right after sign-up, Next's bare \"This page couldn't load\" showed (network error on /onboarding); not reproducible in 8 retries. Sign-up also detours via /today.",
+    "Audit #2: Add/Edit chore form overflows sideways at 375 px (rotation row).",
+    "Audit #3: Today still asks \"Order in or cook yourselves?\" when the day's plan is already set; the Menu card shows \"Not planned\" instead of the plan.",
+    "Audit #4: a new flat's Today has no next steps; \"Not planned\" meals aren't tappable.",
+    "Audit #5: Menu opens on Monday (today far down); the admin is told to pick a menu owner although they can already plan.",
+    "Audit #6: saving an away day takes ~3.7 s (waits for the leave alert even for flatmates).",
+    "Audit #7: a part-day absence shows the dashed \"away\" avatar in Settings and the Calendar list, while Today counts the person as home.",
+    "Audit #8: chore \"How often\" options wrap to two lines at 375 px."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"
