@@ -157,6 +157,15 @@
       ],
       "summary": "A 6-character flat code (no look-alike characters) replaces the invite link. New people sign up, enter the code and wait; the admin accepts or declines in Settings (with a notice on Today). Admin can rename the cook or maid, switch them between cook and maid, and remove anyone but themselves: with history they are marked as left (bills kept), without history they are deleted. Old /join links go to onboarding. Also fixed: creating a flat bounced back to onboarding since the 60 s tab cache. End-to-end run on a production build: 22/22 checks pass. Re-run against the live site after deploy: 22/22 pass.",
       "screenshots": true
+    },
+    {
+      "id": "permissions",
+      "title": "Own-data permissions, chores banner, Barani back 20 Nov",
+      "status": "done",
+      "date": "2026-11-06",
+      "commits": [],
+      "summary": "Each flatmate changes only their own away days (plus the cook's and maid's leave), their own splits and their own duties; the admin can change anyone's. Someone else's away period opens read-only. Server actions and database functions enforce the same rules (lib/engine/permissions.ts). Chores banner now lists only full-day absences. Tapping an away flatmate on Today opens their away period. Barani's away now ends 19 Nov (back 20 Nov). E2E on a production build: 17/17, including a forged request that the server refuses.",
+      "screenshots": true
     }
   ],
   "current_section": null,
@@ -166,17 +175,19 @@
     "summary": "Checklist for each phase's done-when criterion in SPEC §11, plus the open questions."
   },
   "changed_files": [
-    "supabase/migrations/20261111000001_flat_code_join_requests.sql",
-    "lib/supabase/types.ts",
-    "lib/engine/onboarding.ts",
-    "lib/engine/inputs.ts",
-    "app/onboarding/*",
-    "app/(app)/settings/*",
-    "app/(app)/settings/flat-code.tsx",
+    "lib/engine/permissions.ts",
+    "lib/engine/permissions.test.ts",
+    "supabase/migrations/20261112000001_admin_overrides.sql",
+    "app/(app)/calendar/away/*",
+    "app/(app)/calendar/page.tsx",
+    "components/away.tsx",
+    "components/chore-duty.tsx",
+    "app/(app)/chores/page.tsx",
+    "app/(app)/money/[id]/page.tsx",
+    "app/(app)/money/new/page.tsx",
+    "app/(app)/money/actions.ts",
     "app/(app)/today/page.tsx",
-    "next.config.ts",
-    "app/join (removed)",
-    "tests"
+    "scripts/seed-sample.ts"
   ],
   "test_coverage": [
     {
@@ -290,6 +301,10 @@
     {
       "date": "2026-11-06",
       "text": "Moments that change flat membership (creating a flat, being accepted) use a full page load, so pages cached by the 60 s tab cache are not reused."
+    },
+    {
+      "date": "2026-11-06",
+      "text": "Own-data permissions: away days (own + cook/maid leave), splits (creator) and duties (person on duty); the admin can change anyone's. Chores themselves (add/edit/delete) are still open to every flatmate."
     }
   ],
   "open_questions": [
@@ -297,7 +312,6 @@
     "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
     "Maid's pay: reduced for leave days like the cook's, or fixed?",
     "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?",
-    "Barani's return date was not given; the seed uses 30 Nov (back 1 Dec). Change it?",
     "Your menu lists breakfast for 4 people, but the app counts everyone home (5). If one person always skips breakfast, should that be a setting, or do they mark Morning away?"
   ],
   "known_issues": [
@@ -308,13 +322,13 @@
     "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
     "Bill scanning and push notifications have not been tested on the production site yet.",
     "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",
-    "Chores page banner says a member is \"away\" and their turns go to the next person even for part-day absences (e.g. Madan out at night on 6 Nov). The rotation itself is correct; only the banner text is wrong.",
     "Sample logins use one shared sample password on the live site. Remove or change them before real use.",
     "First tap on a tab still waits for one server trip (~0.35 s). Prefetching signed-in data would need \"use cache: private\" data caching; not done.",
     "A visited tab can show data up to 60 s old when another flatmate changes something (your own saves refresh at once).",
     "If you were signed out on your phone, likely causes were switching between tenant-plum.vercel.app and wecohabit.vercel.app (separate cookies) or the 30-day expiry. Not reproduced on desktop Chromium.",
     "The admin gets no push notification for a join request; it shows on Today and in Settings only.",
-    "Admin rights can't be handed to another flatmate yet, and the admin can't remove themselves."
+    "Admin rights can't be handed to another flatmate yet, and the admin can't remove themselves.",
+    "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

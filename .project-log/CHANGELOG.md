@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-06 — Own-data permissions, chores banner, Barani back 20 Nov
+
+- New `lib/engine/permissions.ts` (7 tests): away days, splits, duties; admin overrides.
+- Away: form offers only people you may mark; someone else's period opens read-only; `saveAway`/`deleteAway` refuse otherwise.
+- Migration `20261112000001_admin_overrides.sql` (pushed): admin may edit, settle and delete any split and mark any duty. Admin sees "Mark done for <name>".
+- Chores banner: only full-day absences (part-day ones only change meals).
+- Today: tapping an away flatmate opens their away period.
+- Barani's away period now ends 19 Nov (back 20 Nov); seed script updated.
+- E2E on a production build: 17/17, including a forged "mark someone else away" request that the server refuses. Test users and flats removed. 155/155 unit tests.
+
 ## 2026-11-06 — Members admin: flat code, join requests, removing members
 
 - Migration `20261111000001_flat_code_join_requests.sql` (pushed): `flats.flat_code`, `join_requests`, RPCs `request_to_join`, `decide_join_request`, `remove_member`. Dropped `join_flat` and `invite_preview`.

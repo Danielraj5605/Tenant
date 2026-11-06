@@ -7,6 +7,9 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-06 Chores banner calls part-day absences "away" (small)
+- [x] 2026-11-06 Barani back 20 Nov: change his away end to 19 Nov; tapping "Back …" on Today opens the edit page (small)
+- [x] 2026-11-06 Own-data permissions: each flatmate edits only their own away days, splits and duties; the admin can edit anyone's (medium)
 - [x] 2026-11-06 Pages load too slowly; make them near-instant (medium)
 - [x] 2026-11-06 Stop asking to sign in every time; keep people signed in (small)
 - [x] 2026-11-06 Members admin (large): admin can edit and remove cook/maid; add/remove flatmates. Decided: flat code instead of invite link, new person sends a join request, admin accepts or declines in Settings; removing marks the person as left and keeps their history (staff with no history can be deleted).
