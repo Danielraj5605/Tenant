@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canManageExpense } from "@/lib/engine/permissions";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { requireFlat } from "@/lib/flat";
@@ -43,7 +44,7 @@ export default async function NewSplitPage({ searchParams }: PageProps<"/money/n
       supabase.from("expense_shares").select("*").eq("expense_id", edit).eq("flat_id", flat.id),
     ]);
     if (!expense) notFound();
-    if (expense.created_by !== me.id || expense.settled) redirect(`/money/${edit}`);
+    if (!canManageExpense(me, expense) || expense.settled) redirect(`/money/${edit}`);
     initial = {
       id: expense.id,
       title: expense.title,

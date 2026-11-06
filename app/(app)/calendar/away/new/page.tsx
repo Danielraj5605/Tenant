@@ -10,13 +10,16 @@ export default async function NewAwayPage({ searchParams }: PageProps<"/calendar
   const { d } = await searchParams;
   const today = todayIn(flat.timezone);
   const date = typeof d === "string" && isIsoDate(d) ? d : today;
-  const members = await awayFormMembers(flat.id);
+  const members = await awayFormMembers(flat.id, me);
 
   return (
     <>
       <header className="mb-6 flex flex-col gap-3">
         <BackToCalendar date={date} />
-        <h1 className="text-display font-extrabold">Mark someone away</h1>
+        <h1 className="text-display font-extrabold">{me.is_admin ? "Mark someone away" : "Mark away"}</h1>
+        {me.is_admin ? null : (
+          <p className="text-muted">You can mark yourself, or the cook&rsquo;s or maid&rsquo;s leave.</p>
+        )}
       </header>
       <AwayForm
         members={members}

@@ -4,9 +4,13 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ChevronLeftIcon } from "@/components/icons";
 import type { AwayFormMember } from "./away-form";
+import { canEditAwayFor, type Actor } from "@/lib/engine/permissions";
 
-/** Current members of the flat, flatmates first, then cook and maid. */
-export async function awayFormMembers(flatId: string): Promise<AwayFormMember[]> {
+/**
+ * Current members of the flat that `me` may mark away (themselves and the cook
+ * and maid; everyone for the admin), flatmates first, then cook and maid.
+ */
+export async function awayFormMembers(flatId: string, me: Actor): Promise<AwayFormMember[]> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("members")
@@ -15,7 +19,7 @@ export async function awayFormMembers(flatId: string): Promise<AwayFormMember[]>
     .is("left_on", null)
     .order("sort_order");
   const order = { flatmate: 0, cook: 1, maid: 2 } as const;
-  return (data ?? []).sort((a, b) => order[a.role] - order[b.role]);
+  return (data ?? []).filter((m) => canEditAwayFor(me, m)).sort((a, b) => order[a.role] - order[b.role]);
 }
 
 export function BackToCalendar({ date }: { date?: string }) {

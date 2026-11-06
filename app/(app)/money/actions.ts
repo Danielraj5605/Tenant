@@ -103,7 +103,7 @@ export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<
   if (error || !id) {
     const msg = error?.message ?? "";
     if (msg.includes("read-only")) return { error: "This split is settled and can't be changed." };
-    if (msg.includes("Only the person")) return { error: "Only the person who created this split can change it." };
+    if (msg.includes("Only the person")) return { error: "Only the person who created this split or the flat admin can change it." };
     if (msg.includes("add up")) return { error: "Shares must add up exactly to the total." };
     return { error: "The split couldn't be saved. Try again." };
   }

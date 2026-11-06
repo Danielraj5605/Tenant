@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canMarkDuty } from "@/lib/engine/permissions";
 import { requireFlat } from "@/lib/flat";
 import { loadChoreWeek } from "@/lib/chores";
 import { todayIn } from "@/lib/engine/dates";
@@ -28,11 +29,12 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
   const { views, members, periods } = await loadChoreWeek(flat.id, today);
   const nameOf = new Map(members.map((m) => [m.id, m.name]));
 
-  // Away banner: anyone in a rotation who is away at some point this week.
+  // Away banner: anyone in a rotation who is away for whole days this week.
+  // Part-day absences only change meals, so their turns don't move.
   const inRotation = new Set(views.flatMap((v) => v.rotation));
   const weekEnd = addDays(today, 6);
   const awayThisWeek = periods.filter(
-    (p) => inRotation.has(p.member_id) && p.start_date <= weekEnd && p.end_date >= today,
+    (p) => p.full_day && inRotation.has(p.member_id) && p.start_date <= weekEnd && p.end_date >= today,
   );
 
   const tabClass = (active: boolean) =>
@@ -136,8 +138,12 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                       </>
                     )}
                   </div>
-                  {mine && duty && duty.status !== "skipped" ? (
-                    <DutyButton assignmentId={duty.id} done={duty.status === "done"} />
+                  {duty && duty.status !== "skipped" && canMarkDuty(me, duty) ? (
+                    <DutyButton
+                      assignmentId={duty.id}
+                      done={duty.status === "done"}
+                      forName={mine ? undefined : nameOf.get(ownerId!)}
+                    />
                   ) : null}
 
                   {upcoming.length ? (

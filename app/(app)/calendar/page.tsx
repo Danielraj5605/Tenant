@@ -15,6 +15,7 @@ import {
 import { MEALS, awayOn, headcount } from "@/lib/engine/presence";
 import type { MemberRole } from "@/lib/supabase/types";
 import { AwayRow, DOT_CLASS, RoleDot, partLabel, type AwayItem } from "@/components/away";
+import { canEditAwayFor } from "@/lib/engine/permissions";
 import { mealsPhrase } from "@/components/meals";
 import { cookStatusOn } from "@/lib/engine/menu";
 import { ScreenHeader } from "@/components/screen";
@@ -27,7 +28,7 @@ const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const ROLE_ORDER: MemberRole[] = ["cook", "maid", "flatmate"];
 
 export default async function CalendarPage({ searchParams }: PageProps<"/calendar">) {
-  const { flat } = await requireFlat();
+  const { flat, me } = await requireFlat();
   const sp = await searchParams;
   const today = todayIn(flat.timezone);
   const rawMonth = typeof sp.m === "string" ? sp.m : "";
@@ -190,7 +191,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
         ) : (
           <ul className="flex flex-col">
             {inMonth.map((item) => (
-              <AwayRow key={item.id} item={item} today={today} />
+              <AwayRow key={item.id} item={item} today={today} editable={canEditAwayFor(me, item.member)} />
             ))}
           </ul>
         )}

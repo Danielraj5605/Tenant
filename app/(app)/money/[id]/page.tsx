@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canManageExpense } from "@/lib/engine/permissions";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { requireFlat } from "@/lib/flat";
@@ -46,7 +47,7 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
     })),
     e.total_paise,
   );
-  const isCreator = e.created_by === me.id;
+  const canManage = canManageExpense(me, e);
   const billUrl = e.bill_image_path
     ? (await supabase.storage.from("bills").createSignedUrl(e.bill_image_path, 60 * 60)).data?.signedUrl
     : null;
@@ -164,9 +165,9 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
           </ul>
         </Card>
 
-        {isCreator && !e.settled ? <ExpenseActions id={e.id} /> : null}
-        {!isCreator && !e.settled ? (
-          <p className="text-sm text-muted">Only {who(e.created_by)} can edit this split.</p>
+        {canManage && !e.settled ? <ExpenseActions id={e.id} /> : null}
+        {!canManage && !e.settled ? (
+          <p className="text-sm text-muted">Only {who(e.created_by)} or the flat admin can edit this split.</p>
         ) : null}
       </div>
     </>

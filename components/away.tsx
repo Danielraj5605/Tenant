@@ -44,8 +44,8 @@ export function partLabel(slots: readonly AwaySlot[] | null | undefined): string
   return names.length === 1 ? `${names[0]} only` : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
-/** One row in "Who's away". Tapping it opens the edit form. */
-export function AwayRow({ item, today }: { item: AwayItem; today: string }) {
+/** One row in "Who's away". Tapping it opens the edit form (or a read-only view). */
+export function AwayRow({ item, today, editable = true }: { item: AwayItem; today: string; editable?: boolean }) {
   const { member } = item;
   const long = isLongAway(item);
   const staff = member.role !== "flatmate";
@@ -64,7 +64,7 @@ export function AwayRow({ item, today }: { item: AwayItem; today: string }) {
       <Link
         href={`/calendar/away/${item.id}`}
         className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-bg"
-        aria-label={`Edit ${member.name}, away ${formatRange(item.start_date, item.end_date)}`}
+        aria-label={`${editable ? "Edit" : "See"} ${member.name}, away ${formatRange(item.start_date, item.end_date)}`}
       >
         <span className="relative">
           <Avatar name={member.name} size={40} away />

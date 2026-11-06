@@ -54,7 +54,7 @@ export default async function TodayPage() {
     .filter((m) => !isPresent(m, today, periods))
     .map((m) => {
       const period = awayToday.find((p) => p.member_id === m.id);
-      return { member: m, back: period ? returnDate(period) : null };
+      return { member: m, back: period ? returnDate(period) : null, periodId: period?.id ?? null };
     });
 
   // One alert per staff member per day of leave in the next week.
@@ -106,20 +106,38 @@ export default async function TodayPage() {
           </div>
           <ul className="grid grid-cols-4 gap-x-2 gap-y-4">
             {home.map((m) => (
-              <li key={m.id} className="flex min-w-0 flex-col items-center gap-1">
+              <li key={m.id} className="flex min-w-0 flex-col items-center gap-1 py-1">
                 <Avatar name={m.name} size={48} />
                 <span className="w-full truncate text-center text-xs font-semibold">{m.name}</span>
               </li>
             ))}
-            {away.map(({ member, back }) => (
-              <li key={member.id} className="flex min-w-0 flex-col items-center gap-1">
-                <Avatar name={member.name} size={48} away />
-                <span className="w-full truncate text-center text-xs font-semibold text-muted">{member.name}</span>
-                {back ? (
-                  <span className="w-full truncate text-center text-xs text-muted">Back {formatShortDate(back).slice(4)}</span>
-                ) : null}
-              </li>
-            ))}
+            {away.map(({ member, back, periodId }) => {
+              const body = (
+                <>
+                  <Avatar name={member.name} size={48} away />
+                  <span className="w-full truncate text-center text-xs font-semibold text-muted">{member.name}</span>
+                  {back ? (
+                    <span className="w-full truncate text-center text-xs text-muted">Back {formatShortDate(back).slice(4)}</span>
+                  ) : null}
+                </>
+              );
+              return (
+                <li key={member.id} className="min-w-0">
+                  {periodId ? (
+                    // Tap to change the return date (or see it, if it isn't yours to change).
+                    <Link
+                      href={`/calendar/away/${periodId}`}
+                      aria-label={`${member.name}, away${back ? `, back ${formatShortDate(back)}` : ""}`}
+                      className="flex min-w-0 flex-col items-center gap-1 rounded-xl py-1 hover:bg-bg"
+                    >
+                      {body}
+                    </Link>
+                  ) : (
+                    <div className="flex min-w-0 flex-col items-center gap-1 py-1">{body}</div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           {flatmates.length < 2 && me.is_admin ? (
             <Link

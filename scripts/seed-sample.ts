@@ -143,7 +143,7 @@ async function seed() {
     member_id: m.id, start_date: d, end_date: d, full_day: false, slots, reason, created_by: m.id,
   });
   const away: Away[] = [
-    full(B, "2026-09-01", "2026-11-30", "Back home in Coimbatore"),
+    full(B, "2026-09-01", "2026-11-19", "Back home in Coimbatore"),
     full(M, "2026-09-19", "2026-09-21", "Friend's wedding, Madurai"),
     full(Ki, "2026-10-02", "2026-10-04", "Gandhi Jayanti long weekend"),
     full(R, "2026-10-23", "2026-10-25", "Trip to Pondicherry"),
