@@ -38,7 +38,7 @@ export type SplitInitial = {
   included: string[] | null;
   locks: Record<string, string>;
   /** Set for scanned bills (SPEC 4.7 step 2). */
-  scan?: { merchant: string | null; billImagePath: string; printedTotalPaise: number };
+  scan?: { merchant: string | null; billImagePath: string | null; printedTotalPaise: number };
 };
 
 const withoutKey = (o: Record<string, string>, key: string) =>

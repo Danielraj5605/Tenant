@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-07 — Upload a bill photo or PDF (read only)
+
+- Scan a bill: "Take a photo" (camera) and "Upload a photo or PDF" (gallery/files); drop zone on desktop.
+- `/api/scan` accepts JPEG or PDF (checked by content, PDF ≤ 4 MB); `scanBill(bytes, mime)` sends PDFs to Gemini only.
+- Bills are no longer stored (user's choice): no storage upload, scanned expenses save without `bill_image_path`. No migration needed.
+- E2E locally: sample PDF and PNG bill both read correctly to the review step; nothing saved. 162/162 tests.
+
+## 2026-11-07 — UI polish 1: shared pieces, navigation and Today
+
+- Request: "improve the UI, good and aesthetic". User chose to polish the current look (Manrope, cream, teal) over a new direction. Planned in 4 sections.
+- Today: pending duty is the focal teal block (white Mark done); done duties become a quiet row with Undo. Who's home pill, divided menu rows with headcount pills, share and Mark away as two tiles, alerts share one component.
+- Navigation: bottom bar on phone and tablet; left rail with Settings at 1024 px+. Wider column on tablet; Today goes two-column on desktop (`data-wide`).
+- New shared pieces in `components/ui.tsx` (SectionHeading, Pill, Skeleton, `inverse` buttons) and `components/skeletons.tsx`; loading screens match the page shape.
+- Fix: global focus ring moved into `@layer base` so components can override it (white ring on the teal block).
+- Checked locally at 375/768/1440: Mark done → Undo, keyboard focus, no sideways scroll. Typecheck, lint, 162/162 tests, production build pass. Not committed or deployed yet.
+
 ## 2026-11-06 — Maid's pay by days worked
 
 - Migration `20261114000001_maid_pay.sql` (pushed): `expense_categories.staff_role`; Cook's pay marked cook; "Maid's pay" (pay by days worked, maid) added to every flat and to new flats.

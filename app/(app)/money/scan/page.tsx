@@ -26,7 +26,10 @@ export default async function ScanPage() {
           <ChevronLeftIcon size={20} />
           Money
         </Link>
-        <h1 className="text-display font-extrabold">Scan a bill</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-display font-extrabold">Scan a bill</h1>
+          <p className="font-medium text-muted">Take a photo, or upload a photo or PDF.</p>
+        </div>
       </header>
       <ScanFlow
         meId={me.id}

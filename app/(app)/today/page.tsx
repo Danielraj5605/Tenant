@@ -16,8 +16,8 @@ import { GetStarted } from "@/components/get-started";
 import { formatLongDate, greetingFor, hourIn, todayIn } from "@/lib/engine/dates";
 import { addDays, formatShortDate } from "@/lib/engine/calendar";
 import { awayOn, isPresent, returnDate } from "@/lib/engine/presence";
-import { Avatar, Card } from "@/components/ui";
-import { AlertIcon, CheckIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
+import { Avatar, Card, Pill, SectionHeading, cx } from "@/components/ui";
+import { AlertIcon, CalendarIcon, CheckIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Today · Tenant" };
 
@@ -104,172 +104,240 @@ export default async function TodayPage() {
     }
   }
 
+  const pendingDuties = myDuties.filter((d) => d.today && d.today.status !== "done");
+  const monthName = formatMonth(monthOf(today)).split(" ")[0];
+
   return (
-    <>
-      <header className="mb-6 flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
+    <div data-wide className="flex flex-col gap-4">
+      <header className="mb-2 flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <p className="font-semibold text-muted">{formatLongDate(today)}</p>
-          <h1 className="text-display font-extrabold">
+          <h1 className="text-display font-extrabold text-balance lg:text-display-lg">
             {greetingFor(hourIn(flat.timezone, now))}, {me.name}
           </h1>
         </div>
         <Link
           href="/settings"
           aria-label="Flat settings"
-          className="flex size-11 shrink-0 items-center justify-center rounded-full hover:ring-2 hover:ring-line-strong"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full transition-shadow hover:ring-2 hover:ring-line-strong lg:hidden"
         >
           <Avatar name={me.name} size={44} />
         </Link>
       </header>
 
-      <div className="flex flex-col gap-4">
-        <InstallCard />
-        <GetStarted steps={setupSteps} />
-        <Card className="flex flex-col gap-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-title font-bold">Who&rsquo;s home</h2>
-            <p className="text-sm font-bold text-accent-dark">
-              {home.length} of {flatmates.length}
-            </p>
-          </div>
-          <ul className="grid grid-cols-4 gap-x-2 gap-y-4">
-            {home.map((m) => (
-              <li key={m.id} className="flex min-w-0 flex-col items-center gap-1 py-1">
-                <Avatar name={m.name} size={48} />
-                <span className="w-full truncate text-center text-xs font-semibold">{m.name}</span>
-              </li>
-            ))}
-            {away.map(({ member, back, periodId }) => {
-              const body = (
-                <>
-                  <Avatar name={member.name} size={48} away />
-                  <span className="w-full truncate text-center text-xs font-semibold text-muted">{member.name}</span>
-                  {back ? (
-                    <span className="w-full truncate text-center text-xs text-muted">Back {formatShortDate(back).slice(4)}</span>
-                  ) : null}
-                </>
-              );
-              return (
-                <li key={member.id} className="min-w-0">
-                  {periodId ? (
-                    // Tap to change the return date (or see it, if it isn't yours to change).
-                    <Link
-                      href={`/calendar/away/${periodId}`}
-                      aria-label={`${member.name}, away${back ? `, back ${formatShortDate(back)}` : ""}`}
-                      className="flex min-w-0 flex-col items-center gap-1 rounded-xl py-1 hover:bg-bg"
-                    >
-                      {body}
-                    </Link>
-                  ) : (
-                    <div className="flex min-w-0 flex-col items-center gap-1 py-1">{body}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {/* Adding flatmates is a step in Get started for the admin. */}
-        </Card>
+      <InstallCard />
+      <GetStarted steps={setupSteps} />
 
-        {joinNames.length ? (
-          <Link
-            href="/settings#requests"
-            className="flex min-h-14 items-center gap-3 rounded-[var(--radius-card)] bg-info-bg px-4 py-3 font-semibold text-info-ink"
-          >
-            <UsersIcon size={20} className="shrink-0" />
-            <span className="flex-1">
+      {joinNames.length || alerts.length ? (
+        <section aria-label="Alerts" className="flex flex-col gap-2">
+          {joinNames.length ? (
+            <AlertLink href="/settings#requests" tone="info" icon={<UsersIcon size={20} />}>
               {joinNames.length === 1 ? `${joinNames[0]} wants to join the flat.` : `${joinNames.length} people want to join the flat.`}{" "}
               Review
-            </span>
-            <ChevronRightIcon size={20} className="shrink-0" />
-          </Link>
-        ) : null}
+            </AlertLink>
+          ) : null}
+          {alerts.map((a) => (
+            <AlertLink key={a.key} href={a.href} tone={a.tone} icon={<AlertIcon size={20} />}>
+              {a.text}
+            </AlertLink>
+          ))}
+        </section>
+      ) : null}
 
-        {alerts.length ? (
-          <section aria-label="Alerts" className="flex flex-col gap-2">
-            {alerts.map((a) => (
-              <Link
-                key={a.key}
-                href={a.href}
-                className={
-                  a.tone === "warn"
-                    ? "flex min-h-14 items-center gap-3 rounded-[var(--radius-card)] bg-warn-bg px-4 py-3 font-semibold text-warn-ink"
-                    : "flex min-h-14 items-center gap-3 rounded-[var(--radius-card)] bg-info-bg px-4 py-3 font-semibold text-info-ink"
-                }
-              >
-                <AlertIcon size={20} className="shrink-0" />
-                <span className="flex-1">{a.text}</span>
-                <ChevronRightIcon size={18} className="shrink-0 opacity-70" />
-              </Link>
-            ))}
-          </section>
-        ) : null}
-
-        <Card className="flex flex-col gap-3">
-          <h2 className="text-title font-bold">Your duty today</h2>
-          {myDuties.length === 0 ? (
-            <p className="text-muted">Nothing for you today.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {myDuties.map(({ chore, today: duty }) => (
-                <li key={chore.id} className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-lg font-bold">{chore.name}</span>
-                    {duty?.status === "done" ? (
-                      <span className="inline-flex items-center gap-1 text-sm font-bold text-accent-dark">
-                        <CheckIcon size={18} /> Done
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-4">
+          {pendingDuties.length ? (
+            // The one thing to act on today gets the strongest block on the page.
+            <section aria-labelledby="duty-title" className="flex flex-col gap-1 rounded-[var(--radius-card)] bg-accent p-5 text-white">
+              <h2 id="duty-title" className="text-sm font-semibold text-white/90">
+                Your duty today
+              </h2>
+              <ul className="flex flex-col divide-y divide-white/15">
+                {myDuties.map(({ chore, today: duty }) =>
+                  duty?.status === "done" ? (
+                    <li key={chore.id} className="flex min-h-14 items-center gap-3 py-2">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white text-accent-dark">
+                        <CheckIcon size={16} strokeWidth={2.5} />
                       </span>
-                    ) : null}
-                  </div>
-                  {duty ? <DutyButton assignmentId={duty.id} done={duty.status === "done"} /> : null}
+                      <span className="flex-1 font-bold">
+                        {chore.name}
+                        <span className="sr-only">, done</span>
+                      </span>
+                      <DutyButton assignmentId={duty.id} done tone="inverse" />
+                    </li>
+                  ) : (
+                    <li key={chore.id} className="flex flex-col gap-4 pt-1 pb-4 last:pb-0 [&+li]:pt-4">
+                      <p className="text-2xl leading-tight font-extrabold tracking-tight">{chore.name}</p>
+                      {duty ? <DutyButton assignmentId={duty.id} done={false} tone="inverse" /> : null}
+                    </li>
+                  ),
+                )}
+              </ul>
+            </section>
+          ) : (
+            <Card className="flex flex-col gap-2">
+              <SectionHeading
+                title="Your duty today"
+                meta={
+                  <Link
+                    href="/chores"
+                    className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-full px-2 text-sm font-bold text-accent hover:bg-accent-tint"
+                  >
+                    Rotation
+                    <ChevronRightIcon size={16} />
+                  </Link>
+                }
+              />
+              {myDuties.length === 0 ? (
+                <p className="text-muted">Nothing for you today.</p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-line">
+                  {myDuties.map(({ chore, today: duty }) => (
+                    <li key={chore.id} className="flex min-h-14 items-center gap-3 py-1.5">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-white">
+                        <CheckIcon size={16} strokeWidth={2.5} />
+                      </span>
+                      <span className="flex-1 font-semibold">
+                        {chore.name}
+                        <span className="sr-only">, done</span>
+                      </span>
+                      {duty ? <DutyButton assignmentId={duty.id} done /> : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          )}
+
+          <Card className="flex flex-col gap-4">
+            <SectionHeading
+              title={<>Who&rsquo;s home</>}
+              meta={
+                <Pill>
+                  {home.length} of {flatmates.length} home
+                </Pill>
+              }
+            />
+            <ul className="grid grid-cols-4 gap-x-2 gap-y-3 md:grid-cols-6 lg:grid-cols-4">
+              {home.map((m) => (
+                <li key={m.id} className="flex min-w-0 flex-col items-center gap-1.5 py-1">
+                  <Avatar name={m.name} size={48} />
+                  <span className="w-full truncate text-center text-xs font-semibold">{m.name}</span>
                 </li>
               ))}
+              {away.map(({ member, back, periodId }) => {
+                const body = (
+                  <>
+                    <Avatar name={member.name} size={48} away />
+                    <span className="w-full truncate text-center text-xs font-semibold text-muted">{member.name}</span>
+                    {back ? (
+                      <span className="-mt-1 w-full truncate text-center text-xs text-muted">Back {formatShortDate(back).slice(4)}</span>
+                    ) : null}
+                  </>
+                );
+                return (
+                  <li key={member.id} className="min-w-0">
+                    {periodId ? (
+                      // Tap to change the return date (or see it, if it isn't yours to change).
+                      <Link
+                        href={`/calendar/away/${periodId}`}
+                        aria-label={`${member.name}, away${back ? `, back ${formatShortDate(back)}` : ""}`}
+                        className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl py-1 hover:bg-sunk"
+                      >
+                        {body}
+                      </Link>
+                    ) : (
+                      <div className="flex min-w-0 flex-col items-center gap-1.5 py-1">{body}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
-          )}
-        </Card>
+          </Card>
+        </div>
 
-        <Card className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/menu" className="text-title font-bold underline-offset-4 hover:underline">
-              Today&rsquo;s menu
+        <div className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-2">
+            <SectionHeading
+              title={<>Today&rsquo;s menu</>}
+              meta={
+                <Link
+                  href="/menu"
+                  className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-full px-2 text-sm font-bold text-accent hover:bg-accent-tint"
+                >
+                  This week
+                  <ChevronRightIcon size={16} />
+                </Link>
+              }
+            />
+            <MealList day={menu} counts={counts} noCookMeals={noCookMeals} />
+            {noCook ? (
+              <NoCookCard
+                date={today}
+                plan={menu?.plan ?? "cook"}
+                label={noCookMeals.length === MEALS.length ? "today" : `for ${mealsPhrase(noCookMeals)} today`}
+              />
+            ) : null}
+            {canPlan && !(menu && hasDishes(menu)) ? (
+              <Link
+                href={`/menu/${today}`}
+                className="-mx-2 inline-flex min-h-11 w-fit items-center gap-1 rounded-full px-3 text-sm font-bold text-accent hover:bg-accent-tint"
+              >
+                Plan today&rsquo;s meals
+                <ChevronRightIcon size={16} />
+              </Link>
+            ) : null}
+          </Card>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              href="/money"
+              className="group flex min-h-28 flex-col justify-between gap-3 rounded-[var(--radius-card)] bg-surface p-4 transition-shadow hover:ring-2 hover:ring-line-strong"
+            >
+              <span className="flex items-center justify-between gap-2 text-sm font-semibold text-muted">
+                Your share, {monthName}
+                <ChevronRightIcon size={16} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </span>
+              <span className="text-xl font-extrabold tracking-tight tabular-nums min-[400px]:text-2xl">{formatINR(myShare)}</span>
+            </Link>
+            <Link
+              href="/calendar/away/new"
+              className="group flex min-h-28 flex-col justify-between gap-3 rounded-[var(--radius-card)] bg-surface p-4 transition-shadow hover:ring-2 hover:ring-line-strong"
+            >
+              <span className="flex size-9 items-center justify-center rounded-full bg-accent-tint text-accent-dark">
+                <CalendarIcon size={18} />
+              </span>
+              <span className="leading-snug font-bold">Mark someone away</span>
             </Link>
           </div>
-          <MealList day={menu} counts={counts} noCookMeals={noCookMeals} />
-          {noCook ? (
-            <NoCookCard
-              date={today}
-              plan={menu?.plan ?? "cook"}
-              label={noCookMeals.length === MEALS.length ? "today" : `for ${mealsPhrase(noCookMeals)} today`}
-            />
-          ) : null}
-          {canPlan && !(menu && hasDishes(menu)) ? (
-            <Link
-              href={`/menu/${today}`}
-              className="-mx-2 inline-flex min-h-11 w-fit items-center gap-1 rounded-full px-3 text-sm font-bold text-accent hover:bg-accent-tint"
-            >
-              Plan today&rsquo;s meals
-              <ChevronRightIcon size={16} />
-            </Link>
-          ) : null}
-        </Card>
-
-        <Link
-          href="/money"
-          className="flex min-h-16 items-center justify-between gap-3 rounded-[var(--radius-card)] bg-surface p-5 hover:ring-2 hover:ring-line-strong"
-        >
-          <span className="flex flex-col">
-            <span className="text-sm font-semibold text-muted">Your share in {formatMonth(monthOf(today)).split(" ")[0]}</span>
-            <span className="text-2xl font-extrabold">{formatINR(myShare)}</span>
-          </span>
-          <ChevronRightIcon size={22} className="text-muted" />
-        </Link>
-
-        <Link
-          href="/calendar/away/new"
-          className="flex min-h-[52px] items-center justify-center rounded-full border border-line-strong bg-surface px-6 font-bold hover:border-ink/40"
-        >
-          Mark someone away
-        </Link>
+        </div>
       </div>
-    </>
+    </div>
+  );
+}
+
+function AlertLink({
+  href,
+  tone,
+  icon,
+  children,
+}: {
+  href: string;
+  tone: "warn" | "info";
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cx(
+        "flex min-h-14 items-center gap-3 rounded-[var(--radius-card)] px-4 py-3 font-semibold transition-[filter] hover:brightness-[0.97]",
+        tone === "warn" ? "bg-warn-bg text-warn-ink" : "bg-info-bg text-info-ink",
+      )}
+    >
+      <span className="shrink-0">{icon}</span>
+      <span className="flex-1">{children}</span>
+      <ChevronRightIcon size={18} className="shrink-0 opacity-70" />
+    </Link>
   );
 }

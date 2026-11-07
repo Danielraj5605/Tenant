@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
   "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
-  "last_updated": "2026-11-06",
-  "last_sync": "2026-11-06",
+  "last_updated": "2026-11-07",
+  "last_sync": "2026-11-07",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1793973989-da9f"
+    "version": "1794046935-3c23"
   },
   "sections": [
     {
@@ -221,25 +221,50 @@
       ],
       "summary": "Every flat now has a \"Maid's pay\" category that works like the cook's: daily rate × days worked (full days off unpaid, part days paid), split by days each person was home. Categories carry a staff role (cook or maid); pay counts everyone in that role employed that month. The rule label in Settings is now \"Pay by days worked\". E2E on a production build: 9/9. Re-run on the live site: 9/9.",
       "screenshots": true
+    },
+    {
+      "id": "ui-polish-shell-today",
+      "title": "UI polish 1: shared pieces, navigation and Today",
+      "status": "done",
+      "date": "2026-11-07",
+      "commits": [],
+      "summary": "Kept the current look (Manrope, cream, teal) and tightened it. Today: your pending duty is now the one bold teal block at the top with a white Mark done button; once done it becomes a quiet row with Undo. Who's home shows an 'X of Y home' pill; the menu has divided rows with headcount pills and a 'This week' link; your share and 'Mark someone away' sit side by side as two tiles. Desktop (1024 px and wider) gets a left navigation rail with Settings, and Today splits into two columns; tablets get a wider column. Loading placeholders now match the shape of the page. Shared pieces added: SectionHeading, Pill, Skeleton, inverse button styles. Fixed: the keyboard focus ring could not be overridden (now white on the teal block). Checked locally at 375/768/1440 signed in as Madan: Mark done → Undo round trip, keyboard focus, no sideways scroll; typecheck, lint, 162/162 tests and a production build pass.",
+      "screenshots": true
+    },
+    {
+      "id": "bill-upload",
+      "title": "Upload a bill photo or PDF (read only, not stored)",
+      "status": "done",
+      "date": "2026-11-07",
+      "commits": [],
+      "summary": "Scan a bill now has 'Take a photo' (camera) and 'Upload a photo or PDF' (gallery, files, screenshots, e-bills); desktop gets a drop zone. PDFs up to 4 MB go straight to Gemini; photos are still compressed first. At the user's request the bill is only read: nothing is uploaded to storage any more, and new scanned expenses have no bill picture (older ones keep theirs). Server checks the file's real content (JPEG or %PDF) and size; the page explains a too-large PDF or a wrong file type. Checked locally: a sample PDF and PNG bill each read correctly to the review step (~7 s and ~4 s), all 5 lines, total matches; nothing saved. Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "real-world-checks",
-    "title": "Real-world acceptance checks",
-    "summary": "Use the app for a week; turn on reminders on a phone; check the deferred items (who owes whom, per-meal menu plan)."
+    "id": "ui-polish-calendar-chores",
+    "title": "UI polish 2: Calendar and Chores",
+    "summary": "Same polish on Calendar (month grid, Who's away list, away form) and Chores (this week, rotation, chore form): lighter rows instead of a card for everything, consistent headings, states and skeletons."
   },
   "changed_files": [
-    "supabase/migrations/20261114000001_maid_pay.sql",
-    "lib/engine/money.ts",
-    "lib/engine/money.test.ts",
-    "lib/supabase/types.ts",
-    "app/(app)/money/actions.ts",
-    "app/(app)/money/split-form.tsx",
-    "app/(app)/money/new/page.tsx",
+    "app/(app)/layout.tsx",
+    "app/(app)/loading.tsx",
     "app/(app)/money/scan/page.tsx",
-    "app/(app)/settings/category-rules.tsx",
-    "scripts/seed-sample.ts"
+    "app/(app)/money/scan/scan-flow.tsx",
+    "app/(app)/money/split-form.tsx",
+    "app/(app)/today/loading.tsx",
+    "app/(app)/today/page.tsx",
+    "app/api/scan/route.ts",
+    "app/globals.css",
+    "app/layout.tsx",
+    "components/bottom-nav.tsx",
+    "components/chore-duty.tsx",
+    "components/icons.tsx",
+    "components/meals.tsx",
+    "components/skeletons.tsx",
+    "components/ui.tsx",
+    "lib/scan/index.ts"
   ],
   "test_coverage": [
     {
@@ -369,6 +394,14 @@
     {
       "date": "2026-11-06",
       "text": "Maid's pay is cut for full days off, like the cook's (user's choice). expense_categories.staff_role says whose days a pay-by-days split counts."
+    },
+    {
+      "date": "2026-11-07",
+      "text": "UI improvement: the user chose to polish the current look (Manrope, cream, teal from SPEC §6.1) rather than a new direction. Plan: 1 shared components + nav + Today, 2 Calendar + Chores, 3 Menu + Money, 4 Settings, sign-in and onboarding."
+    },
+    {
+      "date": "2026-11-07",
+      "text": "Bills (photo or PDF) are read by the AI and not stored (user's choice). expenses.bill_image_path stays for older scanned expenses. PDFs: Gemini only, max 4 MB (Vercel's 4.5 MB request limit)."
     }
   ],
   "open_questions": [
@@ -392,7 +425,11 @@
     "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
-    "VAPID_SUBJECT is still the placeholder mailto:you@example.com."
+    "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
+    "UI polish is part-way: Calendar, Chores, Menu, Money, Settings, sign-in and onboarding still have the old card-heavy layout. On desktop they now sit beside the new navigation rail but are otherwise unchanged until their sections.",
+    "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
+    "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
+    "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

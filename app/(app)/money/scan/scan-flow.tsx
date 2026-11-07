@@ -7,7 +7,7 @@ import { isPresent, type AwayPeriod } from "@/lib/engine/presence";
 import type { NormalizedScan } from "@/lib/engine/scan";
 import { Avatar, Button, Field, Notice, Spinner, cx } from "@/components/ui";
 import { Badge } from "@/components/away";
-import { CameraIcon } from "@/components/icons";
+import { CameraIcon, FileTextIcon, UploadIcon } from "@/components/icons";
 import { SplitForm, type SplitCategory, type SplitMember } from "../split-form";
 
 type Draft = { key: number; name: string; amount: string; kind: ItemKind; included: boolean };
@@ -20,6 +20,11 @@ type Phase =
   | { kind: "shares" };
 
 const KIND_LABEL: Record<ItemKind, string> = { item: "Item", fee: "Fee", tax: "Tax", discount: "Discount" };
+
+/** Same cap as /api/scan and the bills bucket (Vercel limits a request to 4.5 MB). */
+const MAX_PDF_BYTES = 4 * 1024 * 1024;
+
+const isPdfFile = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
 
 export function ScanFlow({
   meId,
@@ -38,7 +43,8 @@ export function ScanFlow({
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "pick" });
   const [preview, setPreview] = useState<string | null>(null);
-  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [pdfName, setPdfName] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [merchant, setMerchant] = useState("");
   const [date, setDate] = useState(today);
   const [printedTotal, setPrintedTotal] = useState(0);
@@ -56,17 +62,29 @@ export function ScanFlow({
   async function handleFile(file: File | undefined) {
     if (!file) return;
     try {
-      setPhase({ kind: "working", label: "Shrinking the photo" });
-      const blob = await compressBillPhoto(file);
-      setPreview(URL.createObjectURL(blob));
+      const pdf = isPdfFile(file);
+      let upload: Blob;
+      if (pdf) {
+        if (file.size > MAX_PDF_BYTES) throw new Error("That PDF is over 4 MB. Upload a photo or screenshot of the bill instead.");
+        upload = new Blob([file], { type: "application/pdf" });
+        setPreview(null);
+        setPdfName(file.name);
+      } else {
+        if (file.type && !file.type.startsWith("image/")) throw new Error("Upload a photo (JPG or PNG) or a PDF of the bill.");
+        setPhase({ kind: "working", label: "Shrinking the photo" });
+        upload = await compressBillPhoto(file).catch(() => {
+          throw new Error("This photo format can't be opened here. Try a JPG, PNG or a screenshot of the bill.");
+        });
+        setPreview(URL.createObjectURL(upload));
+        setPdfName(null);
+      }
 
-      setPhase({ kind: "working", label: "Uploading and reading the bill" });
+      setPhase({ kind: "working", label: pdf ? "Reading the PDF" : "Reading the bill" });
       const data = new FormData();
-      data.append("photo", blob, "bill.jpg");
+      data.append("photo", upload, pdf ? "bill.pdf" : "bill.jpg");
       const res = await fetch("/api/scan", { method: "POST", body: data });
-      const body = (await res.json().catch(() => ({}))) as Partial<NormalizedScan> & { error?: string; imagePath?: string };
-      if (!res.ok || !body.imagePath) throw new Error(body.error ?? "This bill couldn't be read. Check your connection and try again.");
-      setImagePath(body.imagePath);
+      const body = (await res.json().catch(() => ({}))) as Partial<NormalizedScan> & { error?: string };
+      if (!res.ok || !Array.isArray(body.items)) throw new Error(body.error ?? "This bill couldn't be read. Check your connection and try again.");
 
       const scan = body as NormalizedScan;
       const d = scan.date ?? today;
@@ -83,32 +101,54 @@ export function ScanFlow({
 
   // ---------------------------------------------------------------- pick / working / error
   if (phase.kind === "pick" || phase.kind === "working" || phase.kind === "error") {
+    const working = phase.kind === "working";
     return (
       <div className="flex flex-col gap-4">
         {phase.kind === "error" ? <Notice tone="warn">{phase.message}</Notice> : null}
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
           <img src={preview} alt="Bill photo" className="max-h-72 w-full rounded-[var(--radius-card)] object-contain" />
+        ) : pdfName ? (
+          <PdfChip name={pdfName} />
         ) : null}
-        {phase.kind === "working" ? (
+        {working ? (
           <p role="status" className="flex items-center justify-center gap-3 rounded-[var(--radius-card)] bg-surface p-6 font-bold">
             <Spinner /> {phase.label}&hellip;
           </p>
         ) : (
-          <label className="flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-full bg-accent px-6 font-bold text-white hover:bg-accent-dark has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
-            <CameraIcon size={20} />
-            {phase.kind === "error" ? "Try another photo" : "Take or choose a photo"}
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="sr-only"
-              onChange={(e) => void handleFile(e.target.files?.[0])}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              void handleFile(e.dataTransfer.files?.[0]);
+            }}
+            className={cx(
+              "flex flex-col gap-3 rounded-[var(--radius-card)] transition-colors lg:border-2 lg:border-dashed lg:p-8",
+              dragging ? "lg:border-accent lg:bg-accent-tint" : "lg:border-line-strong lg:bg-surface",
+            )}
+          >
+            <p className="hidden text-center font-semibold lg:block">
+              {dragging ? "Drop to read the bill" : "Drop a bill photo or PDF here, or"}
+            </p>
+            {/* Phones open the camera straight away; desktops have no camera step. */}
+            <FilePick label="Take a photo" accept="image/*" capture icon={<CameraIcon size={20} />} onFile={handleFile} className="lg:hidden" primary />
+            <FilePick
+              label="Upload a photo or PDF"
+              accept="image/*,application/pdf,.pdf"
+              icon={<UploadIcon size={20} />}
+              onFile={handleFile}
+              className="lg:mx-auto lg:w-fit lg:border-transparent lg:bg-accent lg:text-white lg:hover:bg-accent-dark"
             />
-          </label>
+          </div>
         )}
         <p className="text-sm text-muted">
-          Lay the bill flat in good light. You&rsquo;ll check every line before anything is saved.
+          Photos: lay the bill flat in good light. PDFs up to 4 MB work too, such as e-bills and online orders. The file is only read, not kept.
+          You&rsquo;ll check every line before anything is saved.
         </p>
       </div>
     );
@@ -144,7 +184,7 @@ export function ScanFlow({
             items: items.map((i) => ({ name: i.name, amount: i.amount, kind: i.kind, included: i.included, personal: "" })),
             included: [...people],
             locks: {},
-            scan: { merchant: merchant.trim() || null, billImagePath: imagePath!, printedTotalPaise: printedTotal },
+            scan: { merchant: merchant.trim() || null, billImagePath: null, printedTotalPaise: printedTotal },
           }}
         />
       </div>
@@ -168,6 +208,11 @@ export function ScanFlow({
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element -- local object URL preview
           <img src={preview} alt="Bill photo" className="h-28 w-20 shrink-0 rounded-xl object-cover" />
+        ) : pdfName ? (
+          <span className="flex h-28 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-surface text-muted" title={pdfName}>
+            <FileTextIcon size={28} />
+            <span className="text-xs font-bold">PDF</span>
+          </span>
         ) : null}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-sm font-semibold text-muted">Bill total</span>
@@ -322,6 +367,60 @@ export function ScanFlow({
       <Button disabled={!canNext} onClick={() => setPhase({ kind: "shares" })}>
         Next: check each share
       </Button>
+    </div>
+  );
+}
+
+/** A button that opens the file picker (or the camera, with `capture`). */
+function FilePick({
+  label,
+  accept,
+  capture = false,
+  icon,
+  onFile,
+  primary = false,
+  className,
+}: {
+  label: string;
+  accept: string;
+  capture?: boolean;
+  icon: React.ReactNode;
+  onFile: (file: File | undefined) => void;
+  primary?: boolean;
+  className?: string;
+}) {
+  return (
+    <label
+      className={cx(
+        "flex min-h-[52px] cursor-pointer items-center justify-center gap-2 rounded-full px-6 font-bold transition-colors",
+        "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
+        primary ? "bg-accent text-white hover:bg-accent-dark" : "border border-line-strong bg-surface text-ink hover:border-ink/40",
+        className,
+      )}
+    >
+      {icon}
+      {label}
+      <input
+        type="file"
+        accept={accept}
+        capture={capture ? "environment" : undefined}
+        className="sr-only"
+        onChange={(e) => {
+          onFile(e.target.files?.[0]);
+          e.target.value = ""; // picking the same file again still fires
+        }}
+      />
+    </label>
+  );
+}
+
+function PdfChip({ name }: { name: string }) {
+  return (
+    <div className="flex min-h-16 items-center gap-3 rounded-[var(--radius-card)] bg-surface px-4 py-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-tint text-accent-dark">
+        <FileTextIcon size={22} />
+      </span>
+      <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
     </div>
   );
 }

@@ -27,7 +27,7 @@ async function ensureOk(res: Response, provider: string) {
   if (!res.ok) throw new ProviderError(`${provider} HTTP ${res.status}`, res.status);
 }
 
-function gemini(base64: string, key: string): Provider<ScanResult> {
+function gemini(base64: string, mime: BillMime, key: string): Provider<ScanResult> {
   return {
     name: "gemini",
     async run(signal) {
@@ -38,7 +38,7 @@ function gemini(base64: string, key: string): Provider<ScanResult> {
           signal,
           headers: { "Content-Type": "application/json", "x-goog-api-key": key },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: SCAN_PROMPT }, { inline_data: { mime_type: "image/jpeg", data: base64 } }] }],
+            contents: [{ parts: [{ text: SCAN_PROMPT }, { inline_data: { mime_type: mime, data: base64 } }] }],
             generationConfig: { responseMimeType: "application/json", temperature: 0 },
           }),
         },
@@ -83,13 +83,23 @@ function groq(base64: string, key: string): Provider<ScanResult> {
 
 export class ScanUnavailableError extends Error {}
 
-export async function scanBill(image: Uint8Array): Promise<{ scan: NormalizedScan; provider: string }> {
+/** What a bill can be uploaded as: a compressed photo or a PDF. */
+export type BillMime = "image/jpeg" | "application/pdf";
+
+/**
+ * Reads a bill photo or PDF. Gemini reads both; the Groq fallback only takes
+ * images, so a PDF has no fallback.
+ */
+export async function scanBill(
+  file: Uint8Array,
+  mime: BillMime = "image/jpeg",
+): Promise<{ scan: NormalizedScan; provider: string }> {
   const geminiKey = process.env.GEMINI_API_KEY;
-  const groqKey = process.env.GROQ_API_KEY;
+  const groqKey = mime === "image/jpeg" ? process.env.GROQ_API_KEY : undefined;
   if (!geminiKey && !groqKey) throw new ScanUnavailableError("No AI key configured");
 
-  const base64 = Buffer.from(image).toString("base64");
-  const providers = [geminiKey ? gemini(base64, geminiKey) : null, groqKey ? groq(base64, groqKey) : null].filter(
+  const base64 = Buffer.from(file).toString("base64");
+  const providers = [geminiKey ? gemini(base64, mime, geminiKey) : null, groqKey ? groq(base64, groqKey) : null].filter(
     (p): p is Provider<ScanResult> => p !== null,
   );
   const { result, provider } = await runWithFallback(providers[0], providers[1] ?? null);

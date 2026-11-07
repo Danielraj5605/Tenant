@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full bg-bg text-ink">
         {/* The service worker is built by `npm run build`, so it only exists in production. */}
         <SerwistProvider swUrl="/sw.js" disable={process.env.NODE_ENV !== "production"}>
-          <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col">{children}</div>
+          <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col has-[[data-shell]]:max-w-none">{children}</div>
         </SerwistProvider>
       </body>
     </html>

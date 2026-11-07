@@ -2,7 +2,8 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+/** `inverse` sits on an accent-filled block (the duty card). */
+type ButtonVariant = "primary" | "secondary" | "ghost" | "inverse" | "inverse-ghost";
 
 const buttonBase =
   "inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 text-base font-bold transition-colors disabled:cursor-not-allowed";
@@ -13,6 +14,9 @@ const buttonVariants: Record<ButtonVariant, string> = {
   secondary:
     "border border-line-strong bg-surface text-ink hover:border-ink/40 hover:bg-bg active:bg-line disabled:text-muted",
   ghost: "text-accent hover:bg-accent-tint active:bg-accent-tint disabled:text-muted",
+  inverse:
+    "bg-surface text-accent-dark shadow-[0_1px_0_rgb(0_0_0/0.08)] focus-visible:outline-white hover:bg-accent-tint active:bg-accent-tint disabled:bg-white/70 disabled:text-accent-dark/70",
+  "inverse-ghost": "text-white focus-visible:outline-white underline-offset-4 hover:bg-white/10 hover:underline active:bg-white/15 disabled:text-white/70",
 };
 
 export function Button({
@@ -122,6 +126,45 @@ export function Avatar({ name, size = 40, away = false }: { name: string; size?:
       {initial}
     </span>
   );
+}
+
+/** A card's heading row: title on the left, an optional count or link on the right. */
+export function SectionHeading({
+  title,
+  meta,
+  id,
+}: {
+  title: ReactNode;
+  meta?: ReactNode;
+  id?: string;
+}) {
+  return (
+    <div className="flex min-h-7 items-center justify-between gap-3">
+      <h2 id={id} className="text-title font-bold">
+        {title}
+      </h2>
+      {meta}
+    </div>
+  );
+}
+
+/** Small rounded count or status, e.g. "5 of 6 home". */
+export function Pill({ tone = "accent", children }: { tone?: "accent" | "neutral"; children: ReactNode }) {
+  return (
+    <span
+      className={cx(
+        "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums",
+        tone === "accent" ? "bg-accent-tint text-accent-dark" : "bg-sunk text-muted",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** A grey block in the shape of content that is still loading. */
+export function Skeleton({ className }: { className?: string }) {
+  return <span className={cx("skeleton block rounded-lg", className)} aria-hidden="true" />;
 }
 
 export { cx };

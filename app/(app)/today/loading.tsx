@@ -1,1 +1,5 @@
-export { default } from "../loading";
+import { TodaySkeleton } from "@/components/skeletons";
+
+export default function Loading() {
+  return <TodaySkeleton />;
+}
