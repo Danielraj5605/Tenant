@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794046935-3c23"
+    "version": "1794048065-90b8"
   },
   "sections": [
     {
@@ -227,8 +227,10 @@
       "title": "UI polish 1: shared pieces, navigation and Today",
       "status": "done",
       "date": "2026-11-07",
-      "commits": [],
-      "summary": "Kept the current look (Manrope, cream, teal) and tightened it. Today: your pending duty is now the one bold teal block at the top with a white Mark done button; once done it becomes a quiet row with Undo. Who's home shows an 'X of Y home' pill; the menu has divided rows with headcount pills and a 'This week' link; your share and 'Mark someone away' sit side by side as two tiles. Desktop (1024 px and wider) gets a left navigation rail with Settings, and Today splits into two columns; tablets get a wider column. Loading placeholders now match the shape of the page. Shared pieces added: SectionHeading, Pill, Skeleton, inverse button styles. Fixed: the keyboard focus ring could not be overridden (now white on the teal block). Checked locally at 375/768/1440 signed in as Madan: Mark done → Undo round trip, keyboard focus, no sideways scroll; typecheck, lint, 162/162 tests and a production build pass.",
+      "commits": [
+        "4fb6a5c"
+      ],
+      "summary": "Kept the current look (Manrope, cream, teal) and tightened it. Today: your pending duty is now the one bold teal block at the top with a white Mark done button; once done it becomes a quiet row with Undo. Who's home shows an 'X of Y home' pill; the menu has divided rows with headcount pills and a 'This week' link; your share and 'Mark someone away' sit side by side as two tiles. Desktop (1024 px and wider) gets a left navigation rail with Settings, and Today splits into two columns; tablets get a wider column. Loading placeholders now match the shape of the page. Shared pieces added: SectionHeading, Pill, Skeleton, inverse button styles. Fixed: the keyboard focus ring could not be overridden (now white on the teal block). Checked locally at 375/768/1440 signed in as Madan: Mark done → Undo round trip, keyboard focus, no sideways scroll; typecheck, lint, 162/162 tests and a production build pass. Deployed with 4fb6a5c.",
       "screenshots": true
     },
     {
@@ -236,8 +238,10 @@
       "title": "Upload a bill photo or PDF (read only, not stored)",
       "status": "done",
       "date": "2026-11-07",
-      "commits": [],
-      "summary": "Scan a bill now has 'Take a photo' (camera) and 'Upload a photo or PDF' (gallery, files, screenshots, e-bills); desktop gets a drop zone. PDFs up to 4 MB go straight to Gemini; photos are still compressed first. At the user's request the bill is only read: nothing is uploaded to storage any more, and new scanned expenses have no bill picture (older ones keep theirs). Server checks the file's real content (JPEG or %PDF) and size; the page explains a too-large PDF or a wrong file type. Checked locally: a sample PDF and PNG bill each read correctly to the review step (~7 s and ~4 s), all 5 lines, total matches; nothing saved. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "4fb6a5c"
+      ],
+      "summary": "Scan a bill now has 'Take a photo' (camera) and 'Upload a photo or PDF' (gallery, files, screenshots, e-bills); desktop gets a drop zone. PDFs up to 4 MB go straight to Gemini; photos are still compressed first. At the user's request the bill is only read: nothing is uploaded to storage any more, and new scanned expenses have no bill picture (older ones keep theirs). Server checks the file's real content (JPEG or %PDF) and size; the page explains a too-large PDF or a wrong file type. Checked locally: a sample PDF and PNG bill each read correctly to the review step (~7 s and ~4 s), all 5 lines, total matches; nothing saved. Typecheck, lint, 162/162 tests pass. Deployed (4fb6a5c); re-run on the live site: PDF and PNG both read correctly (~7 s, ~5 s).",
       "screenshots": true
     }
   ],
