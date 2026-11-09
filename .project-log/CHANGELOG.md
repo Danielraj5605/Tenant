@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-09 — Edit all chores on one screen
+
+- New `/chores/edit`: every chore's name, days, time and rotation on one screen; add and delete (with Undo); one Save.
+- `saveAllChores` server action: validates all chores first (per-chore errors), checks chore and member ownership, then writes.
+- Chores page: 'Edit chores' button, saved notice, labelled pencil Edit on each chore.
+- E2E on a production build (throwaway flat): 38/38. 162/162 unit tests.
+
 ## 2026-11-09 — Plan the whole week's menu on one screen
 
 - Request: "edit option to change the chores and add menu for the entire week, easy option". Split into two sections: week menu, then chores.

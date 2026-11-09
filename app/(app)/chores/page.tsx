@@ -6,10 +6,10 @@ import { todayIn } from "@/lib/engine/dates";
 import { addDays, formatRange, formatShortDate } from "@/lib/engine/calendar";
 import { isPresent } from "@/lib/engine/presence";
 import { scheduleLabel } from "@/lib/engine/rotation";
-import { Avatar, Card, cx } from "@/components/ui";
+import { Avatar, Card, Notice, cx } from "@/components/ui";
 import { Badge } from "@/components/away";
 import { DutyButton } from "@/components/chore-duty";
-import { CheckIcon, ChevronRightIcon, PlusIcon } from "@/components/icons";
+import { CheckIcon, ChevronRightIcon, PencilIcon, PlusIcon } from "@/components/icons";
 
 export const metadata = { title: "Chores · Tenant" };
 
@@ -23,7 +23,7 @@ const formatTime = (t: string | null) => {
 
 export default async function ChoresPage({ searchParams }: PageProps<"/chores">) {
   const { me, flat } = await requireFlat();
-  const { tab } = await searchParams;
+  const { tab, saved } = await searchParams;
   const view = tab === "rotation" ? "rotation" : "week";
   const today = todayIn(flat.timezone);
   const { views, members, periods } = await loadChoreWeek(flat.id, today);
@@ -45,16 +45,34 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
 
   return (
     <>
-      <header className="mb-5 flex items-start justify-between gap-4">
+      <header className="mb-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <h1 className="text-display font-extrabold">Chores</h1>
-        <Link
-          href="/chores/new"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent-tint px-4 font-bold text-accent-dark hover:bg-accent hover:text-white"
-        >
-          <PlusIcon size={18} />
-          Add chore
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/chores/new"
+            aria-label="Add chore"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent-tint px-3.5 font-bold text-accent-dark hover:bg-accent hover:text-white"
+          >
+            <PlusIcon size={18} />
+            <span className="max-[389px]:sr-only">Add</span>
+          </Link>
+          {views.length ? (
+            <Link
+              href="/chores/edit"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-4 font-bold text-white hover:bg-accent-dark"
+            >
+              <PencilIcon size={17} />
+              Edit chores
+            </Link>
+          ) : null}
+        </div>
       </header>
+
+      {saved === "all" ? (
+        <div className="mb-4">
+          <Notice tone="success">Chores saved. Turns from today follow the new settings.</Notice>
+        </div>
+      ) : null}
 
       <nav aria-label="Chore views" className="mb-4 flex gap-1 rounded-full bg-line/70 p-1">
         <Link href="/chores" className={tabClass(view === "week")} aria-current={view === "week" ? "page" : undefined}>
@@ -112,8 +130,10 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                     </div>
                     <Link
                       href={`/chores/${chore.id}`}
-                      className="-mr-2 inline-flex min-h-11 items-center rounded-full px-3 text-sm font-bold text-accent hover:bg-accent-tint"
+                      aria-label={`Edit ${chore.name}`}
+                      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-line-strong px-3.5 text-sm font-bold text-accent-dark hover:border-accent hover:bg-accent-tint"
                     >
+                      <PencilIcon size={15} />
                       Edit
                     </Link>
                   </div>
