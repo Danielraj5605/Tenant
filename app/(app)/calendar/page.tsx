@@ -67,7 +67,7 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
     <div data-wide>
       <ScreenHeader title="Calendar" />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <Card className="flex flex-col gap-3 px-3 pt-3 pb-4 lg:sticky lg:top-8">
           <div className="flex items-center justify-between">
             <Link

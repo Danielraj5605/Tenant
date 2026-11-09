@@ -167,7 +167,7 @@ export function SplitForm({
       {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
       <input type="hidden" name="payload" value={JSON.stringify(payload)} />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
         <div className="flex flex-col gap-4">
           <section aria-labelledby="details-heading" className="flex flex-col gap-5 rounded-[var(--radius-card)] bg-surface p-5">
             <h2 id="details-heading" className="text-title font-bold">

@@ -21,10 +21,12 @@ export default async function NewAwayPage({ searchParams }: PageProps<"/calendar
           <p className="text-muted">You can mark yourself, or the cook&rsquo;s or maid&rsquo;s leave.</p>
         )}
       </header>
-      <AwayForm
-        members={members}
-        initial={{ memberId: me.id, startDate: date, endDate: date, fullDay: true, slots: [], reason: "" }}
-      />
+      <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
+        <AwayForm
+          members={members}
+          initial={{ memberId: me.id, startDate: date, endDate: date, fullDay: true, slots: [], reason: "" }}
+        />
+      </div>
     </>
   );
 }

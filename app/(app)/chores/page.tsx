@@ -120,7 +120,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
           </Link>
         </Card>
       ) : view === "week" ? (
-        <ul className="grid gap-3 lg:grid-cols-2 lg:items-start">
+        <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
           {views.map(({ chore, today: duty, upcoming }) => {
             const ownerId = duty?.member_id ?? null;
             const mine = ownerId === me.id;
@@ -223,7 +223,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
           })}
         </ul>
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2 lg:items-start">
+        <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
           {views.map(({ chore, rotation, today: duty }) => (
             <li key={chore.id} className="min-w-0">
               <Card className="flex flex-col gap-2 px-3">

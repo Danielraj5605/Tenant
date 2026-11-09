@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794256209-e2e7"
+    "version": "1794260888-bdb4"
   },
   "sections": [
     {
@@ -305,16 +305,42 @@
       "commits": [],
       "summary": "The New split / Edit split form (also the last step of Scan a bill) is now three cards: Details, Line items (with a one-line hint when empty; lines not split are drawn dashed) and Each person's share. Desktop: two columns, the shares card stays in view on the right with the status line and Save. Phones and tablets: a sticky bar keeps the status ('✓ Shares add up to ₹500', '₹… still to assign', 'over the total') next to Save. Fixed: the shares section's legend wasn't the group's label (it sat inside a div); the selected payer chip is outlined so the avatar stays visible. Found and fixed during testing: the desktop Save showed on phones too (the Button's inline-flex beat `hidden`). Layout only: the split maths is unchanged. E2E on a production build with a throwaway flat: 28/28 (lock a share → others ₹150, over the total disables Save, saved shares checked in the database, line items with one not split, cook pay helper, edit loads, scan page loads); the other five suites pass (33, 31, 40, 38, 38; the week menu suite now also covers a past day in the current week); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
       "screenshots": true
+    },
+    {
+      "id": "ui-polish-remaining-forms",
+      "title": "UI polish 6: remaining forms",
+      "status": "done",
+      "date": "2026-11-10",
+      "commits": [],
+      "summary": "Scan a bill review step: a two-step indicator (Items and people → Each person's share, with Back to items on step 2); the bill total, Details (shop, date, category, paid by, who shares) and Lines on the bill as cards; two columns on desktop with Next in the lines card; a sticky 'Splitting ₹… · N people' + Next bar on phones; 'Pick at least one person' hint; unticked lines are greyed. The single chore, away, member and day-menu forms now sit in a white card; the chosen person in 'Who is away?' is outlined so the avatar stays visible. Found and fixed: on phones the scan review step was wider than the screen (amounts cut off on the right) because the two-column grid had no column template below desktop; every two-column page now uses grid-cols-1 below desktop. The test suites' 'no sideways scroll' check missed this (phone emulation zooms out instead of scrolling), so all seven suites now compare the page width with the real screen width. E2E on a production build: 40/40, including a real Gemini read of a sample bill → untick a line → save; ₹314 total, shares add to ₹274 in the database. The other six suites pass with the stricter check (28, 33, 31, 40, 38, 38). Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "money-questions",
-    "title": "Money: who owes whom and settling up (needs answers)",
-    "summary": "Waiting on the three open money questions. The Scan a bill review step (before the split form) still has the older layout."
+    "id": "wifi-present-only",
+    "title": "WiFi split only among people at home",
+    "summary": "User's answer: a long-away flatmate pays only rent. WiFi's default becomes 'only people at home' for new flats and the current flat."
   },
   "changed_files": [
-    "app/(app)/money/split-form.tsx"
+    "app/(app)/money/scan/scan-flow.tsx",
+    "app/(app)/money/split-form.tsx",
+    "app/(app)/chores/new/page.tsx",
+    "app/(app)/chores/[id]/page.tsx",
+    "app/(app)/calendar/away/new/page.tsx",
+    "app/(app)/calendar/away/[id]/page.tsx",
+    "app/(app)/calendar/away/away-form.tsx",
+    "app/(app)/settings/members/[id]/page.tsx",
+    "app/(app)/menu/[date]/page.tsx",
+    "app/(app)/calendar/page.tsx",
+    "app/(app)/chores/page.tsx",
+    "app/(app)/chores/edit/edit-all-chores.tsx",
+    "app/(app)/menu/page.tsx",
+    "app/(app)/money/page.tsx",
+    "app/(app)/money/[id]/page.tsx",
+    "app/(app)/settings/page.tsx",
+    "app/(app)/today/page.tsx",
+    "components/skeletons.tsx"
   ],
   "test_coverage": [
     {
@@ -464,13 +490,13 @@
     {
       "date": "2026-11-09",
       "text": "UI polish sections 2–4 kept the SPEC §6.1 direction (Manrope, cream, teal). Desktop pattern: data-wide pages with two columns, sticky left column where it helps; phone layouts unchanged in structure. Own highlights use a teal outline, not a tinted fill, so avatars and pills keep contrast."
+    },
+    {
+      "date": "2026-11-10",
+      "text": "Money answers: no who-owes-whom balances (each person's share per bill and month only); someone leaving the flat settles outside the app; a long-away flatmate pays only rent, so WiFi becomes 'only people at home'."
     }
   ],
-  "open_questions": [
-    "Should the ledger also show net 'who owes whom' balances (display only), or only each person's share per expense and per month?",
-    "Does the away flatmate pay maintenance or other fixed bills, or only rent and WiFi?",
-    "How should a member who leaves the flat for good settle up? Does the ledger need a 'settled' marker?"
-  ],
+  "open_questions": [],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",
@@ -488,12 +514,12 @@
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "UI polish: every main screen and the New split form are done; the Scan a bill review step and the single chore, away and member edit forms keep the older form layout.",
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
     "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
-    "UI polish 4 (Settings, sign-in, onboarding) and the New split form are committed but not deployed yet (waiting on the user's OK)."
+    "UI polish 4, the New split form and the remaining forms are committed but not deployed yet (waiting on the user's OK).",
+    "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

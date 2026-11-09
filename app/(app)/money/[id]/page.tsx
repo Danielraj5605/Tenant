@@ -98,7 +98,7 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
           {billUrl ? (
             <a href={billUrl} target="_blank" rel="noreferrer" className="block">

@@ -44,7 +44,7 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
                 className={cx(
                   "flex min-h-11 cursor-pointer items-center gap-2 rounded-full border py-1 pr-4 pl-1 font-semibold",
                   "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
-                  checked ? "border-accent bg-accent-tint text-accent-dark" : "border-line-strong bg-surface hover:border-ink/40",
+                  checked ? "border-accent bg-surface text-accent-dark ring-1 ring-accent" : "border-line-strong bg-surface hover:border-ink/40",
                 )}
               >
                 <input

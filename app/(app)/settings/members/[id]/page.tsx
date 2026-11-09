@@ -44,7 +44,9 @@ export default async function EditMemberPage({ params }: PageProps<"/settings/me
           </p>
         </div>
       </header>
-      <EditMemberForm member={member} />
+      <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
+        <EditMemberForm member={member} />
+      </div>
       {member.user_id && member.id !== me.id ? (
         <Card className="mt-6 flex flex-col gap-3">
           <h2 className="text-title font-bold">Forgot their password?</h2>

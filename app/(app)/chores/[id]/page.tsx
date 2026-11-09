@@ -27,17 +27,19 @@ export default async function EditChorePage({ params }: PageProps<"/chores/[id]"
         <BackToChores />
         <h1 className="text-display font-extrabold break-words">{chore.name}</h1>
       </header>
-      <ChoreForm
-        flatmates={flatmates}
-        initial={{
-          id: chore.id,
-          name: chore.name,
-          frequency: chore.frequency,
-          days: chore.days_of_week,
-          dueTime: chore.due_time?.slice(0, 5) ?? "",
-          rotation: (rotation ?? []).map((r) => r.member_id).filter((m) => flatmates.some((f) => f.id === m)),
-        }}
-      />
+      <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
+        <ChoreForm
+          flatmates={flatmates}
+          initial={{
+            id: chore.id,
+            name: chore.name,
+            frequency: chore.frequency,
+            days: chore.days_of_week,
+            dueTime: chore.due_time?.slice(0, 5) ?? "",
+            rotation: (rotation ?? []).map((r) => r.member_id).filter((m) => flatmates.some((f) => f.id === m)),
+          }}
+        />
+      </div>
       <div className="mt-3">
         <DeleteChoreButton id={chore.id} />
       </div>

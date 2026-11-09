@@ -34,7 +34,7 @@ export default async function MoneyPage({ searchParams }: PageProps<"/money">) {
         <p className="font-medium text-muted">Shared costs and why each person owes their share.</p>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
         <div className="flex flex-col gap-4 lg:sticky lg:top-8">
           <div className="flex items-center justify-between rounded-full bg-surface p-1">
             <Link

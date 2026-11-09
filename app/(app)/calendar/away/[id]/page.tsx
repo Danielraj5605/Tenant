@@ -59,18 +59,20 @@ export default async function EditAwayPage({ params }: PageProps<"/calendar/away
         <BackToCalendar date={period.start_date} />
         <h1 className="text-display font-extrabold">Edit away dates</h1>
       </header>
-      <AwayForm
-        members={options}
-        initial={{
-          id: period.id,
-          memberId: period.member_id,
-          startDate: period.start_date,
-          endDate: period.end_date,
-          fullDay: period.full_day,
-          slots: period.slots ?? [],
-          reason: period.reason ?? "",
-        }}
-      />
+      <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
+        <AwayForm
+          members={options}
+          initial={{
+            id: period.id,
+            memberId: period.member_id,
+            startDate: period.start_date,
+            endDate: period.end_date,
+            fullDay: period.full_day,
+            slots: period.slots ?? [],
+            reason: period.reason ?? "",
+          }}
+        />
+      </div>
       <div className="mt-3">
         <DeleteAwayButton id={period.id} back={period.start_date} />
       </div>

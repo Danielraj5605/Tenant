@@ -32,7 +32,9 @@ export default async function PlanDayPage({ params }: PageProps<"/menu/[date]">)
         </Link>
         <h1 className="text-display font-extrabold">{formatShortDate(date)}</h1>
       </header>
-      <DishesForm date={date} breakfast={day?.breakfast ?? ""} lunch={day?.lunch ?? ""} dinner={day?.dinner ?? ""} />
+      <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
+        <DishesForm date={date} breakfast={day?.breakfast ?? ""} lunch={day?.lunch ?? ""} dinner={day?.dinner ?? ""} />
+      </div>
     </>
   );
 }

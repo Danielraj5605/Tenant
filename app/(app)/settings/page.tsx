@@ -84,7 +84,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
         ) : null}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
           {me.is_admin && pending.length ? (
             <Card className="flex flex-col gap-1">

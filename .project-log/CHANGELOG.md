@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-10 — UI polish 6: remaining forms
+
+- Scan a bill review step: step indicator, cards, two columns on desktop, sticky Splitting + Next bar on phones.
+- Single chore, away, member and day-menu forms in a card; outlined chosen person in 'Who is away?'.
+- Fixed: scan review step wider than a phone screen; all two-column pages now use grid-cols-1 below desktop.
+- Test fix: 'no sideways scroll' now compares with the real screen width (phone emulation zooms out instead of scrolling).
+- E2E: 40/40 incl. a real bill read and saved; the other six suites pass. 162/162 unit tests.
+
 ## 2026-11-10 — UI polish 5: New split form
 
 - Three cards (Details, Line items, Each person's share); two columns on desktop with the shares card in view; sticky status + Save bar on phones.

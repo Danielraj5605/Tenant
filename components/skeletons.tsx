@@ -33,7 +33,7 @@ export function TodaySkeleton() {
         </div>
         <Skeleton className="size-11 rounded-full" />
       </div>
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
           <div className="flex h-40 flex-col justify-between rounded-[var(--radius-card)] bg-accent/15 p-5">
             <Skeleton className="h-4 w-28 bg-accent/20" />
@@ -67,7 +67,7 @@ export function CalendarSkeleton() {
   return (
     <div data-wide className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">
       <Skeleton className="mb-2 h-9 w-48" />
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-4">
           <Skeleton className="mx-auto h-6 w-36" />
           <div className="grid grid-cols-7 gap-1.5">
@@ -109,7 +109,7 @@ export function ChoresSkeleton() {
         <Skeleton className="h-11 w-36 rounded-full" />
       </div>
       <Skeleton className="h-[52px] w-full rounded-full lg:max-w-sm" />
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {Array.from({ length: 2 }, (_, i) => (
           <div key={i} className="flex flex-col gap-4 rounded-[var(--radius-card)] bg-surface p-5">
             <div className="flex justify-between">
@@ -144,7 +144,7 @@ export function MenuSkeleton() {
         <Skeleton className="h-11 w-36 rounded-full" />
       </div>
       <Skeleton className="h-[52px] w-full rounded-full lg:max-w-md" />
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {Array.from({ length: 2 }, (_, i) => (
           <div key={i} className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-5">
             <div className="flex justify-between">
@@ -172,7 +172,7 @@ export function MoneySkeleton() {
         <Skeleton className="h-9 w-32" />
         <Skeleton className="h-4 w-2/3 max-w-80" />
       </div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start">
         <div className="flex flex-col gap-4">
           <Skeleton className="h-[52px] w-full rounded-full" />
           <div className="grid h-28 grid-cols-2 gap-4 rounded-[var(--radius-card)] bg-surface p-5">
@@ -207,7 +207,7 @@ export function SettingsSkeleton() {
         <Skeleton className="h-9 w-48" />
         <Skeleton className="h-4 w-40" />
       </div>
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-5">
           <Skeleton className="h-6 w-28" />
           {Array.from({ length: 4 }, (_, i) => (

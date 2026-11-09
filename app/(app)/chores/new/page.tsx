@@ -13,10 +13,12 @@ export default async function NewChorePage() {
         <BackToChores />
         <h1 className="text-display font-extrabold">Add chore</h1>
       </header>
-      <ChoreForm
-        flatmates={flatmates}
-        initial={{ name: "", frequency: "daily", days: [], dueTime: "", rotation: flatmates.map((f) => f.id) }}
-      />
+      <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
+        <ChoreForm
+          flatmates={flatmates}
+          initial={{ name: "", frequency: "daily", days: [], dueTime: "", rotation: flatmates.map((f) => f.id) }}
+        />
+      </div>
     </>
   );
 }

@@ -144,7 +144,7 @@ export default async function TodayPage() {
         </section>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
           {pendingDuties.length ? (
             // The one thing to act on today gets the strongest block on the page.
