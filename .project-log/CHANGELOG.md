@@ -6,6 +6,7 @@
 - `saveAllChores` server action: validates all chores first (per-chore errors), checks chore and member ownership, then writes.
 - Chores page: 'Edit chores' button, saved notice, labelled pencil Edit on each chore.
 - E2E on a production build (throwaway flat): 38/38. 162/162 unit tests.
+- Deployed with a815730; re-run on the live site: 38/38.
 
 ## 2026-11-09 — Plan the whole week's menu on one screen
 
@@ -14,6 +15,7 @@
 - New table `menu_templates` (migration `20261115000001`, pushed by the user) for the flat's usual menu.
 - `saveWeek` server action: owner/admin only, writes days from today on, leaves `plan` alone, optionally saves the usual menu.
 - E2E on a production build (throwaway flat): 38/38. 162/162 unit tests.
+- Deployed with a815730; re-run on the live site: 38/38.
 
 ## 2026-11-07 — Upload a bill photo or PDF (read only)
 

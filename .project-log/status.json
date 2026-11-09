@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794240140-8964"
+    "version": "1794240548-bcfb"
   },
   "sections": [
     {
@@ -249,8 +249,10 @@
       "title": "Plan the whole week's menu on one screen",
       "status": "done",
       "date": "2026-11-09",
-      "commits": [],
-      "summary": "Menu has a 'Plan the week' button (menu owner, or the admin while none is set). One screen holds all 7 days × breakfast, lunch, dinner with one Save: cards on phones, a table on desktop, sticky save bar. 'Copy last week', 'Use usual menu' and 'Clear' fill the days still to come, with Undo; nothing is saved until Save week. Past days are read-only; a finished week says so. 'Save as our usual menu' stores the 7 days in a new menu_templates table (migration 20261115000001, pushed). Saving keeps each day's Order in / We'll cook choice. E2E on a production build with a throwaway flat: 38/38, no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "1ed7844"
+      ],
+      "summary": "Menu has a 'Plan the week' button (menu owner, or the admin while none is set). One screen holds all 7 days × breakfast, lunch, dinner with one Save: cards on phones, a table on desktop, sticky save bar. 'Copy last week', 'Use usual menu' and 'Clear' fill the days still to come, with Undo; nothing is saved until Save week. Past days are read-only; a finished week says so. 'Save as our usual menu' stores the 7 days in a new menu_templates table (migration 20261115000001, pushed). Saving keeps each day's Order in / We'll cook choice. E2E on a production build with a throwaway flat: 38/38, no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (a815730); re-run on the live site: 38/38.",
       "screenshots": true
     },
     {
@@ -258,8 +260,10 @@
       "title": "Edit all chores on one screen",
       "status": "done",
       "date": "2026-11-09",
-      "commits": [],
-      "summary": "Chores has an 'Edit chores' button that opens every chore on one screen: name, days (Daily + Mon–Sun chips: all seven is daily, one is weekly, otherwise some days), done-by time, and who takes turns (folded summary 'A → B → C', opens to reorder, remove or add people). Add a chore and delete (with Undo) on the same screen; an 'Edited'/'New' tag and a counter show what will change; one 'Save changes' saves them all. Every chore is checked before anything is written, so one bad chore saves nothing and is outlined with its own error. Each chore's Edit is now a labelled pencil button. Same rule as before: any flatmate can change chores. E2E on a production build with a throwaway flat: 38/38, no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "a815730"
+      ],
+      "summary": "Chores has an 'Edit chores' button that opens every chore on one screen: name, days (Daily + Mon–Sun chips: all seven is daily, one is weekly, otherwise some days), done-by time, and who takes turns (folded summary 'A → B → C', opens to reorder, remove or add people). Add a chore and delete (with Undo) on the same screen; an 'Edited'/'New' tag and a counter show what will change; one 'Save changes' saves them all. Every chore is checked before anything is written, so one bad chore saves nothing and is outlined with its own error. Each chore's Edit is now a labelled pencil button. Same rule as before: any flatmate can change chores. E2E on a production build with a throwaway flat: 38/38, no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (a815730); re-run on the live site: 38/38.",
       "screenshots": true
     }
   ],
@@ -447,7 +451,6 @@
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
-    "Week menu and Edit chores are committed but not deployed yet (waiting on the user's OK to push to main).",
     "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it)."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
