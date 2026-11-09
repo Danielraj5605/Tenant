@@ -14,13 +14,13 @@ import {
 } from "@/lib/engine/calendar";
 import { MEALS, awayOn, headcount } from "@/lib/engine/presence";
 import type { MemberRole } from "@/lib/supabase/types";
-import { AwayRow, DOT_CLASS, RoleDot, partLabel, type AwayItem } from "@/components/away";
+import { AwayRow, DOT_CLASS, ROLE_LABEL, RoleDot, partLabel, type AwayItem } from "@/components/away";
 import { canEditAwayFor } from "@/lib/engine/permissions";
 import { mealsPhrase } from "@/components/meals";
 import { cookStatusOn } from "@/lib/engine/menu";
 import { ScreenHeader } from "@/components/screen";
-import { Card, cx } from "@/components/ui";
-import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
+import { Avatar, Card, Pill, SectionHeading, cx } from "@/components/ui";
+import { AlertIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Calendar · Tenant" };
 
@@ -57,145 +57,184 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   const selectedAway = awayOn(selected, items);
   const flatmates = members.filter((m) => m.role === "flatmate" && m.joined_on <= selected && (!m.left_on || m.left_on >= selected));
   const home = headcount(members, selected, periods);
-  const fullAway = selectedAway.filter((p) => p.full_day);
-  const partAway = selectedAway.filter((p) => !p.full_day);
+  // Whole-day absences first, then people out for part of the day.
+  const dayRows = [...selectedAway.filter((p) => p.full_day), ...selectedAway.filter((p) => !p.full_day)];
   const { noCookMeals } = cookStatusOn(members, selected, periods);
 
   const href = (q: Record<string, string>) => `/calendar?${new URLSearchParams(q).toString()}`;
 
   return (
-    <>
+    <div data-wide>
       <ScreenHeader title="Calendar" />
 
-      <Card className="flex flex-col gap-3 px-3 pt-3 pb-4">
-        <div className="flex items-center justify-between">
-          <Link
-            href={href({ m: shiftMonth(month, -1) })}
-            className="flex size-11 items-center justify-center rounded-full hover:bg-bg"
-            aria-label="Previous month"
-          >
-            <ChevronLeftIcon size={22} />
-          </Link>
-          <h2 className="text-title font-bold" aria-live="polite">
-            {formatMonth(month)}
-          </h2>
-          <Link
-            href={href({ m: shiftMonth(month, 1) })}
-            className="flex size-11 items-center justify-center rounded-full hover:bg-bg"
-            aria-label="Next month"
-          >
-            <ChevronRightIcon size={22} />
-          </Link>
-        </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
+        <Card className="flex flex-col gap-3 px-3 pt-3 pb-4 lg:sticky lg:top-8">
+          <div className="flex items-center justify-between">
+            <Link
+              href={href({ m: shiftMonth(month, -1) })}
+              className="flex size-11 items-center justify-center rounded-full hover:bg-bg"
+              aria-label="Previous month"
+            >
+              <ChevronLeftIcon size={22} />
+            </Link>
+            <h2 className="text-title font-bold" aria-live="polite">
+              {formatMonth(month)}
+            </h2>
+            <Link
+              href={href({ m: shiftMonth(month, 1) })}
+              className="flex size-11 items-center justify-center rounded-full hover:bg-bg"
+              aria-label="Next month"
+            >
+              <ChevronRightIcon size={22} />
+            </Link>
+          </div>
 
-        <table className="w-full table-fixed border-separate border-spacing-y-0.5 text-center">
-          <thead>
-            <tr>
-              {WEEKDAYS.map((d) => (
-                <th key={d} scope="col" className="pb-1 text-xs font-semibold text-muted">
-                  <abbr title={d} className="no-underline">
-                    {d.charAt(0)}
-                  </abbr>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {monthGrid(month).map((week) => (
-              <tr key={week[0].date}>
-                {week.map(({ date, inMonth: within }) => {
-                  const roles = rolesAwayOn(date);
-                  const isToday = date === today;
-                  const isSelected = date === selected;
-                  const label = `${formatShortDate(date)}${roles.length ? `, ${roles.join(", ")} away` : ""}`;
-                  return (
-                    <td key={date} className="p-0">
-                      <Link
-                        href={href({ m: month, d: date })}
-                        scroll={false}
-                        aria-label={label}
-                        aria-current={isSelected ? "date" : undefined}
-                        className={cx(
-                          "mx-auto flex h-12 w-11 flex-col items-center justify-center gap-1 rounded-xl text-sm font-semibold",
-                          isSelected ? "bg-accent text-white" : "hover:bg-bg",
-                          !isSelected && isToday && "ring-2 ring-accent ring-inset",
-                          !within && !isSelected && "text-muted/60",
-                        )}
-                      >
-                        {Number(date.slice(8))}
-                        <span className="flex h-1.5 gap-0.5">
-                          {roles.map((r) => (
-                            <span
-                              key={r}
-                              className={cx("size-1.5 rounded-full", DOT_CLASS[r], isSelected && "ring-1 ring-white")}
-                            />
-                          ))}
-                        </span>
-                      </Link>
-                    </td>
-                  );
-                })}
+          <table className="w-full table-fixed border-separate border-spacing-y-0.5 text-center">
+            <thead>
+              <tr>
+                {WEEKDAYS.map((d) => (
+                  <th key={d} scope="col" className="pb-1 text-xs font-semibold text-muted">
+                    <abbr title={d} className="no-underline">
+                      {d.charAt(0)}
+                    </abbr>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {monthGrid(month).map((week) => (
+                <tr key={week[0].date}>
+                  {week.map(({ date, inMonth: within }) => {
+                    const roles = rolesAwayOn(date);
+                    const isToday = date === today;
+                    const isSelected = date === selected;
+                    const label = `${formatShortDate(date)}${roles.length ? `, ${roles.join(", ")} away` : ""}`;
+                    return (
+                      <td key={date} className="p-0">
+                        <Link
+                          href={href({ m: month, d: date })}
+                          scroll={false}
+                          aria-label={label}
+                          aria-current={isSelected ? "date" : undefined}
+                          className={cx(
+                            "mx-auto flex h-12 w-full max-w-14 flex-col items-center justify-center gap-1 rounded-xl text-sm font-semibold transition-colors lg:h-14",
+                            isSelected ? "bg-accent text-white" : "hover:bg-bg",
+                            !isSelected && isToday && "ring-2 ring-accent ring-inset",
+                            !within && !isSelected && "text-muted/60",
+                          )}
+                        >
+                          {Number(date.slice(8))}
+                          <span className="flex h-1.5 gap-0.5">
+                            {roles.map((r) => (
+                              <span
+                                key={r}
+                                className={cx("size-1.5 rounded-full", DOT_CLASS[r], isSelected && "ring-1 ring-white")}
+                              />
+                            ))}
+                          </span>
+                        </Link>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        <ul className="flex justify-center gap-4 text-xs font-semibold text-muted" aria-label="Legend">
-          <li className="flex items-center gap-1.5">
-            <RoleDot role="cook" className="size-2" /> Cook away
-          </li>
-          <li className="flex items-center gap-1.5">
-            <RoleDot role="maid" className="size-2" /> Maid away
-          </li>
-          <li className="flex items-center gap-1.5">
-            <RoleDot role="flatmate" className="size-2" /> Flatmate away
-          </li>
-        </ul>
-      </Card>
-
-      <section aria-labelledby="day-heading" className="mt-4 flex flex-col gap-2 px-1">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="day-heading" className="text-title font-bold">
-            {selected === today ? "Today" : formatShortDate(selected)}
-          </h2>
-          <p className="text-sm font-semibold text-muted">
-            {home} of {flatmates.length} home
-          </p>
-        </div>
-        {noCookMeals.length ? (
-          <p className="text-sm font-semibold text-warn-ink">
-            {noCookMeals.length === MEALS.length ? "No cook this day." : `No cook for ${mealsPhrase(noCookMeals)}.`}
-          </p>
-        ) : null}
-        {selectedAway.length === 0 ? <p className="text-muted">Everyone is in.</p> : null}
-        {fullAway.length ? <p className="text-muted">Away: {fullAway.map((p) => p.member.name).join(", ")}</p> : null}
-        {partAway.length ? (
-          <p className="text-muted">
-            Out part of the day:{" "}
-            {partAway.map((p) => `${p.member.name} (${partLabel(p.slots).replace(/ only$/, "").toLowerCase()})`).join(", ")}
-          </p>
-        ) : null}
-      </section>
-
-      <Link
-        href={`/calendar/away/new?d=${selected}`}
-        className="mt-5 inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-accent px-6 font-bold text-white hover:bg-accent-dark"
-      >
-        Mark someone away
-      </Link>
-
-      <Card className="mt-5 flex flex-col gap-1 px-3">
-        <h2 className="px-2 pb-1 text-title font-bold">Who&rsquo;s away in {formatMonth(month).split(" ")[0]}</h2>
-        {inMonth.length === 0 ? (
-          <p className="px-2 pb-1 text-muted">Nobody is marked away this month.</p>
-        ) : (
-          <ul className="flex flex-col">
-            {inMonth.map((item) => (
-              <AwayRow key={item.id} item={item} today={today} editable={canEditAwayFor(me, item.member)} />
-            ))}
+          <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-semibold text-muted" aria-label="Legend">
+            <li className="flex items-center gap-1.5">
+              <RoleDot role="cook" className="size-2" /> Cook away
+            </li>
+            <li className="flex items-center gap-1.5">
+              <RoleDot role="maid" className="size-2" /> Maid away
+            </li>
+            <li className="flex items-center gap-1.5">
+              <RoleDot role="flatmate" className="size-2" /> Flatmate away
+            </li>
           </ul>
-        )}
-      </Card>
-    </>
+        </Card>
+
+        <div className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-3">
+            <SectionHeading
+              id="day-heading"
+              title={selected === today ? "Today" : formatShortDate(selected)}
+              meta={
+                <Pill>
+                  <UsersIcon size={14} />
+                  {home} of {flatmates.length} home
+                </Pill>
+              }
+            />
+            {noCookMeals.length ? (
+              <p className="flex items-center gap-2 rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-ink">
+                <AlertIcon size={18} className="shrink-0" />
+                {noCookMeals.length === MEALS.length ? "No cook this day." : `No cook for ${mealsPhrase(noCookMeals)}.`}
+              </p>
+            ) : null}
+            {dayRows.length === 0 ? (
+              <p className="flex items-center gap-2 py-1 text-muted">
+                <CheckIcon size={18} className="shrink-0 text-accent" />
+                Everyone is in.
+              </p>
+            ) : (
+              <ul className="-mx-2 flex flex-col" aria-labelledby="day-heading">
+                {dayRows.map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/calendar/away/${p.id}`}
+                      className="flex min-h-14 items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-bg"
+                    >
+                      <span className="relative">
+                        <Avatar name={p.member.name} size={36} away />
+                        <RoleDot role={p.member.role} className="absolute -right-0.5 -bottom-0.5 size-3 ring-2 ring-surface" />
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate font-bold">{p.member.name}</span>
+                        <span className="truncate text-sm text-muted">
+                          {[
+                            p.member.role !== "flatmate" ? ROLE_LABEL[p.member.role] : null,
+                            p.full_day ? "Away all day" : `Out: ${partLabel(p.slots).replace(/ only$/, "").toLowerCase()}`,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </span>
+                      <ChevronRightIcon size={18} className="shrink-0 text-muted" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Link
+              href={`/calendar/away/new?d=${selected}`}
+              className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-accent px-6 font-bold text-white hover:bg-accent-dark"
+            >
+              <PlusIcon size={20} />
+              Mark someone away
+            </Link>
+          </Card>
+
+          <Card className="flex flex-col gap-1 px-3">
+            <div className="px-2 pb-1">
+              <SectionHeading
+                id="month-away-heading"
+                title={<>Who&rsquo;s away in {formatMonth(month).split(" ")[0]}</>}
+                meta={inMonth.length ? <Pill tone="neutral">{inMonth.length}</Pill> : null}
+              />
+            </div>
+            {inMonth.length === 0 ? (
+              <p className="px-2 pb-1 text-muted">Nobody is marked away this month.</p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-line" aria-labelledby="month-away-heading">
+                {inMonth.map((item) => (
+                  <AwayRow key={item.id} item={item} today={today} editable={canEditAwayFor(me, item.member)} />
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 }

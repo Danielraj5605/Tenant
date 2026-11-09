@@ -6,10 +6,10 @@ import { todayIn } from "@/lib/engine/dates";
 import { addDays, formatRange, formatShortDate } from "@/lib/engine/calendar";
 import { isPresent } from "@/lib/engine/presence";
 import { scheduleLabel } from "@/lib/engine/rotation";
-import { Avatar, Card, Notice, cx } from "@/components/ui";
+import { Avatar, Card, Notice, Pill, cx } from "@/components/ui";
 import { Badge } from "@/components/away";
 import { DutyButton } from "@/components/chore-duty";
-import { CheckIcon, ChevronRightIcon, PencilIcon, PlusIcon } from "@/components/icons";
+import { AlertIcon, CheckIcon, ChevronRightIcon, PencilIcon, PlusIcon } from "@/components/icons";
 
 export const metadata = { title: "Chores · Tenant" };
 
@@ -21,6 +21,9 @@ const formatTime = (t: string | null) => {
     .toLowerCase();
 };
 
+/** "Tue" from an ISO date. */
+const weekdayOf = (iso: string) => formatShortDate(iso).split(" ")[0];
+
 export default async function ChoresPage({ searchParams }: PageProps<"/chores">) {
   const { me, flat } = await requireFlat();
   const { tab, saved } = await searchParams;
@@ -28,6 +31,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
   const today = todayIn(flat.timezone);
   const { views, members, periods } = await loadChoreWeek(flat.id, today);
   const nameOf = new Map(members.map((m) => [m.id, m.name]));
+  const shortName = (id: string) => (id === me.id ? "You" : (nameOf.get(id) ?? "Former member"));
 
   // Away banner: anyone in a rotation who is away for whole days this week.
   // Part-day absences only change meals, so their turns don't move.
@@ -39,14 +43,14 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
 
   const tabClass = (active: boolean) =>
     cx(
-      "flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-bold",
+      "flex min-h-11 flex-1 items-center justify-center rounded-full text-sm font-bold transition-colors",
       active ? "bg-surface text-ink shadow-sm" : "text-muted hover:text-ink",
     );
 
   return (
-    <>
+    <div data-wide>
       <header className="mb-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-        <h1 className="text-display font-extrabold">Chores</h1>
+        <h1 className="text-display font-extrabold lg:text-display-lg">Chores</h1>
         <div className="flex gap-2">
           <Link
             href="/chores/new"
@@ -74,7 +78,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
         </div>
       ) : null}
 
-      <nav aria-label="Chore views" className="mb-4 flex gap-1 rounded-full bg-line/70 p-1">
+      <nav aria-label="Chore views" className="mb-4 flex gap-1 rounded-full bg-line/70 p-1 lg:max-w-sm">
         <Link href="/chores" className={tabClass(view === "week")} aria-current={view === "week" ? "page" : undefined}>
           This week
         </Link>
@@ -88,37 +92,42 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
       </nav>
 
       {awayThisWeek.length ? (
-        <div className="mb-4 rounded-[var(--radius-card)] bg-info-bg px-4 py-3 text-sm font-semibold text-info-ink">
-          {awayThisWeek.map((p) => (
-            <p key={p.id}>
-              {nameOf.get(p.member_id)} is away {formatRange(p.start_date, p.end_date)}. Their turns go to the next
-              person.
-            </p>
-          ))}
+        <div className="mb-4 flex gap-3 rounded-[var(--radius-card)] bg-info-bg px-4 py-3 text-sm font-semibold text-info-ink">
+          <AlertIcon size={18} className="mt-0.5 shrink-0" />
+          <div className="flex flex-col gap-1">
+            {awayThisWeek.map((p) => (
+              <p key={p.id}>
+                {nameOf.get(p.member_id)} is away {formatRange(p.start_date, p.end_date)}. Their turns go to the next
+                person.
+              </p>
+            ))}
+          </div>
         </div>
       ) : null}
 
       {views.length === 0 ? (
-        <Card className="flex flex-col gap-3">
+        <Card className="flex flex-col gap-3 lg:max-w-xl">
           <h2 className="text-title font-bold">No chores yet</h2>
           <p className="text-muted">
             Add garbage, kitchen cleaning, water cans or anything else that rotates. Tenant skips whoever is away.
           </p>
           <Link
             href="/chores/new"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-accent font-bold text-white hover:bg-accent-dark"
+            className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-accent font-bold text-white hover:bg-accent-dark"
           >
+            <PlusIcon size={20} />
             Add the first chore
           </Link>
         </Card>
       ) : view === "week" ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-3 lg:grid-cols-2 lg:items-start">
           {views.map(({ chore, today: duty, upcoming }) => {
             const ownerId = duty?.member_id ?? null;
             const mine = ownerId === me.id;
             const time = formatTime(chore.due_time);
+            const pendingMine = mine && duty?.status === "pending";
             return (
-              <li key={chore.id}>
+              <li key={chore.id} className="min-w-0">
                 <Card className="flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 flex-col">
@@ -138,7 +147,12 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                     </Link>
                   </div>
 
-                  <div className="flex items-center gap-3 rounded-xl bg-bg px-3 py-3">
+                  <div
+                    className={cx(
+                      "flex min-h-14 items-center gap-3 rounded-xl px-3 py-2",
+                      pendingMine ? "bg-surface ring-2 ring-accent ring-inset" : "bg-sunk",
+                    )}
+                  >
                     {!duty ? (
                       <p className="text-sm font-semibold text-muted">Not due today</p>
                     ) : duty.status === "skipped" ? (
@@ -148,13 +162,15 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                         <Avatar name={nameOf.get(ownerId!) ?? "?"} size={36} />
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className="text-xs font-semibold text-muted">Today</span>
-                          <span className="truncate font-bold">{mine ? "You" : nameOf.get(ownerId!)}</span>
+                          <span className="truncate font-bold">{shortName(ownerId!)}</span>
                         </span>
                         {duty.status === "done" ? (
-                          <span className="inline-flex items-center gap-1 text-sm font-bold text-accent-dark">
-                            <CheckIcon size={18} /> Done
-                          </span>
-                        ) : null}
+                          <Pill>
+                            <CheckIcon size={14} strokeWidth={2.5} /> Done
+                          </Pill>
+                        ) : (
+                          <Pill tone={pendingMine ? "accent" : "neutral"}>To do</Pill>
+                        )}
                       </>
                     )}
                   </div>
@@ -167,18 +183,38 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                   ) : null}
 
                   {upcoming.length ? (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-2">
                       <h3 className="text-sm font-bold">Who&rsquo;s next</h3>
-                      <ul className="flex flex-col">
+                      <ol className="grid grid-cols-4 gap-2">
                         {upcoming.slice(0, 4).map((d) => (
-                          <li key={d.date} className="flex min-h-9 items-center justify-between text-sm">
-                            <span className="text-muted">{formatShortDate(d.date)}</span>
-                            <span className={d.memberId ? "font-semibold" : "text-muted"}>
-                              {d.memberId ? (d.memberId === me.id ? "You" : nameOf.get(d.memberId)) : "Skipped"}
+                          <li
+                            key={d.date}
+                            className={cx(
+                              "flex min-w-0 flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center",
+                              d.memberId === me.id ? "border-accent bg-surface ring-1 ring-accent" : "border-line",
+                            )}
+                          >
+                            <span className="text-xs font-semibold text-muted">
+                              <abbr title={formatShortDate(d.date)} className="no-underline">
+                                {weekdayOf(d.date)}
+                              </abbr>
+                            </span>
+                            {d.memberId ? (
+                              <Avatar name={nameOf.get(d.memberId) ?? "?"} size={28} />
+                            ) : (
+                              <span className="size-7 rounded-full border-2 border-dashed border-line-strong" aria-hidden="true" />
+                            )}
+                            <span
+                              className={cx(
+                                "w-full truncate text-xs",
+                                d.memberId ? "font-bold" : "font-semibold text-muted",
+                              )}
+                            >
+                              {d.memberId ? shortName(d.memberId) : "Skipped"}
                             </span>
                           </li>
                         ))}
-                      </ul>
+                      </ol>
                     </div>
                   ) : null}
                 </Card>
@@ -187,32 +223,36 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
           })}
         </ul>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid gap-3 lg:grid-cols-2 lg:items-start">
           {views.map(({ chore, rotation, today: duty }) => (
-            <li key={chore.id}>
-              <Card className="flex flex-col gap-3 px-3">
+            <li key={chore.id} className="min-w-0">
+              <Card className="flex flex-col gap-2 px-3">
                 <Link
                   href={`/chores/${chore.id}`}
-                  className="flex min-h-11 items-center justify-between rounded-xl px-2 hover:bg-bg"
+                  aria-label={`Edit ${chore.name}`}
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2 hover:bg-bg"
                 >
-                  <span className="flex flex-col">
-                    <span className="text-title font-bold">{chore.name}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-title font-bold">{chore.name}</span>
                     <span className="text-sm text-muted">{scheduleLabel(chore)}</span>
                   </span>
-                  <ChevronRightIcon size={20} className="text-muted" />
+                  <span className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-accent">
+                    Edit
+                    <ChevronRightIcon size={18} />
+                  </span>
                 </Link>
                 {/* Rotation order is a real sequence, so it is numbered. */}
-                <ol className="flex flex-col">
+                <ol className="flex flex-col divide-y divide-line">
                   {rotation.map((id, i) => {
                     const member = members.find((m) => m.id === id);
                     const away = member ? !isPresent(member, today, periods) : true;
                     const current = duty?.member_id === id;
                     return (
-                      <li key={id} className="flex min-h-12 items-center gap-3 border-t border-line px-2">
-                        <span className="w-5 text-sm font-bold text-muted">{i + 1}</span>
+                      <li key={id} className="flex min-h-12 items-center gap-3 px-2">
+                        <span className="w-5 text-sm font-bold text-muted tabular-nums">{i + 1}</span>
                         <Avatar name={nameOf.get(id) ?? "?"} size={32} away={away} />
-                        <span className={cx("flex-1 font-semibold", away && "text-muted")}>
-                          {nameOf.get(id) ?? "Former member"}
+                        <span className={cx("min-w-0 flex-1 truncate font-semibold", away && "text-muted")}>
+                          {id === me.id ? "You" : (nameOf.get(id) ?? "Former member")}
                         </span>
                         {away ? <Badge tone="info">Away, skipped</Badge> : current ? <Badge>Today</Badge> : null}
                       </li>
@@ -224,6 +264,6 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
           ))}
         </ul>
       )}
-    </>
+    </div>
   );
 }

@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794240548-bcfb"
+    "version": "1794241156-0e4e"
   },
   "sections": [
     {
@@ -265,19 +265,33 @@
       ],
       "summary": "Chores has an 'Edit chores' button that opens every chore on one screen: name, days (Daily + Mon–Sun chips: all seven is daily, one is weekly, otherwise some days), done-by time, and who takes turns (folded summary 'A → B → C', opens to reorder, remove or add people). Add a chore and delete (with Undo) on the same screen; an 'Edited'/'New' tag and a counter show what will change; one 'Save changes' saves them all. Every chore is checked before anything is written, so one bad chore saves nothing and is outlined with its own error. Each chore's Edit is now a labelled pencil button. Same rule as before: any flatmate can change chores. E2E on a production build with a throwaway flat: 38/38, no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (a815730); re-run on the live site: 38/38.",
       "screenshots": true
+    },
+    {
+      "id": "ui-polish-calendar-chores",
+      "title": "UI polish 2: Calendar and Chores",
+      "status": "done",
+      "date": "2026-11-09",
+      "commits": [],
+      "summary": "Calendar: on desktop the month grid sits beside the selected day; the day panel has an 'X of Y home' pill, a no-cook warning row, one row per away person ('Away all day' / 'Out: night', cook and maid labelled) that opens their away period, and the Mark someone away button; 'Who's away in <month>' has a count and divided rows. Chores: lighter cards in two columns on desktop; today's row shows who with a To do / Done pill (your own pending duty is outlined in teal); 'Who's next' is a 4-day strip with your days outlined; the away banner has an icon; rotation rows are divided with 'You' for yourself. Calendar and Chores have loading placeholders shaped like the page (their form pages keep the generic one). Checked on a production build with a seeded throwaway flat (3 flatmates, cook, maid, away periods, 3 chores): 38/38 including Mark done → Undo, keyboard day selection and empty states; Edit chores e2e still 38/38; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "ui-polish-calendar-chores",
-    "title": "UI polish 2: Calendar and Chores",
-    "summary": "Same polish on Calendar (month grid, Who's away list, away form) and Chores (this week, rotation, chore form): lighter rows instead of a card for everything, consistent headings, states and skeletons."
+    "id": "ui-polish-menu-money",
+    "title": "UI polish 3: Menu and Money",
+    "summary": "Same polish on Menu (week list, day cards) and Money (ledger, expense detail, New split, scan): lighter rows, consistent headings, states and skeletons."
   },
   "changed_files": [
+    "app/(app)/calendar/page.tsx",
+    "app/(app)/calendar/loading.tsx",
+    "app/(app)/calendar/away/loading.tsx",
     "app/(app)/chores/page.tsx",
-    "app/(app)/chores/actions.ts",
-    "app/(app)/chores/edit/page.tsx",
-    "app/(app)/chores/edit/edit-all-chores.tsx"
+    "app/(app)/chores/loading.tsx",
+    "app/(app)/chores/new/loading.tsx",
+    "app/(app)/chores/edit/loading.tsx",
+    "app/(app)/chores/[id]/loading.tsx",
+    "components/skeletons.tsx"
   ],
   "test_coverage": [
     {
@@ -447,7 +461,7 @@
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "UI polish is part-way: Calendar, Chores, Menu, Money, Settings, sign-in and onboarding still have the old card-heavy layout. On desktop they now sit beside the new navigation rail but are otherwise unchanged until their sections.",
+    "UI polish is part-way: Menu, Money, Settings, sign-in and onboarding still have the old card-heavy layout (Today, Calendar and Chores are done).",
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",

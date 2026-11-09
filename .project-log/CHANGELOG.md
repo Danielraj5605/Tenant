@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-09 — UI polish 2: Calendar and Chores
+
+- Calendar: two columns on desktop; day panel with home pill, no-cook row, one row per away person, Mark someone away; month list with count.
+- Chores: lighter cards (two columns on desktop), Today row with To do / Done pill, 4-day Who's next strip, outlined highlights for your own turns.
+- Page-shaped loading placeholders for Calendar and Chores.
+- E2E on a production build with a seeded throwaway flat: 38/38; Edit chores still 38/38. 162/162 unit tests.
+
 ## 2026-11-09 — Edit all chores on one screen
 
 - New `/chores/edit`: every chore's name, days, time and rotation on one screen; add and delete (with Undo); one Save.

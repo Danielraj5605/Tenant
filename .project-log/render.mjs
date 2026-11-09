@@ -13,17 +13,35 @@ const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const code = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
 
-function shots(sectionId) {
-  const d = join(dir, "shots", sectionId);
-  if (!existsSync(d)) return [];
-  return readdirSync(d)
-    .filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
-    .sort((a, b) => parseInt(a) - parseInt(b))
-    .map((f) => {
-      const ext = extname(f).slice(1).toLowerCase().replace("jpg", "jpeg");
-      return { name: f, src: `data:image/${ext};base64,${readFileSync(join(d, f)).toString("base64")}` };
-    });
+// Screenshots are embedded as smaller WebP copies (max 560 px wide) so the page
+// stays under the 16 MB artifact limit. Without sharp, the originals are used.
+let sharp = null;
+try {
+  sharp = (await import("sharp")).default;
+} catch {
+  sharp = null;
 }
+
+async function embed(file) {
+  if (sharp) {
+    const buf = await sharp(file).resize({ width: 560, withoutEnlargement: true }).webp({ quality: 72 }).toBuffer();
+    return `data:image/webp;base64,${buf.toString("base64")}`;
+  }
+  const ext = extname(file).slice(1).toLowerCase().replace("jpg", "jpeg");
+  return `data:image/${ext};base64,${readFileSync(file).toString("base64")}`;
+}
+
+const shotCache = new Map();
+for (const s of status.sections) {
+  const d = join(dir, "shots", s.id);
+  if (!existsSync(d)) continue;
+  const files = readdirSync(d)
+    .filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
+    .sort((a, b) => parseInt(a) - parseInt(b));
+  shotCache.set(s.id, await Promise.all(files.map(async (f) => ({ name: f, src: await embed(join(d, f)) }))));
+}
+
+const shots = (sectionId) => shotCache.get(sectionId) ?? [];
 
 const counts = status.sections.reduce((m, s) => ((m[s.status] = (m[s.status] || 0) + 1), m), {});
 
