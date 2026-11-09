@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
   "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
-  "last_updated": "2026-11-07",
-  "last_sync": "2026-11-07",
+  "last_updated": "2026-11-09",
+  "last_sync": "2026-11-09",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794048065-90b8"
+    "version": "1794239656-8762"
   },
   "sections": [
     {
@@ -243,32 +243,31 @@
       ],
       "summary": "Scan a bill now has 'Take a photo' (camera) and 'Upload a photo or PDF' (gallery, files, screenshots, e-bills); desktop gets a drop zone. PDFs up to 4 MB go straight to Gemini; photos are still compressed first. At the user's request the bill is only read: nothing is uploaded to storage any more, and new scanned expenses have no bill picture (older ones keep theirs). Server checks the file's real content (JPEG or %PDF) and size; the page explains a too-large PDF or a wrong file type. Checked locally: a sample PDF and PNG bill each read correctly to the review step (~7 s and ~4 s), all 5 lines, total matches; nothing saved. Typecheck, lint, 162/162 tests pass. Deployed (4fb6a5c); re-run on the live site: PDF and PNG both read correctly (~7 s, ~5 s).",
       "screenshots": true
+    },
+    {
+      "id": "week-menu",
+      "title": "Plan the whole week's menu on one screen",
+      "status": "done",
+      "date": "2026-11-09",
+      "commits": [],
+      "summary": "Menu has a 'Plan the week' button (menu owner, or the admin while none is set). One screen holds all 7 days × breakfast, lunch, dinner with one Save: cards on phones, a table on desktop, sticky save bar. 'Copy last week', 'Use usual menu' and 'Clear' fill the days still to come, with Undo; nothing is saved until Save week. Past days are read-only; a finished week says so. 'Save as our usual menu' stores the 7 days in a new menu_templates table (migration 20261115000001, pushed). Saving keeps each day's Order in / We'll cook choice. E2E on a production build with a throwaway flat: 38/38, no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "ui-polish-calendar-chores",
-    "title": "UI polish 2: Calendar and Chores",
-    "summary": "Same polish on Calendar (month grid, Who's away list, away form) and Chores (this week, rotation, chore form): lighter rows instead of a card for everything, consistent headings, states and skeletons."
+    "id": "chores-edit-all",
+    "title": "Edit all chores on one screen",
+    "summary": "One screen to change every chore's name, days, time and rotation at once, plus a clearer Edit on each chore. Then UI polish 2 (Calendar and Chores)."
   },
   "changed_files": [
-    "app/(app)/layout.tsx",
-    "app/(app)/loading.tsx",
-    "app/(app)/money/scan/page.tsx",
-    "app/(app)/money/scan/scan-flow.tsx",
-    "app/(app)/money/split-form.tsx",
-    "app/(app)/today/loading.tsx",
-    "app/(app)/today/page.tsx",
-    "app/api/scan/route.ts",
-    "app/globals.css",
-    "app/layout.tsx",
-    "components/bottom-nav.tsx",
-    "components/chore-duty.tsx",
+    "app/(app)/menu/page.tsx",
+    "app/(app)/menu/actions.ts",
+    "app/(app)/menu/week/page.tsx",
+    "app/(app)/menu/week/week-planner.tsx",
     "components/icons.tsx",
-    "components/meals.tsx",
-    "components/skeletons.tsx",
-    "components/ui.tsx",
-    "lib/scan/index.ts"
+    "lib/supabase/types.ts",
+    "supabase/migrations/20261115000001_menu_templates.sql"
   ],
   "test_coverage": [
     {
@@ -406,6 +405,10 @@
     {
       "date": "2026-11-07",
       "text": "Bills (photo or PDF) are read by the AI and not stored (user's choice). expenses.bill_image_path stays for older scanned expenses. PDFs: Gemini only, max 4 MB (Vercel's 4.5 MB request limit)."
+    },
+    {
+      "date": "2026-11-09",
+      "text": "Week menu: one planner screen; Copy last week and Use usual menu overwrite only days from today on and can be undone before saving. The usual menu is one per flat (menu_templates, weekday 1–7), saved from the planner's checkbox. Chores and menu keep the current permission rules (user's choice)."
     }
   ],
   "open_questions": [
@@ -433,7 +436,8 @@
     "UI polish is part-way: Calendar, Chores, Menu, Money, Settings, sign-in and onboarding still have the old card-heavy layout. On desktop they now sit beside the new navigation rail but are otherwise unchanged until their sections.",
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
-    "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them."
+    "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
+    "The week menu is not deployed yet (waiting on the user's OK to push)."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

@@ -49,6 +49,14 @@ type MenuDayRow = {
   plan: MenuPlan;
   created_at: string;
 };
+type MenuTemplateRow = {
+  flat_id: string;
+  weekday: number;
+  breakfast: string | null;
+  lunch: string | null;
+  dinner: string | null;
+  updated_at: string;
+};
 export type SplitRule = "all_members" | "present_only" | "per_day_worked" | "custom";
 type ExpenseCategoryRow = {
   id: string;
@@ -232,6 +240,7 @@ export type Database = {
       chore_rotation: Table<ChoreRotationRow, "chore_id" | "member_id" | "flat_id" | "position">;
       chore_assignments: Table<ChoreAssignmentRow, "chore_id" | "flat_id" | "due_date">;
       menu_days: Table<MenuDayRow, "flat_id" | "date">;
+      menu_templates: Table<MenuTemplateRow, "flat_id" | "weekday">;
       expense_categories: Table<ExpenseCategoryRow, "flat_id" | "name" | "default_rule">;
       expenses: Table<ExpenseRow, "flat_id" | "category_id" | "title" | "paid_by" | "total_paise" | "expense_date" | "created_by">;
       expense_items: Table<ExpenseItemRow, "expense_id" | "flat_id" | "name" | "amount_paise" | "kind">;
@@ -280,6 +289,7 @@ export type AwayPeriodRow = Database["public"]["Tables"]["away_periods"]["Row"];
 export type Chore = ChoreRow;
 export type ChoreAssignment = ChoreAssignmentRow;
 export type MenuDay = MenuDayRow;
+export type MenuTemplate = MenuTemplateRow;
 export type ExpenseCategory = ExpenseCategoryRow;
 export type Expense = ExpenseRow;
 export type ExpenseItemDb = ExpenseItemRow;

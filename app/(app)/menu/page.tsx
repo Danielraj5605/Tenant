@@ -6,16 +6,16 @@ import { isIsoDate, todayIn } from "@/lib/engine/dates";
 import { addDays, formatRange, formatShortDate } from "@/lib/engine/calendar";
 import { MEALS, headcount, type Meal } from "@/lib/engine/presence";
 import { cookStatusOn, weekDates, weekStart } from "@/lib/engine/menu";
-import { Card, cx } from "@/components/ui";
+import { Card, Notice, cx } from "@/components/ui";
 import { NoCookCard } from "@/components/no-cook";
 import { MealList, mealsPhrase } from "@/components/meals";
-import { ChevronLeftIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Menu · Tenant" };
 
 export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
   const { me, flat } = await requireFlat();
-  const { w } = await searchParams;
+  const { w, saved } = await searchParams;
   const today = todayIn(flat.timezone);
   const monday = weekStart(typeof w === "string" && isIsoDate(w) ? w : today);
   const dates = weekDates(monday);
@@ -85,7 +85,18 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
   return (
     <>
       <header className="mb-5 flex flex-col gap-1">
-        <h1 className="text-display font-extrabold">Menu</h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-display font-extrabold">Menu</h1>
+          {canPlan && sunday >= today ? (
+            <Link
+              href={`/menu/week?w=${monday}`}
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 font-bold text-white hover:bg-accent-dark"
+            >
+              <PencilIcon size={17} />
+              Plan the week
+            </Link>
+          ) : null}
+        </div>
         <p className="font-medium text-muted">
           {owner
             ? `Planned by ${owner.id === me.id ? "you" : owner.name}`
@@ -94,6 +105,12 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
               : "No menu owner yet. The admin can pick one in Settings."}
         </p>
       </header>
+
+      {saved === "week" ? (
+        <div className="mb-4">
+          <Notice tone="success">Week saved. Everyone sees the new menu now.</Notice>
+        </div>
+      ) : null}
 
       <div className="mb-4 flex items-center justify-between">
         <Link
