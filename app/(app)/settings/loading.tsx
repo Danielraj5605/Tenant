@@ -1,1 +1,5 @@
-export { default } from "../loading";
+import { SettingsSkeleton } from "@/components/skeletons";
+
+export default function Loading() {
+  return <SettingsSkeleton />;
+}

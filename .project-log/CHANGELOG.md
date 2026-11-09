@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-09 — UI polish 4: Settings, sign-in and onboarding
+
+- Settings: two columns on desktop, grouped into the flat, 'How the flat runs' and 'You'; members count pill; page-shaped loading placeholder.
+- Sign-in: teal brand panel beside the form on desktop; phone layout unchanged.
+- Onboarding: centred column, 'Start a new flat' and 'Join' as two cards.
+- E2E on a production build: 33/33 (incl. a real join request accepted by the admin); earlier suites still pass. 162/162 unit tests.
+
 ## 2026-11-09 — UI polish 3: Menu and Money
 
 - Menu: pill week switcher with days-planned count, day cards with one header row (date, home pill, Plan/Edit), two columns on desktop.

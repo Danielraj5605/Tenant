@@ -5,7 +5,7 @@ import { siteUrl } from "@/lib/supabase/env";
 import { todayIn } from "@/lib/engine/dates";
 import { formatShortDate } from "@/lib/engine/calendar";
 import { awayOn, isLongAway } from "@/lib/engine/presence";
-import { Avatar, Card, Notice } from "@/components/ui";
+import { Avatar, Card, Notice, Pill, SectionHeading } from "@/components/ui";
 import { Badge, ROLE_LABEL } from "@/components/away";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { FlatCode } from "./flat-code";
@@ -52,19 +52,24 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   const sorted = [...people].sort((a, b) => order[a.role] - order[b.role] || a.sort_order - b.sort_order);
 
   return (
-    <>
+    <div data-wide>
       <header className="mb-6 flex flex-col gap-3">
         <Link
           href="/today"
-          className="-ml-3 inline-flex min-h-11 w-fit items-center gap-1 rounded-full pr-4 pl-2 font-semibold text-muted hover:bg-line/60 hover:text-ink"
+          className="-ml-3 inline-flex min-h-11 w-fit items-center gap-1 rounded-full pr-4 pl-2 font-semibold text-muted hover:bg-line/60 hover:text-ink lg:hidden"
         >
           <ChevronLeftIcon size={20} />
           Today
         </Link>
-        <h1 className="text-display font-extrabold break-words">{flat.name}</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-display font-extrabold break-words lg:text-display-lg">{flat.name}</h1>
+          <p className="font-medium text-muted">
+            Flat settings{me.is_admin ? " · you’re the admin" : ""}
+          </p>
+        </div>
       </header>
 
-      <div className="flex flex-col gap-4">
+      <div className="mb-4 flex flex-col gap-3 empty:hidden">
         {created ? <Notice tone="success">Your flat is ready. Send the flat code to your flatmates.</Notice> : null}
         {admin === "handed" ? <Notice tone="success">Done. You&rsquo;re a regular flatmate now.</Notice> : null}
         {request === "accepted" ? (
@@ -77,133 +82,149 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
         ) : removed === "deleted" ? (
           <Notice tone="success">Removed. They had no history, so nothing else changed.</Notice>
         ) : null}
+      </div>
 
-        {me.is_admin && pending.length ? (
-          <Card className="flex flex-col gap-1">
-            <h2 id="requests" className="scroll-mt-6 text-title font-bold">
-              {pending.length === 1 ? "1 person wants to join" : `${pending.length} people want to join`}
-            </h2>
-            <p className="text-sm text-muted">Accept only people you know. They&rsquo;ll see the flat&rsquo;s chores, menu and money.</p>
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-4">
+          {me.is_admin && pending.length ? (
+            <Card className="flex flex-col gap-1">
+              <h2 id="requests" className="scroll-mt-6 text-title font-bold">
+                {pending.length === 1 ? "1 person wants to join" : `${pending.length} people want to join`}
+              </h2>
+              <p className="text-sm text-muted">Accept only people you know. They&rsquo;ll see the flat&rsquo;s chores, menu and money.</p>
+              <ul className="flex flex-col">
+                {pending.map((r) => (
+                  <JoinRequestItem key={r.id} id={r.id} name={r.name} username={r.user?.username ?? "unknown"} when={askedOn(r.created_at)} />
+                ))}
+              </ul>
+            </Card>
+          ) : null}
+
+          <Card className="flex flex-col gap-2 px-3">
+            <div className="px-2">
+              <SectionHeading
+                title="Members"
+                meta={
+                  <Pill tone="neutral">
+                    {flatmates.length} {flatmates.length === 1 ? "flatmate" : "flatmates"}
+                  </Pill>
+                }
+              />
+            </div>
             <ul className="flex flex-col">
-              {pending.map((r) => (
-                <JoinRequestItem key={r.id} id={r.id} name={r.name} username={r.user?.username ?? "unknown"} when={askedOn(r.created_at)} />
-              ))}
+              {sorted.map((m) => {
+                // Out for a meal or two still counts as home.
+                const away = awayToday.find((p) => p.member_id === m.id && p.full_day);
+                const badges = (
+                  <span className="flex flex-wrap justify-end gap-1.5">
+                    {m.is_admin ? <Badge>Admin</Badge> : null}
+                    {flat.menu_owner_id === m.id ? <Badge>Menu owner</Badge> : null}
+                    {away && isLongAway(away) ? <Badge tone="info">Long away</Badge> : null}
+                    {m.left_on ? <Badge tone="neutral">Leaves {formatShortDate(m.left_on)}</Badge> : null}
+                  </span>
+                );
+                const body = (
+                  <>
+                    <Avatar name={m.name} size={40} away={Boolean(away)} />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate font-semibold">
+                        {m.name}
+                        {m.id === me.id ? <span className="font-medium text-muted"> (you)</span> : null}
+                      </span>
+                      <span className="text-sm text-muted">
+                        {ROLE_LABEL[m.role]}
+                        {m.role !== "flatmate" ? ", no login" : null}
+                      </span>
+                    </span>
+                    {badges}
+                  </>
+                );
+                return (
+                  <li key={m.id} className="border-b border-line last:border-b-0">
+                    {me.is_admin ? (
+                      <Link
+                        href={`/settings/members/${m.id}`}
+                        className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-2 hover:bg-bg"
+                        aria-label={`Edit ${m.name}`}
+                      >
+                        {body}
+                        <ChevronRightIcon size={20} className="shrink-0 text-muted" />
+                      </Link>
+                    ) : (
+                      <div className="flex min-h-16 items-center gap-3 px-2 py-2">{body}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </Card>
-        ) : null}
 
-        <Card className="flex flex-col gap-2 px-3">
-          <div className="flex items-baseline justify-between px-2">
-            <h2 className="text-title font-bold">Members</h2>
-            <p className="text-sm font-semibold text-muted">
-              {flatmates.length} {flatmates.length === 1 ? "flatmate" : "flatmates"}
-            </p>
-          </div>
-          <ul className="flex flex-col">
-            {sorted.map((m) => {
-              // Out for a meal or two still counts as home.
-              const away = awayToday.find((p) => p.member_id === m.id && p.full_day);
-              const badges = (
-                <span className="flex flex-wrap justify-end gap-1.5">
-                  {m.is_admin ? <Badge>Admin</Badge> : null}
-                  {flat.menu_owner_id === m.id ? <Badge>Menu owner</Badge> : null}
-                  {away && isLongAway(away) ? <Badge tone="info">Long away</Badge> : null}
-                  {m.left_on ? <Badge tone="neutral">Leaves {formatShortDate(m.left_on)}</Badge> : null}
-                </span>
-              );
-              const body = (
-                <>
-                  <Avatar name={m.name} size={40} away={Boolean(away)} />
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-semibold">
-                      {m.name}
-                      {m.id === me.id ? <span className="font-medium text-muted"> (you)</span> : null}
-                    </span>
-                    <span className="text-sm text-muted">
-                      {ROLE_LABEL[m.role]}
-                      {m.role !== "flatmate" ? ", no login" : null}
-                    </span>
-                  </span>
-                  {badges}
-                </>
-              );
-              return (
-                <li key={m.id} className="border-b border-line last:border-b-0">
-                  {me.is_admin ? (
-                    <Link
-                      href={`/settings/members/${m.id}`}
-                      className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-2 hover:bg-bg"
-                      aria-label={`Edit ${m.name}`}
-                    >
-                      {body}
-                      <ChevronRightIcon size={20} className="shrink-0 text-muted" />
-                    </Link>
-                  ) : (
-                    <div className="flex min-h-16 items-center gap-3 px-2 py-2">{body}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
+          {me.is_admin ? (
+            <>
+              <Card className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <h2 id="add-flatmate" className="scroll-mt-6 text-title font-bold">Add a flatmate</h2>
+                  <p className="text-sm text-muted">
+                    They sign up at {siteUrl.replace(/^https?:\/\//, "")} and enter this code. You&rsquo;ll see their
+                    request here to accept or decline.
+                  </p>
+                </div>
+                <FlatCode code={flat.flat_code} shown={formatFlatCode(flat.flat_code)} flatName={flat.name} siteUrl={siteUrl} />
+              </Card>
 
-        {me.is_admin ? (
-          <>
-            <Card className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <h2 id="add-flatmate" className="scroll-mt-6 text-title font-bold">Add a flatmate</h2>
-                <p className="text-sm text-muted">
-                  They sign up at {siteUrl.replace(/^https?:\/\//, "")} and enter this code. You&rsquo;ll see their
-                  request here to accept or decline.
-                </p>
-              </div>
-              <FlatCode code={flat.flat_code} shown={formatFlatCode(flat.flat_code)} flatName={flat.name} siteUrl={siteUrl} />
-            </Card>
+              <Card className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <h2 id="add-staff" className="scroll-mt-6 text-title font-bold">Add the cook or maid</h2>
+                  <p className="text-sm text-muted">
+                    They don&rsquo;t sign in. Any flatmate can mark their leave on the calendar.
+                  </p>
+                </div>
+                <AddStaffForm />
+              </Card>
+            </>
+          ) : null}
+        </div>
 
-            <Card className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <h2 id="add-staff" className="scroll-mt-6 text-title font-bold">Add the cook or maid</h2>
-                <p className="text-sm text-muted">
-                  They don&rsquo;t sign in. Any flatmate can mark their leave on the calendar.
-                </p>
-              </div>
-              <AddStaffForm />
-            </Card>
+        <div className="flex flex-col gap-4">
+          {me.is_admin ? (
+            <>
+              <h2 className="mt-2 px-1 text-sm font-bold tracking-wide text-muted uppercase first:mt-0">How the flat runs</h2>
+              <Card className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-title font-bold">Default splits</h2>
+                  <p className="text-sm text-muted">
+                    Who shares each kind of cost by default. You can always change people and amounts on a split.
+                  </p>
+                </div>
+                <CategoryRules categories={categories ?? []} />
+              </Card>
 
-            <Card className="flex flex-col gap-2">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-title font-bold">Default splits</h2>
-                <p className="text-sm text-muted">
-                  Who shares each kind of cost by default. You can always change people and amounts on a split.
-                </p>
-              </div>
-              <CategoryRules categories={categories ?? []} />
-            </Card>
+              <Card className="flex flex-col gap-3">
+                <h2 className="text-title font-bold">Menu owner</h2>
+                <MenuOwnerForm flatmates={flatmates.map(({ id, name }) => ({ id, name }))} current={flat.menu_owner_id} />
+              </Card>
+            </>
+          ) : null}
 
-            <Card className="flex flex-col gap-3">
-              <h2 className="text-title font-bold">Menu owner</h2>
-              <MenuOwnerForm flatmates={flatmates.map(({ id, name }) => ({ id, name }))} current={flat.menu_owner_id} />
-            </Card>
-          </>
-        ) : null}
+          <h2 className="mt-2 px-1 text-sm font-bold tracking-wide text-muted uppercase first:mt-0">You</h2>
+          <Card className="flex flex-col gap-3">
+            <h2 className="text-title font-bold">My meals</h2>
+            <UsualSkipsForm current={me.usual_skips ?? []} />
+          </Card>
 
-        <Card className="flex flex-col gap-3">
-          <h2 className="text-title font-bold">My meals</h2>
-          <UsualSkipsForm current={me.usual_skips ?? []} />
-        </Card>
+          <Card className="flex flex-col gap-3">
+            <h2 className="text-title font-bold">Password</h2>
+            <PasswordSetup username={user.username} />
+          </Card>
 
-        <Card className="flex flex-col gap-3">
-          <h2 className="text-title font-bold">Password</h2>
-          <PasswordSetup username={user.username} />
-        </Card>
+          <Card className="flex flex-col gap-3">
+            <h2 className="text-title font-bold">Reminders on this phone</h2>
+            <PushSetup />
+          </Card>
 
-        <Card className="flex flex-col gap-3">
-          <h2 className="text-title font-bold">Reminders on this phone</h2>
-          <PushSetup />
-        </Card>
-
-        <SignOutButton />
+          <SignOutButton />
+        </div>
       </div>
-    </>
+    </div>
   );
 }

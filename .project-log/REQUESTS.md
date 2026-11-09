@@ -9,7 +9,7 @@ and asks which to do now, later, or skip.
 
 - [x] 2026-11-09 Easy editing for chores and a whole-week menu. Decided: one screen to plan the week's menu with Copy last week and a saved usual menu; one screen to edit all chores, and a clearer Edit. Current permission rules kept. Done now, before UI polish 2 (medium)
 - [x] 2026-11-07 Upload a bill image or document for splitting. Decided: two buttons (take a photo / upload a photo or PDF); PDFs read by Gemini only. Then: don't store the photo or PDF at all, only read it (medium)
-- [ ] 2026-11-07 Improve the UI so it looks good and aesthetic. Decided: polish the current look (keep Manrope, cream, teal); tighter hierarchy, focal duty block, lighter list rows, consistent states and skeletons, nav and header polish. Done in sections (large)
+- [x] 2026-11-07 Improve the UI so it looks good and aesthetic. Decided: polish the current look (keep Manrope, cream, teal); tighter hierarchy, focal duty block, lighter list rows, consistent states and skeletons, nav and header polish. Done in sections (large)
 - [x] 2026-11-06 Maid's pay by days worked: a Maid's pay category that works like the cook's (daily rate × days worked) (small)
 - [x] 2026-11-06 Mary replaces Lakshmi as cook (small)
 - [x] 2026-11-06 Seamless flow: full flow audit of every journey (new user, flatmate, admin) at phone size, then fix in sections (medium)

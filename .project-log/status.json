@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794245985-bda9"
+    "version": "1794246479-d160"
   },
   "sections": [
     {
@@ -287,25 +287,29 @@
       ],
       "summary": "Menu: week switcher is a pill bar with 'X of 7 days planned'; each day card has its date, a home pill and a labelled Plan/Edit button in one header row; two columns on desktop. Money: on desktop the month switcher, totals (with bill count and 'so far this month') and New split / Scan a bill sit on the left, the bill list on the right. Bill rows have a date tile, 'Scanned' on the second line so names aren't cut off, the total, and your share ('You ₹72' or 'Not in it'). Bill detail: Total and Your share at the top, items and split side by side on desktop, your share row outlined, a note when a split has no item list. Page-shaped loading placeholders for Menu and Money (their sub-pages keep the generic one). New split and Scan forms are unchanged. E2E on a production build with a seeded throwaway flat (bills saved through save_expense): 31/31; week menu, Calendar/Chores and Edit chores suites still 38/38 each; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (cd35b4b); re-run on the live site: 31/31.",
       "screenshots": true
+    },
+    {
+      "id": "ui-polish-settings-auth",
+      "title": "UI polish 4: Settings, sign-in and onboarding",
+      "status": "done",
+      "date": "2026-11-09",
+      "commits": [],
+      "summary": "Settings: flat name with 'Flat settings · you're the admin'; two columns on desktop: join requests, Members (count pill), Add a flatmate and Add the cook or maid on the left; 'How the flat runs' (Default splits, Menu owner, admin only) and 'You' (My meals, Password, Reminders, Sign out) on the right; the back-to-Today link is phone only (desktop has the rail); page-shaped loading placeholder. Sign-in: phones unchanged; desktop gets a teal brand panel (household row, name, tagline, three points) beside the form. Onboarding: a centred column with the Tenant mark, 'Start a new flat' and 'Joining a flatmate's flat?' as two cards with an 'or' divider, and a card-shaped loading placeholder. E2E on a production build with throwaway accounts: 33/33 (sign-in at all sizes, keyboard on the tabs, create flat, a second person asks to join, admin accepts, the new flatmate's Settings has no admin cards); the four earlier suites still pass (31 + 38 × 3); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "ui-polish-settings-auth",
-    "title": "UI polish 4: Settings, sign-in and onboarding",
-    "summary": "Last polish section: Settings (members, categories, menu owner, my meals, admin), sign-in / create account and onboarding. Then the New split and Scan forms if wanted."
+    "id": "ui-polish-forms",
+    "title": "Optional: polish the New split and Scan a bill forms",
+    "summary": "The last screens with the old layout. Or the money questions (who owes whom, fixed bills while away, settling up) if answered."
   },
   "changed_files": [
-    "app/(app)/menu/page.tsx",
-    "app/(app)/menu/loading.tsx",
-    "app/(app)/menu/[date]/loading.tsx",
-    "app/(app)/menu/week/loading.tsx",
-    "app/(app)/money/page.tsx",
-    "app/(app)/money/loading.tsx",
-    "app/(app)/money/[id]/page.tsx",
-    "app/(app)/money/[id]/loading.tsx",
-    "app/(app)/money/new/loading.tsx",
-    "app/(app)/money/scan/loading.tsx",
+    "app/(app)/settings/page.tsx",
+    "app/(app)/settings/loading.tsx",
+    "app/(app)/settings/members/[id]/loading.tsx",
+    "app/login/page.tsx",
+    "app/onboarding/page.tsx",
     "components/skeletons.tsx"
   ],
   "test_coverage": [
@@ -452,6 +456,10 @@
     {
       "date": "2026-11-09",
       "text": "Edit chores screen: days picked as chips, frequency derived (7 days = daily, 1 = weekly, else custom). Saving checks every chore first, then writes; the writes are separate statements, not one transaction."
+    },
+    {
+      "date": "2026-11-09",
+      "text": "UI polish sections 2–4 kept the SPEC §6.1 direction (Manrope, cream, teal). Desktop pattern: data-wide pages with two columns, sticky left column where it helps; phone layouts unchanged in structure. Own highlights use a teal outline, not a tinted fill, so avatars and pills keep contrast."
     }
   ],
   "open_questions": [
@@ -476,7 +484,7 @@
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "UI polish is part-way: Settings, sign-in, onboarding, and the New split and Scan forms still have the old layout (Today, Calendar, Chores, Menu and Money are done).",
+    "UI polish: every main screen is done; the New split and Scan a bill forms (and the single chore, away and member edit forms) keep the older form layout.",
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",

@@ -198,3 +198,35 @@ export function MoneySkeleton() {
     </div>
   );
 }
+
+/** Settings placeholder: flat name, members on the left, settings cards on the right. */
+export function SettingsSkeleton() {
+  return (
+    <div data-wide className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">
+      <div className="mb-2 flex flex-col gap-2">
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-5">
+          <Skeleton className="h-6 w-28" />
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="size-10 rounded-full" />
+              <Skeleton className="h-4 flex-1" />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-5">
+              <Skeleton className="h-6 w-36" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
