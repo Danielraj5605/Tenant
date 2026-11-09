@@ -7,6 +7,7 @@
 - Bill detail: Total and Your share up top, items and split side by side on desktop.
 - Page-shaped loading placeholders for Menu and Money. New split and Scan forms unchanged.
 - E2E on a production build with a seeded throwaway flat: 31/31; the other three suites still pass. 162/162 unit tests.
+- Deployed with cd35b4b; re-run on the live site: 31/31.
 
 ## 2026-11-09 — UI polish 2: Calendar and Chores
 

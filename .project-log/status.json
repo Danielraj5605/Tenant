@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794241917-9cc6"
+    "version": "1794245985-bda9"
   },
   "sections": [
     {
@@ -282,8 +282,10 @@
       "title": "UI polish 3: Menu and Money",
       "status": "done",
       "date": "2026-11-09",
-      "commits": [],
-      "summary": "Menu: week switcher is a pill bar with 'X of 7 days planned'; each day card has its date, a home pill and a labelled Plan/Edit button in one header row; two columns on desktop. Money: on desktop the month switcher, totals (with bill count and 'so far this month') and New split / Scan a bill sit on the left, the bill list on the right. Bill rows have a date tile, 'Scanned' on the second line so names aren't cut off, the total, and your share ('You ₹72' or 'Not in it'). Bill detail: Total and Your share at the top, items and split side by side on desktop, your share row outlined, a note when a split has no item list. Page-shaped loading placeholders for Menu and Money (their sub-pages keep the generic one). New split and Scan forms are unchanged. E2E on a production build with a seeded throwaway flat (bills saved through save_expense): 31/31; week menu, Calendar/Chores and Edit chores suites still 38/38 each; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "cd35b4b"
+      ],
+      "summary": "Menu: week switcher is a pill bar with 'X of 7 days planned'; each day card has its date, a home pill and a labelled Plan/Edit button in one header row; two columns on desktop. Money: on desktop the month switcher, totals (with bill count and 'so far this month') and New split / Scan a bill sit on the left, the bill list on the right. Bill rows have a date tile, 'Scanned' on the second line so names aren't cut off, the total, and your share ('You ₹72' or 'Not in it'). Bill detail: Total and Your share at the top, items and split side by side on desktop, your share row outlined, a note when a split has no item list. Page-shaped loading placeholders for Menu and Money (their sub-pages keep the generic one). New split and Scan forms are unchanged. E2E on a production build with a seeded throwaway flat (bills saved through save_expense): 31/31; week menu, Calendar/Chores and Edit chores suites still 38/38 each; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (cd35b4b); re-run on the live site: 31/31.",
       "screenshots": true
     }
   ],
