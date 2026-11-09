@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 — UI polish 5: New split form
+
+- Three cards (Details, Line items, Each person's share); two columns on desktop with the shares card in view; sticky status + Save bar on phones.
+- Fixed: shares legend not labelling its group; desktop Save also showing on phones; payer chip avatar contrast.
+- E2E on a production build: 28/28 incl. a real save checked in the database; the other five suites pass. 162/162 unit tests.
+
 ## 2026-11-09 — UI polish 4: Settings, sign-in and onboarding
 
 - Settings: two columns on desktop, grouped into the flat, 'How the flat runs' and 'You'; members count pill; page-shaped loading placeholder.

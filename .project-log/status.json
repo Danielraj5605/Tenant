@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
   "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
-  "last_updated": "2026-11-09",
-  "last_sync": "2026-11-09",
+  "last_updated": "2026-11-10",
+  "last_sync": "2026-11-10",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794246479-d160"
+    "version": "1794256209-e2e7"
   },
   "sections": [
     {
@@ -296,21 +296,25 @@
       "commits": [],
       "summary": "Settings: flat name with 'Flat settings · you're the admin'; two columns on desktop: join requests, Members (count pill), Add a flatmate and Add the cook or maid on the left; 'How the flat runs' (Default splits, Menu owner, admin only) and 'You' (My meals, Password, Reminders, Sign out) on the right; the back-to-Today link is phone only (desktop has the rail); page-shaped loading placeholder. Sign-in: phones unchanged; desktop gets a teal brand panel (household row, name, tagline, three points) beside the form. Onboarding: a centred column with the Tenant mark, 'Start a new flat' and 'Joining a flatmate's flat?' as two cards with an 'or' divider, and a card-shaped loading placeholder. E2E on a production build with throwaway accounts: 33/33 (sign-in at all sizes, keyboard on the tabs, create flat, a second person asks to join, admin accepts, the new flatmate's Settings has no admin cards); the four earlier suites still pass (31 + 38 × 3); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
       "screenshots": true
+    },
+    {
+      "id": "ui-polish-forms",
+      "title": "UI polish 5: New split form",
+      "status": "done",
+      "date": "2026-11-10",
+      "commits": [],
+      "summary": "The New split / Edit split form (also the last step of Scan a bill) is now three cards: Details, Line items (with a one-line hint when empty; lines not split are drawn dashed) and Each person's share. Desktop: two columns, the shares card stays in view on the right with the status line and Save. Phones and tablets: a sticky bar keeps the status ('✓ Shares add up to ₹500', '₹… still to assign', 'over the total') next to Save. Fixed: the shares section's legend wasn't the group's label (it sat inside a div); the selected payer chip is outlined so the avatar stays visible. Found and fixed during testing: the desktop Save showed on phones too (the Button's inline-flex beat `hidden`). Layout only: the split maths is unchanged. E2E on a production build with a throwaway flat: 28/28 (lock a share → others ₹150, over the total disables Save, saved shares checked in the database, line items with one not split, cook pay helper, edit loads, scan page loads); the other five suites pass (33, 31, 40, 38, 38; the week menu suite now also covers a past day in the current week); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "ui-polish-forms",
-    "title": "Optional: polish the New split and Scan a bill forms",
-    "summary": "The last screens with the old layout. Or the money questions (who owes whom, fixed bills while away, settling up) if answered."
+    "id": "money-questions",
+    "title": "Money: who owes whom and settling up (needs answers)",
+    "summary": "Waiting on the three open money questions. The Scan a bill review step (before the split form) still has the older layout."
   },
   "changed_files": [
-    "app/(app)/settings/page.tsx",
-    "app/(app)/settings/loading.tsx",
-    "app/(app)/settings/members/[id]/loading.tsx",
-    "app/login/page.tsx",
-    "app/onboarding/page.tsx",
-    "components/skeletons.tsx"
+    "app/(app)/money/split-form.tsx"
   ],
   "test_coverage": [
     {
@@ -484,11 +488,12 @@
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "UI polish: every main screen is done; the New split and Scan a bill forms (and the single chore, away and member edit forms) keep the older form layout.",
+    "UI polish: every main screen and the New split form are done; the Scan a bill review step and the single chore, away and member edit forms keep the older form layout.",
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
-    "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it)."
+    "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
+    "UI polish 4 (Settings, sign-in, onboarding) and the New split form are committed but not deployed yet (waiting on the user's OK)."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"
