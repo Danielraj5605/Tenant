@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794241156-0e4e"
+    "version": "1794241316-1c1a"
   },
   "sections": [
     {
@@ -271,8 +271,10 @@
       "title": "UI polish 2: Calendar and Chores",
       "status": "done",
       "date": "2026-11-09",
-      "commits": [],
-      "summary": "Calendar: on desktop the month grid sits beside the selected day; the day panel has an 'X of Y home' pill, a no-cook warning row, one row per away person ('Away all day' / 'Out: night', cook and maid labelled) that opens their away period, and the Mark someone away button; 'Who's away in <month>' has a count and divided rows. Chores: lighter cards in two columns on desktop; today's row shows who with a To do / Done pill (your own pending duty is outlined in teal); 'Who's next' is a 4-day strip with your days outlined; the away banner has an icon; rotation rows are divided with 'You' for yourself. Calendar and Chores have loading placeholders shaped like the page (their form pages keep the generic one). Checked on a production build with a seeded throwaway flat (3 flatmates, cook, maid, away periods, 3 chores): 38/38 including Mark done → Undo, keyboard day selection and empty states; Edit chores e2e still 38/38; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "70f1172"
+      ],
+      "summary": "Calendar: on desktop the month grid sits beside the selected day; the day panel has an 'X of Y home' pill, a no-cook warning row, one row per away person ('Away all day' / 'Out: night', cook and maid labelled) that opens their away period, and the Mark someone away button; 'Who's away in <month>' has a count and divided rows. Chores: lighter cards in two columns on desktop; today's row shows who with a To do / Done pill (your own pending duty is outlined in teal); 'Who's next' is a 4-day strip with your days outlined; the away banner has an icon; rotation rows are divided with 'You' for yourself. Calendar and Chores have loading placeholders shaped like the page (their form pages keep the generic one). Checked on a production build with a seeded throwaway flat (3 flatmates, cook, maid, away periods, 3 chores): 38/38 including Mark done → Undo, keyboard day selection and empty states; Edit chores e2e still 38/38; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (70f1172); re-run on the live site: 38/38.",
       "screenshots": true
     }
   ],

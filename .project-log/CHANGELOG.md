@@ -6,6 +6,7 @@
 - Chores: lighter cards (two columns on desktop), Today row with To do / Done pill, 4-day Who's next strip, outlined highlights for your own turns.
 - Page-shaped loading placeholders for Calendar and Chores.
 - E2E on a production build with a seeded throwaway flat: 38/38; Edit chores still 38/38. 162/162 unit tests.
+- Deployed with 70f1172; re-run on the live site: 38/38.
 
 ## 2026-11-09 — Edit all chores on one screen
 
