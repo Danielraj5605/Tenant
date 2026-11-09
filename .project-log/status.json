@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794241316-1c1a"
+    "version": "1794241917-9cc6"
   },
   "sections": [
     {
@@ -276,23 +276,34 @@
       ],
       "summary": "Calendar: on desktop the month grid sits beside the selected day; the day panel has an 'X of Y home' pill, a no-cook warning row, one row per away person ('Away all day' / 'Out: night', cook and maid labelled) that opens their away period, and the Mark someone away button; 'Who's away in <month>' has a count and divided rows. Chores: lighter cards in two columns on desktop; today's row shows who with a To do / Done pill (your own pending duty is outlined in teal); 'Who's next' is a 4-day strip with your days outlined; the away banner has an icon; rotation rows are divided with 'You' for yourself. Calendar and Chores have loading placeholders shaped like the page (their form pages keep the generic one). Checked on a production build with a seeded throwaway flat (3 flatmates, cook, maid, away periods, 3 chores): 38/38 including Mark done → Undo, keyboard day selection and empty states; Edit chores e2e still 38/38; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (70f1172); re-run on the live site: 38/38.",
       "screenshots": true
+    },
+    {
+      "id": "ui-polish-menu-money",
+      "title": "UI polish 3: Menu and Money",
+      "status": "done",
+      "date": "2026-11-09",
+      "commits": [],
+      "summary": "Menu: week switcher is a pill bar with 'X of 7 days planned'; each day card has its date, a home pill and a labelled Plan/Edit button in one header row; two columns on desktop. Money: on desktop the month switcher, totals (with bill count and 'so far this month') and New split / Scan a bill sit on the left, the bill list on the right. Bill rows have a date tile, 'Scanned' on the second line so names aren't cut off, the total, and your share ('You ₹72' or 'Not in it'). Bill detail: Total and Your share at the top, items and split side by side on desktop, your share row outlined, a note when a split has no item list. Page-shaped loading placeholders for Menu and Money (their sub-pages keep the generic one). New split and Scan forms are unchanged. E2E on a production build with a seeded throwaway flat (bills saved through save_expense): 31/31; week menu, Calendar/Chores and Edit chores suites still 38/38 each; no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": {
-    "id": "ui-polish-menu-money",
-    "title": "UI polish 3: Menu and Money",
-    "summary": "Same polish on Menu (week list, day cards) and Money (ledger, expense detail, New split, scan): lighter rows, consistent headings, states and skeletons."
+    "id": "ui-polish-settings-auth",
+    "title": "UI polish 4: Settings, sign-in and onboarding",
+    "summary": "Last polish section: Settings (members, categories, menu owner, my meals, admin), sign-in / create account and onboarding. Then the New split and Scan forms if wanted."
   },
   "changed_files": [
-    "app/(app)/calendar/page.tsx",
-    "app/(app)/calendar/loading.tsx",
-    "app/(app)/calendar/away/loading.tsx",
-    "app/(app)/chores/page.tsx",
-    "app/(app)/chores/loading.tsx",
-    "app/(app)/chores/new/loading.tsx",
-    "app/(app)/chores/edit/loading.tsx",
-    "app/(app)/chores/[id]/loading.tsx",
+    "app/(app)/menu/page.tsx",
+    "app/(app)/menu/loading.tsx",
+    "app/(app)/menu/[date]/loading.tsx",
+    "app/(app)/menu/week/loading.tsx",
+    "app/(app)/money/page.tsx",
+    "app/(app)/money/loading.tsx",
+    "app/(app)/money/[id]/page.tsx",
+    "app/(app)/money/[id]/loading.tsx",
+    "app/(app)/money/new/loading.tsx",
+    "app/(app)/money/scan/loading.tsx",
     "components/skeletons.tsx"
   ],
   "test_coverage": [
@@ -463,7 +474,7 @@
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "UI polish is part-way: Menu, Money, Settings, sign-in and onboarding still have the old card-heavy layout (Today, Calendar and Chores are done).",
+    "UI polish is part-way: Settings, sign-in, onboarding, and the New split and Scan forms still have the old layout (Today, Calendar, Chores, Menu and Money are done).",
     "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",

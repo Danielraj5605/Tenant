@@ -6,7 +6,7 @@ import { requireFlat } from "@/lib/flat";
 import { createClient } from "@/lib/supabase/server";
 import { formatShortDate } from "@/lib/engine/calendar";
 import { formatINR, splitTotal } from "@/lib/engine/money";
-import { Avatar, Card, cx } from "@/components/ui";
+import { Avatar, Card, Pill, SectionHeading, cx } from "@/components/ui";
 import { Badge } from "@/components/away";
 import { ChevronLeftIcon } from "@/components/icons";
 import { ExpenseActions } from "./expense-actions";
@@ -59,8 +59,10 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
     </div>
   );
 
+  const myShare = (shares ?? []).find((x) => x.member_id === me.id)?.amount_paise ?? null;
+
   return (
-    <>
+    <div data-wide>
       <header className="mb-5 flex flex-col gap-3">
         <Link
           href={`/money?m=${e.expense_date.slice(0, 7)}`}
@@ -70,7 +72,7 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
           Money
         </Link>
         <div className="flex flex-col gap-1">
-          <h1 className="text-display font-extrabold break-words">{e.title}</h1>
+          <h1 className="text-display font-extrabold break-words lg:text-display-lg">{e.title}</h1>
           <p className="font-medium text-muted">
             {formatShortDate(e.expense_date)}, paid by {payer}
             {category ? `, ${category.name}` : ""}
@@ -82,94 +84,117 @@ export default async function ExpensePage({ params }: PageProps<"/money/[id]">) 
             {e.settled ? <Badge tone="neutral">Settled</Badge> : null}
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-4 rounded-[var(--radius-card)] bg-surface p-5 lg:max-w-md">
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="text-sm font-semibold text-muted">Total</span>
+            <span className="truncate text-2xl font-extrabold tabular-nums">{formatINR(e.total_paise)}</span>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1 border-l border-line pl-4">
+            <span className="text-sm font-semibold text-muted">Your share</span>
+            <span className={cx("truncate text-2xl font-extrabold tabular-nums", myShare ? "text-accent-dark" : "text-muted")}>
+              {myShare ? formatINR(myShare) : "None"}
+            </span>
+          </div>
+        </div>
       </header>
 
-      <div className="flex flex-col gap-4">
-        {billUrl ? (
-          <a href={billUrl} target="_blank" rel="noreferrer" className="block">
-            {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL */}
-            <img src={billUrl} alt={`Photo of the ${e.title} bill`} className="max-h-64 w-full rounded-[var(--radius-card)] bg-surface object-contain" />
-          </a>
-        ) : null}
-        {list.length ? (
-          <Card className="flex flex-col">
-            <h2 className="mb-1 text-title font-bold">Bill items</h2>
-            {billItems.map((i) =>
-              line(
-                i.id,
-                <span className="flex flex-wrap items-baseline gap-x-2">
-                  {i.name}
-                  {i.personal_member_id ? (
-                    <span className="text-sm text-muted">for {who(i.personal_member_id)}</span>
-                  ) : null}
-                </span>,
-                i.amount_paise,
-              ),
-            )}
-            {extras.length ? (
-              <>
-                <h3 className="mt-3 mb-1 text-sm font-bold text-muted">Extras</h3>
-                {extras.map((i) =>
-                  line(
-                    i.id,
-                    <span>
-                      {i.name}{" "}
-                      <span className="text-sm text-muted">{EXTRA_LABEL[i.kind as keyof typeof EXTRA_LABEL]}</span>
-                    </span>,
-                    i.amount_paise,
-                    { negative: i.kind === "discount" },
-                  ),
-                )}
-              </>
-            ) : null}
-            {notSplitItems.length ? (
-              <>
-                <h3 className="mt-3 mb-1 text-sm font-bold text-muted">Not split, stays with {payer}</h3>
-                {notSplitItems.map((i) =>
-                  line(i.id, i.name, i.amount_paise, { negative: i.kind === "discount", muted: true }),
-                )}
-              </>
-            ) : null}
-            <div className="mt-2 border-t border-line pt-2">
-              {line("total", <span className="font-bold">Total</span>, e.total_paise)}
-              {notSplit !== 0 ? line("split", "Split", split, { muted: true }) : null}
-            </div>
-          </Card>
-        ) : (
-          <Card className="flex items-baseline justify-between">
-            <span className="text-title font-bold">Total</span>
-            <span className="text-2xl font-extrabold">{formatINR(e.total_paise)}</span>
-          </Card>
-        )}
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="flex flex-col gap-4">
+          {billUrl ? (
+            <a href={billUrl} target="_blank" rel="noreferrer" className="block">
+              {/* eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL */}
+              <img src={billUrl} alt={`Photo of the ${e.title} bill`} className="max-h-64 w-full rounded-[var(--radius-card)] bg-surface object-contain" />
+            </a>
+          ) : null}
+          {list.length ? (
+            <Card className="flex flex-col">
+              <h2 className="mb-1 text-title font-bold">Bill items</h2>
+              {billItems.map((i) =>
+                line(
+                  i.id,
+                  <span className="flex flex-wrap items-baseline gap-x-2">
+                    {i.name}
+                    {i.personal_member_id ? (
+                      <span className="text-sm text-muted">for {who(i.personal_member_id)}</span>
+                    ) : null}
+                  </span>,
+                  i.amount_paise,
+                ),
+              )}
+              {extras.length ? (
+                <>
+                  <h3 className="mt-3 mb-1 text-sm font-bold text-muted">Extras</h3>
+                  {extras.map((i) =>
+                    line(
+                      i.id,
+                      <span>
+                        {i.name}{" "}
+                        <span className="text-sm text-muted">{EXTRA_LABEL[i.kind as keyof typeof EXTRA_LABEL]}</span>
+                      </span>,
+                      i.amount_paise,
+                      { negative: i.kind === "discount" },
+                    ),
+                  )}
+                </>
+              ) : null}
+              {notSplitItems.length ? (
+                <>
+                  <h3 className="mt-3 mb-1 text-sm font-bold text-muted">Not split, stays with {payer}</h3>
+                  {notSplitItems.map((i) =>
+                    line(i.id, i.name, i.amount_paise, { negative: i.kind === "discount", muted: true }),
+                  )}
+                </>
+              ) : null}
+              <div className="mt-2 border-t border-line pt-2">
+                {line("total", <span className="font-bold">Total</span>, e.total_paise)}
+                {notSplit !== 0 ? line("split", "Split", split, { muted: true }) : null}
+              </div>
+            </Card>
+          ) : (
+            <Card className="flex flex-col gap-1">
+              <h2 className="text-title font-bold">No item list</h2>
+              <p className="text-muted">This split was added as one amount, so there are no bill lines to show.</p>
+            </Card>
+          )}
+        </div>
 
-        <Card className="flex flex-col gap-2">
-          <h2 className="text-title font-bold">How it was split</h2>
-          {e.rule_note ? <p className="rounded-xl bg-bg px-3 py-2 text-sm font-semibold">{e.rule_note}</p> : null}
-          <ul className="flex flex-col">
-            {(shares ?? []).map((s) => (
-              <li
-                key={s.member_id}
-                className={cx(
-                  "flex min-h-14 items-center gap-3 border-b border-line py-2 last:border-b-0",
-                  s.member_id === me.id && "-mx-2 rounded-xl bg-accent-tint/60 px-2",
-                )}
-              >
-                <Avatar name={nameOf.get(s.member_id) ?? "?"} size={36} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="font-bold">{who(s.member_id)}</span>
-                  {s.reason ? <span className="text-sm text-muted">{s.reason}</span> : null}
-                </span>
-                <span className="font-bold tabular-nums">{formatINR(s.amount_paise)}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <div className="flex flex-col gap-4">
+          <Card className="flex flex-col gap-2">
+            <SectionHeading
+              title="How it was split"
+              meta={
+                <Pill tone="neutral">
+                  {(shares ?? []).length} {(shares ?? []).length === 1 ? "person" : "people"}
+                </Pill>
+              }
+            />
+            {e.rule_note ? <p className="rounded-xl bg-bg px-3 py-2 text-sm font-semibold">{e.rule_note}</p> : null}
+            <ul className="flex flex-col">
+              {(shares ?? []).map((s) => (
+                <li
+                  key={s.member_id}
+                  className={cx(
+                    "flex min-h-14 items-center gap-3 border-b border-line py-2 last:border-b-0",
+                    s.member_id === me.id && "-mx-2 rounded-xl border-b-0 px-2 ring-2 ring-accent ring-inset",
+                  )}
+                >
+                  <Avatar name={nameOf.get(s.member_id) ?? "?"} size={36} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="font-bold">{who(s.member_id)}</span>
+                    {s.reason ? <span className="text-sm text-muted">{s.reason}</span> : null}
+                  </span>
+                  <span className="font-bold tabular-nums">{formatINR(s.amount_paise)}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
 
-        {canManage && !e.settled ? <ExpenseActions id={e.id} /> : null}
-        {!canManage && !e.settled ? (
-          <p className="text-sm text-muted">Only {who(e.created_by)} or the flat admin can edit this split.</p>
-        ) : null}
+          {canManage && !e.settled ? <ExpenseActions id={e.id} /> : null}
+          {!canManage && !e.settled ? (
+            <p className="text-sm text-muted">Only {who(e.created_by)} or the flat admin can edit this split.</p>
+          ) : null}
+        </div>
       </div>
-    </>
+    </div>
   );
 }

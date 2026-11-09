@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09 — UI polish 3: Menu and Money
+
+- Menu: pill week switcher with days-planned count, day cards with one header row (date, home pill, Plan/Edit), two columns on desktop.
+- Money: two-column desktop layout, date tiles, your share on every bill row, bill count on the totals.
+- Bill detail: Total and Your share up top, items and split side by side on desktop.
+- Page-shaped loading placeholders for Menu and Money. New split and Scan forms unchanged.
+- E2E on a production build with a seeded throwaway flat: 31/31; the other three suites still pass. 162/162 unit tests.
+
 ## 2026-11-09 — UI polish 2: Calendar and Chores
 
 - Calendar: two columns on desktop; day panel with home pill, no-cook row, one row per away person, Mark someone away; month list with count.
