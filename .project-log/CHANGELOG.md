@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-10 — Deployed UI polish 4–6
+
+- Pushed 78ed7c6, c6ad1ec and 97260d0 (deploy 97260d0). Re-run on the live site: Settings/sign-in/onboarding 33/33, New split 28/28, remaining forms 40/40 (including a real bill read and saved).
+
 ## 2026-11-10 — UI polish 6: remaining forms
 
 - Scan a bill review step: step indicator, cards, two columns on desktop, sticky Splitting + Next bar on phones.

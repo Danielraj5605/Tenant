@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794260888-bdb4"
+    "version": "1794262637-9c25"
   },
   "sections": [
     {
@@ -293,8 +293,10 @@
       "title": "UI polish 4: Settings, sign-in and onboarding",
       "status": "done",
       "date": "2026-11-09",
-      "commits": [],
-      "summary": "Settings: flat name with 'Flat settings · you're the admin'; two columns on desktop: join requests, Members (count pill), Add a flatmate and Add the cook or maid on the left; 'How the flat runs' (Default splits, Menu owner, admin only) and 'You' (My meals, Password, Reminders, Sign out) on the right; the back-to-Today link is phone only (desktop has the rail); page-shaped loading placeholder. Sign-in: phones unchanged; desktop gets a teal brand panel (household row, name, tagline, three points) beside the form. Onboarding: a centred column with the Tenant mark, 'Start a new flat' and 'Joining a flatmate's flat?' as two cards with an 'or' divider, and a card-shaped loading placeholder. E2E on a production build with throwaway accounts: 33/33 (sign-in at all sizes, keyboard on the tabs, create flat, a second person asks to join, admin accepts, the new flatmate's Settings has no admin cards); the four earlier suites still pass (31 + 38 × 3); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "78ed7c6"
+      ],
+      "summary": "Settings: flat name with 'Flat settings · you're the admin'; two columns on desktop: join requests, Members (count pill), Add a flatmate and Add the cook or maid on the left; 'How the flat runs' (Default splits, Menu owner, admin only) and 'You' (My meals, Password, Reminders, Sign out) on the right; the back-to-Today link is phone only (desktop has the rail); page-shaped loading placeholder. Sign-in: phones unchanged; desktop gets a teal brand panel (household row, name, tagline, three points) beside the form. Onboarding: a centred column with the Tenant mark, 'Start a new flat' and 'Joining a flatmate's flat?' as two cards with an 'or' divider, and a card-shaped loading placeholder. E2E on a production build with throwaway accounts: 33/33 (sign-in at all sizes, keyboard on the tabs, create flat, a second person asks to join, admin accepts, the new flatmate's Settings has no admin cards); the four earlier suites still pass (31 + 38 × 3); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (97260d0); re-run on the live site: 33/33.",
       "screenshots": true
     },
     {
@@ -302,8 +304,10 @@
       "title": "UI polish 5: New split form",
       "status": "done",
       "date": "2026-11-10",
-      "commits": [],
-      "summary": "The New split / Edit split form (also the last step of Scan a bill) is now three cards: Details, Line items (with a one-line hint when empty; lines not split are drawn dashed) and Each person's share. Desktop: two columns, the shares card stays in view on the right with the status line and Save. Phones and tablets: a sticky bar keeps the status ('✓ Shares add up to ₹500', '₹… still to assign', 'over the total') next to Save. Fixed: the shares section's legend wasn't the group's label (it sat inside a div); the selected payer chip is outlined so the avatar stays visible. Found and fixed during testing: the desktop Save showed on phones too (the Button's inline-flex beat `hidden`). Layout only: the split maths is unchanged. E2E on a production build with a throwaway flat: 28/28 (lock a share → others ₹150, over the total disables Save, saved shares checked in the database, line items with one not split, cook pay helper, edit loads, scan page loads); the other five suites pass (33, 31, 40, 38, 38; the week menu suite now also covers a past day in the current week); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "c6ad1ec"
+      ],
+      "summary": "The New split / Edit split form (also the last step of Scan a bill) is now three cards: Details, Line items (with a one-line hint when empty; lines not split are drawn dashed) and Each person's share. Desktop: two columns, the shares card stays in view on the right with the status line and Save. Phones and tablets: a sticky bar keeps the status ('✓ Shares add up to ₹500', '₹… still to assign', 'over the total') next to Save. Fixed: the shares section's legend wasn't the group's label (it sat inside a div); the selected payer chip is outlined so the avatar stays visible. Found and fixed during testing: the desktop Save showed on phones too (the Button's inline-flex beat `hidden`). Layout only: the split maths is unchanged. E2E on a production build with a throwaway flat: 28/28 (lock a share → others ₹150, over the total disables Save, saved shares checked in the database, line items with one not split, cook pay helper, edit loads, scan page loads); the other five suites pass (33, 31, 40, 38, 38; the week menu suite now also covers a past day in the current week); no sideways scroll at 375/768/1440. Typecheck, lint, 162/162 tests pass. Deployed (97260d0); re-run on the live site: 28/28.",
       "screenshots": true
     },
     {
@@ -311,8 +315,10 @@
       "title": "UI polish 6: remaining forms",
       "status": "done",
       "date": "2026-11-10",
-      "commits": [],
-      "summary": "Scan a bill review step: a two-step indicator (Items and people → Each person's share, with Back to items on step 2); the bill total, Details (shop, date, category, paid by, who shares) and Lines on the bill as cards; two columns on desktop with Next in the lines card; a sticky 'Splitting ₹… · N people' + Next bar on phones; 'Pick at least one person' hint; unticked lines are greyed. The single chore, away, member and day-menu forms now sit in a white card; the chosen person in 'Who is away?' is outlined so the avatar stays visible. Found and fixed: on phones the scan review step was wider than the screen (amounts cut off on the right) because the two-column grid had no column template below desktop; every two-column page now uses grid-cols-1 below desktop. The test suites' 'no sideways scroll' check missed this (phone emulation zooms out instead of scrolling), so all seven suites now compare the page width with the real screen width. E2E on a production build: 40/40, including a real Gemini read of a sample bill → untick a line → save; ₹314 total, shares add to ₹274 in the database. The other six suites pass with the stricter check (28, 33, 31, 40, 38, 38). Typecheck, lint, 162/162 tests pass.",
+      "commits": [
+        "97260d0"
+      ],
+      "summary": "Scan a bill review step: a two-step indicator (Items and people → Each person's share, with Back to items on step 2); the bill total, Details (shop, date, category, paid by, who shares) and Lines on the bill as cards; two columns on desktop with Next in the lines card; a sticky 'Splitting ₹… · N people' + Next bar on phones; 'Pick at least one person' hint; unticked lines are greyed. The single chore, away, member and day-menu forms now sit in a white card; the chosen person in 'Who is away?' is outlined so the avatar stays visible. Found and fixed: on phones the scan review step was wider than the screen (amounts cut off on the right) because the two-column grid had no column template below desktop; every two-column page now uses grid-cols-1 below desktop. The test suites' 'no sideways scroll' check missed this (phone emulation zooms out instead of scrolling), so all seven suites now compare the page width with the real screen width. E2E on a production build: 40/40, including a real Gemini read of a sample bill → untick a line → save; ₹314 total, shares add to ₹274 in the database. The other six suites pass with the stricter check (28, 33, 31, 40, 38, 38). Typecheck, lint, 162/162 tests pass. Deployed (97260d0); re-run on the live site: 40/40.",
       "screenshots": true
     }
   ],
@@ -518,7 +524,6 @@
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
     "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
-    "UI polish 4, the New split form and the remaining forms are committed but not deployed yet (waiting on the user's OK).",
     "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
