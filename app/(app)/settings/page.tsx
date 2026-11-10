@@ -14,7 +14,6 @@ import { JoinRequestItem, MenuOwnerForm, UsualSkipsForm } from "./member-forms";
 import { formatFlatCode } from "@/lib/engine/onboarding";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
-import { CategoryRules } from "./category-rules";
 
 export const metadata = { title: "Flat settings · Tenant" };
 
@@ -23,7 +22,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   const { created, removed, request, admin } = await searchParams;
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
-  const [{ data: members }, { data: periods }, { data: categories }, { data: requests }] = await Promise.all([
+  const [{ data: members }, { data: periods }, { data: requests }] = await Promise.all([
     supabase
       .from("members")
       .select("*")
@@ -31,7 +30,6 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       .or(`left_on.is.null,left_on.gte.${today}`)
       .order("sort_order"),
     supabase.from("away_periods").select("*").eq("flat_id", flat.id).lte("start_date", today).gte("end_date", today),
-    supabase.from("expense_categories").select("id, name, default_rule").eq("flat_id", flat.id).order("created_at"),
     me.is_admin
       ? supabase
           .from("join_requests")
@@ -194,16 +192,6 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           {me.is_admin ? (
             <>
               <h2 className="mt-2 px-1 text-sm font-bold tracking-wide text-muted uppercase first:mt-0">How the flat runs</h2>
-              <Card className="flex flex-col gap-2">
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-title font-bold">Default splits</h2>
-                  <p className="text-sm text-muted">
-                    Who shares each kind of cost by default. You can always change people and amounts on a split.
-                  </p>
-                </div>
-                <CategoryRules categories={categories ?? []} />
-              </Card>
-
               <Card className="flex flex-col gap-3">
                 <h2 className="text-title font-bold">Menu owner</h2>
                 <MenuOwnerForm flatmates={flatmates.map(({ id, name }) => ({ id, name }))} current={flat.menu_owner_id} />

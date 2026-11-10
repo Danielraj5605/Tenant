@@ -131,15 +131,3 @@ export async function deleteExpense(form: FormData) {
   }
   redirect("/money");
 }
-
-/** Admin: change a category's default split rule (Settings). */
-export async function setCategoryRule(form: FormData) {
-  const { me, flat } = await requireFlat();
-  if (!me.is_admin) return;
-  const id = z.uuid().safeParse(form.get("categoryId"));
-  const rule = z.enum(["all_members", "present_only", "per_day_worked", "custom"]).safeParse(form.get("rule"));
-  if (!id.success || !rule.success) return;
-  const supabase = await createClient();
-  await supabase.from("expense_categories").update({ default_rule: rule.data }).eq("id", id.data).eq("flat_id", flat.id);
-  revalidatePath("/", "layout");
-}
