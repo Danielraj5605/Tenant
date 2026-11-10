@@ -6,6 +6,7 @@
 - Drives No cook on Menu, Today and Calendar, pay by days worked (scheduled days only) and the Cook & maid page (week strip, notes, Day off).
 - Migration 20261117000001: members.work_schedule (applied to production).
 - E2E on dev through the UI, then reset to every day. 189/189 tests.
+- Deployed 7ea987a (Vercel: success); live pages checked at 375/768/1440.
 
 ## 2026-11-10 — Deployed Cook & maid page
 
