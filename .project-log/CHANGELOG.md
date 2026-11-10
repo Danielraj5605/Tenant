@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 — Calendar: cook & maid apart; Default splits removed
+
+- Calendar: 'Flatmates away' and a separate 'Cook & maid leave' card; the day panel groups the cook and maid separately.
+- Settings: Default splits card removed; categories keep their current rules.
+- Deployed bcaeb04 and b67c26f; checked live as Madan at 375/768/1440.
+
 ## 2026-11-11 — Scan a bill: camera on every screen
 
 - 'Take a photo' was hidden on screens 1024 px and wider since 7 Nov; it's back everywhere.

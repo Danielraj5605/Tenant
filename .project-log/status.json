@@ -364,14 +364,27 @@
       ],
       "summary": "The user missed the camera option. Cause: since 7 Nov (4fb6a5c, UI polish 1) 'Take a photo' was hidden on screens 1024 px and wider, because laptop browsers ignore the file input's capture setting. Now 'Take a photo' shows on every screen: touch devices (phones, tablets) open the native camera via capture=environment; laptops and desktops open an in-app camera (live preview, Take photo, Cancel, Escape or click outside to close, focus on the shutter, camera stopped on close). Blocked, missing or busy cameras show a clear message pointing to Upload. Upload a photo or PDF and drag-and-drop are unchanged. Deployed (0974d53, Vercel: success) at the user's choice and tested on the live site with Chromium's fake camera: button visible at 1440/768/375 with no sideways scroll; camera live at 1920x1440; at 1440 the photo went into 'Reading the bill…' (nothing saved); Escape closes; a touch phone gets the native picker with capture=environment; a denied permission shows 'Camera access is blocked…'. No page errors. 198/198 tests, typecheck and lint pass.",
       "screenshots": true
+    },
+    {
+      "id": "calendar-staff-apart",
+      "title": "Calendar: cook & maid apart; Default splits removed",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "bcaeb04",
+        "b67c26f"
+      ],
+      "summary": "Calendar: 'Who's away in <month>' is now 'Flatmates away in <month>' (flatmates only), with a new 'Cook & maid leave in <month>' card below it (Details → Cook & maid page). The selected-day panel lists flatmates first and then a separate 'Cook & maid' group; 'All flatmates are in.' when only staff are off. Settings: the Default splits card is removed (and its editor component and setCategoryRule action deleted). The categories keep their current default rules, which new splits still use; they can no longer be changed in the app. Deployed and checked live as Madan at 375/768/1440: Mary only in the cook & maid card and group, no sideways scroll, no page errors; Settings has no Default splits. Not checked signed in as the admin (the check would need the admin's account); the card's code is deleted, so it can't show. 198/198 tests, typecheck and lint pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    "components/camera-capture.tsx",
-    "components/ui.tsx",
-    "app/(app)/money/scan/scan-flow.tsx"
+    "app/(app)/calendar/page.tsx",
+    "app/(app)/settings/page.tsx",
+    "app/(app)/settings/category-rules.tsx (deleted)",
+    "app/(app)/money/actions.ts"
   ],
   "test_coverage": [
     {
@@ -541,6 +554,10 @@
     {
       "date": "2026-11-11",
       "text": "Take a photo on every screen: native camera on touch devices, in-app camera (getUserMedia) on laptops and desktops."
+    },
+    {
+      "date": "2026-11-11",
+      "text": "Default splits removed from Settings at the user's request; each category keeps its current default rule (Rent and WiFi: everyone; Groceries, Gas, Household: people at home; Cook's and Maid's pay: by days worked)."
     }
   ],
   "open_questions": [
@@ -568,7 +585,8 @@
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
     "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
     "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye.",
-    "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is."
+    "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is.",
+    "Default split rules can no longer be changed in the app (the Settings card was removed on request). Each split can still be changed when it's made."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"
