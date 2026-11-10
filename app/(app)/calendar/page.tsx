@@ -247,9 +247,10 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
                 meta={
                   <Link
                     href={`/staff?m=${month}`}
-                    className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-full px-2 text-sm font-bold text-accent hover:bg-accent-tint"
+                    aria-label="Cook and maid details"
+                    className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-full px-2 text-sm font-bold whitespace-nowrap text-accent hover:bg-accent-tint"
                   >
-                    Cook &amp; maid
+                    Details
                     <ChevronRightIcon size={16} />
                   </Link>
                 }
