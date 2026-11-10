@@ -26,7 +26,12 @@ export function Button({
   children,
   disabled,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; loading?: boolean }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+  loading?: boolean;
+  /** React 19 passes refs as a prop; spread onto the <button> below. */
+  ref?: React.Ref<HTMLButtonElement>;
+}) {
   return (
     <button
       className={cx(buttonBase, buttonVariants[variant], className)}

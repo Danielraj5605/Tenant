@@ -7,7 +7,8 @@ import { isPresent, type AwayPeriod } from "@/lib/engine/presence";
 import type { NormalizedScan } from "@/lib/engine/scan";
 import { Avatar, Button, Field, Notice, Spinner, cx } from "@/components/ui";
 import { Badge } from "@/components/away";
-import { CameraIcon, CheckIcon, FileTextIcon, UploadIcon } from "@/components/icons";
+import { CheckIcon, FileTextIcon, UploadIcon } from "@/components/icons";
+import { TakePhotoButton } from "@/components/camera-capture";
 import { SplitForm, type SplitCategory, type SplitMember } from "../split-form";
 
 type Draft = { key: number; name: string; amount: string; kind: ItemKind; included: boolean };
@@ -133,16 +134,16 @@ export function ScanFlow({
             )}
           >
             <p className="hidden text-center font-semibold lg:block">
-              {dragging ? "Drop to read the bill" : "Drop a bill photo or PDF here, or"}
+              {dragging ? "Drop to read the bill" : "Drop a bill photo or PDF here, take a photo, or upload one"}
             </p>
-            {/* Phones open the camera straight away; desktops have no camera step. */}
-            <FilePick label="Take a photo" accept="image/*" capture icon={<CameraIcon size={20} />} onFile={handleFile} className="lg:hidden" primary />
+            {/* Every screen: phones open the camera app, laptops and desktops an in-app camera. */}
+            <TakePhotoButton onFile={(file) => void handleFile(file)} className="lg:mx-auto lg:w-fit" />
             <FilePick
               label="Upload a photo or PDF"
               accept="image/*,application/pdf,.pdf"
               icon={<UploadIcon size={20} />}
               onFile={handleFile}
-              className="lg:mx-auto lg:w-fit lg:border-transparent lg:bg-accent lg:text-white lg:hover:bg-accent-dark"
+              className="lg:mx-auto lg:w-fit"
             />
           </div>
         )}
@@ -430,11 +431,10 @@ function StepIndicator({ step, onBack }: { step: 1 | 2; onBack?: () => void }) {
   );
 }
 
-/** A button that opens the file picker (or the camera, with `capture`). */
+/** A button that opens the file picker. (Taking a photo: TakePhotoButton.) */
 function FilePick({
   label,
   accept,
-  capture = false,
   icon,
   onFile,
   primary = false,
@@ -442,7 +442,6 @@ function FilePick({
 }: {
   label: string;
   accept: string;
-  capture?: boolean;
   icon: React.ReactNode;
   onFile: (file: File | undefined) => void;
   primary?: boolean;
@@ -462,7 +461,6 @@ function FilePick({
       <input
         type="file"
         accept={accept}
-        capture={capture ? "environment" : undefined}
         className="sr-only"
         onChange={(e) => {
           onFile(e.target.files?.[0]);
