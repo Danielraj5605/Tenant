@@ -7,6 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-11 Editing an away entry (Kishore's reason) looked like 'nothing happens' on Save. Cause: the save worked, but there was no confirmation and the day panel didn't show reasons. Fix: 'Saved…' notice after saving or removing, reason shown in the day panel (small)
 - [x] 2026-11-11 Remove 'Default splits' from Settings; on the Calendar, show cook and maid leave in its own section, not mixed with the flatmates (small)
 - [x] 2026-11-11 Scan a bill: bring back the camera option (it was hidden on screens 1024 px and wider since 7 Nov). Decided: 'Take a photo' on every screen; phones use the native camera, laptops/desktops/landscape tablets get an in-app camera (small)
 - [x] 2026-11-10 Monthly / every-N-months chores (cook and maid salary, rent monthly; EB bill every 2 months), assigned to one person who can hand it over to someone they choose. Decided by Claude as asked: new 'Monthly' frequency with every N months, due day and first month; one owner; per-occurrence Hand over (just this time or from now on); no auto-skip when away, a hint instead (medium)

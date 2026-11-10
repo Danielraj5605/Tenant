@@ -110,7 +110,12 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
 
   revalidatePath("/", "layout");
   // Opened from the Cook & maid page: go back there, on the leave's month.
-  redirect(form.get("from") === "staff" ? `/staff?m=${v.startDate.slice(0, 7)}` : `/calendar?d=${v.startDate}`);
+  // Say it worked, on the page they land on (the Calendar on the first day, or the Cook & maid page).
+  redirect(
+    form.get("from") === "staff"
+      ? `/staff?m=${v.startDate.slice(0, 7)}&saved=1`
+      : `/calendar?d=${v.startDate}&saved=${id.success ? "edited" : "added"}&who=${v.memberId}`,
+  );
 }
 
 export async function deleteAway(form: FormData) {
@@ -123,5 +128,5 @@ export async function deleteAway(form: FormData) {
     await supabase.from("away_periods").delete().eq("id", id.data).eq("flat_id", flat.id);
     revalidatePath("/", "layout");
   }
-  redirect(/^\d{4}-\d{2}-\d{2}$/.test(back) ? `/calendar?d=${back}` : "/calendar");
+  redirect(/^\d{4}-\d{2}-\d{2}$/.test(back) ? `/calendar?d=${back}&saved=removed` : "/calendar?saved=removed");
 }

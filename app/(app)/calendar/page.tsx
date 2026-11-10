@@ -19,7 +19,7 @@ import { canEditAwayFor } from "@/lib/engine/permissions";
 import { mealsPhrase } from "@/components/meals";
 import { cookStatusOn } from "@/lib/engine/menu";
 import { ScreenHeader } from "@/components/screen";
-import { Avatar, Card, Pill, SectionHeading, cx } from "@/components/ui";
+import { Avatar, Card, Notice, Pill, SectionHeading, cx } from "@/components/ui";
 import { AlertIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Calendar · Tenant" };
@@ -72,6 +72,20 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   return (
     <div data-wide>
       <ScreenHeader title="Calendar" />
+      {sp.saved === "edited" || sp.saved === "added" || sp.saved === "removed" ? (
+        <div className="mb-4">
+          <Notice tone="success">
+            {sp.saved === "removed"
+              ? "Removed."
+              : (() => {
+                  const who = members.find((m) => m.id === sp.who);
+                  const whose = !who ? "The" : who.id === me.id ? "Your" : `${who.name}’s`;
+                  const what = who && who.role !== "flatmate" ? "leave is" : "away days are";
+                  return `Saved. ${whose} ${what} ${sp.saved === "added" ? "on the calendar" : "updated"}.`;
+                })()}
+          </Notice>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <Card className="flex flex-col gap-3 px-3 pt-3 pb-4 lg:sticky lg:top-8">
@@ -287,6 +301,7 @@ function DayRow({ p }: { p: AwayItem }) {
             {[
               p.member.role !== "flatmate" ? ROLE_LABEL[p.member.role] : null,
               p.full_day ? "Away all day" : `Out: ${partLabel(p.slots).replace(/ only$/, "").toLowerCase()}`,
+              p.reason,
             ]
               .filter(Boolean)
               .join(" · ")}
