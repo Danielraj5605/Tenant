@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { requireFlat } from "@/lib/flat";
+import { todayIn } from "@/lib/engine/dates";
 import { createClient } from "@/lib/supabase/server";
 import { ChoreForm } from "../chore-form";
 import { BackToChores, rotationCandidates } from "../shared";
@@ -9,7 +10,7 @@ import { DeleteChoreButton } from "./delete-chore";
 export const metadata = { title: "Edit chore · Tenant" };
 
 export default async function EditChorePage({ params }: PageProps<"/chores/[id]">) {
-  const { flat } = await requireFlat();
+  const { me, flat } = await requireFlat();
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
@@ -30,6 +31,8 @@ export default async function EditChorePage({ params }: PageProps<"/chores/[id]"
       <div className="rounded-[var(--radius-card)] bg-surface p-5 md:p-7">
         <ChoreForm
           flatmates={flatmates}
+          today={todayIn(flat.timezone)}
+          meId={me.id}
           initial={{
             id: chore.id,
             name: chore.name,
@@ -37,6 +40,9 @@ export default async function EditChorePage({ params }: PageProps<"/chores/[id]"
             days: chore.days_of_week,
             dueTime: chore.due_time?.slice(0, 5) ?? "",
             rotation: (rotation ?? []).map((r) => r.member_id).filter((m) => flatmates.some((f) => f.id === m)),
+            everyMonths: chore.every_months ?? undefined,
+            dayOfMonth: chore.day_of_month ?? undefined,
+            startMonth: chore.start_month?.slice(0, 7),
           }}
         />
       </div>

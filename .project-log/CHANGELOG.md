@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-10 — Monthly chores and hand over
+
+- 'Monthly' chores: every N months, due by a day, first month, one person (rent, salaries, EB bill every 2 months).
+- Turn per cycle: Due / Overdue / Done and Next; Mark done; Hand over just this time or from now on; away-on-due-date hint. 'Your monthly jobs' on Today.
+- Fixed: the chore form no longer clears after a refused save.
+- Migration 20261118000001 (applied to production). Daily job unchanged (already skips monthly chores).
+- E2E on dev through the UI, test chores deleted afterwards. 198/198 tests.
+
 ## 2026-11-10 — Cook & maid weekly schedule
 
 - Per weekday: Weekly / Alternate (this or next week) / Off; the cook also picks meals. Set on the cook's or maid's edit page by any flatmate.

@@ -342,28 +342,40 @@
       ],
       "summary": "Each cook or maid has a weekly schedule, set on their edit page by any flatmate. Each weekday is Weekly, Alternate (pick 'this' or 'next' week as a working one) or Off, and the cook also has Breakfast/Lunch/Dinner chips. Example: maid Tue and Thu only; cook Sundays on alternate weeks, breakfast and lunch only. The schedule drives No cook on Menu, Today and Calendar (same as leave), pay by days worked (only scheduled days count, so a Tue/Thu maid is paid for those minus leave), and the Cook & maid page (week strip, notes like 'Sun: alternate weeks (next 15 Nov), breakfast and lunch only', 'Day off today'). No schedule = every day, every meal, so nothing changed until one is set. Migration 20261117000001 adds members.work_schedule (applied to production with the user's OK). Schedule logic lives in lib/engine/schedule.ts, not presence.ts, so the Edge Functions didn't need a redeploy. E2E through the UI on dev: set Selvi to Tue/Thu and Mary to alternate Sundays without dinner, checked the saved JSON, Menu showed 'No cook for dinner on Sun 15 Nov', a cook day with no meals blocks Save, then both reset to every day through the UI (data back to null). 375/768/1440, no sideways scroll, no page errors. 189/189 tests, typecheck and lint pass. Deployed (7ea987a, Vercel: success); live check signed in as Madan: /staff, the cook's edit page with the schedule, /menu and /today load at 375/768/1440 with no sideways scroll.",
       "screenshots": true
+    },
+    {
+      "id": "monthly-chores",
+      "title": "Monthly chores and hand over",
+      "status": "done",
+      "date": "2026-11-10",
+      "commits": [],
+      "summary": "New 'Monthly' chore type for rent, the cook's and maid's salary, the EB bill and the like. Set: every 1/2/3/4/6/12 months, due by a day of the month (29–31 fall on the last day of shorter months), the first month (defaults to next month if this month's day has passed), and one person who does it. Each cycle's turn is created when the flat opens Chores or Today and stays until done: 'Due Sat 5 Dec' / 'Overdue since …' (amber) / Done, plus 'Next: …'. The person on duty (or the admin) can Mark done or Hand over to another flatmate, just this time or from now on; a notice confirms it. If the person is away on the due date, the card suggests handing it over (nobody is skipped automatically). Today shows 'Your monthly jobs'. Rotation tab lists monthly chores with their owner; the Edit chores screen stays weekday-only. Changing a monthly chore's person moves the turns not yet done. The daily job ignores monthly chores (its deployed code already skips chores with no weekdays; rotation.ts now says so explicitly, synced), so the Edge Functions weren't redeployed; its 'Your duty today' push includes a monthly turn on its due date once the turn exists. Fixed: the chore form no longer resets after a refused save. Migration 20261118000001 (applied with the user's OK). E2E on dev as a non-admin through the UI: refused save keeps choices; rent (monthly by the 5th from Nov → overdue) and EB bill (every 2 months by the 10th → due today) saved correctly; Today lists both; hand over to Karthik just this time moved only that turn; EB marked done; test chores deleted afterwards. 375/768/1440 with no sideways scroll or page errors. 198/198 tests, typecheck and lint pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    "supabase/migrations/20261117000001_work_schedule.sql",
-    "lib/engine/schedule.ts",
-    "lib/engine/schedule.test.ts",
-    "lib/engine/menu.ts",
-    "lib/engine/money.ts",
-    "lib/engine/staff.ts",
-    "lib/engine/inputs.ts",
-    "lib/engine/inputs.test.ts",
-    "lib/supabase/types.ts",
-    "app/(app)/staff/schedule-form.tsx",
-    "app/(app)/staff/actions.ts",
-    "app/(app)/staff/page.tsx",
-    "app/(app)/staff/[id]/page.tsx",
+    ".project-log/REQUESTS.md",
+    "app/(app)/chores/[id]/page.tsx",
+    "app/(app)/chores/actions.ts",
+    "app/(app)/chores/chore-form.tsx",
+    "app/(app)/chores/edit/page.tsx",
+    "app/(app)/chores/new/page.tsx",
+    "app/(app)/chores/page.tsx",
     "app/(app)/today/page.tsx",
-    "app/(app)/money/split-form.tsx",
-    "app/(app)/money/new/page.tsx",
-    "app/(app)/money/scan/page.tsx"
+    "lib/chores.ts",
+    "lib/engine/inputs.test.ts",
+    "lib/engine/inputs.ts",
+    "lib/engine/rotation.ts",
+    "lib/supabase/types.ts",
+    "supabase/functions/_shared/engine/rotation.ts",
+    ".project-log/shots/monthly-chores/",
+    "app/(app)/chores/monthly-card.tsx",
+    "components/hand-over.tsx",
+    "lib/engine/monthly.test.ts",
+    "lib/engine/monthly.ts",
+    "supabase/migrations/20261118000001_monthly_chores.sql"
   ],
   "test_coverage": [
     {
@@ -525,9 +537,15 @@
     {
       "date": "2026-11-10",
       "text": "Weekly schedule for the cook and maid: per weekday Weekly / Alternate / Off, plus meals for the cook. Scheduled-off meals count as No cook like leave; only scheduled days count for pay; leave on an off day doesn't count. No schedule means every day. Scheduled days off don't send push alerts (only leave does)."
+    },
+    {
+      "date": "2026-11-10",
+      "text": "Monthly chores: one owner (stored as a one-person rotation), every N months by a day of the month. Away owners aren't skipped (rent can't be skipped); the card suggests handing over. Hand over is per turn, or 'from now on' to change the owner. Turns are created by the app, not the daily job."
     }
   ],
-  "open_questions": [],
+  "open_questions": [
+    "Monthly chores: should handing over send a push to the new person? Not done yet (it would need the notify Edge Function to be updated and redeployed)."
+  ],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",

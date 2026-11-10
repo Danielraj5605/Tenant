@@ -34,7 +34,7 @@ export default async function TodayPage() {
   const today = todayIn(flat.timezone, now);
   const horizon = addDays(today, ALERT_DAYS - 1);
   const supabase = await createClient();
-  const [{ members, periods }, { views }, { data: menuWeek }, myShare, { data: requests }] = await Promise.all([
+  const [{ members, periods }, { views, monthly }, { data: menuWeek }, myShare, { data: requests }] = await Promise.all([
     loadAvailability(flat.id, today, horizon),
     loadChoreWeek(flat.id, today, 1),
     // Today's meals, and the plan for each day an alert might cover.
@@ -50,6 +50,10 @@ export default async function TodayPage() {
   const hasDishes = (d: { breakfast: string | null; lunch: string | null; dinner: string | null }) => Boolean(d.breakfast || d.lunch || d.dinner);
   const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
+  // Monthly chores (rent, salaries, bills) still to do by me, oldest first.
+  const myMonthly = monthly
+    .flatMap((m) => m.turns.filter((t) => t.member_id === me.id && t.status === "pending").map((turn) => ({ chore: m.chore, turn })))
+    .sort((a, b) => a.turn.due_date.localeCompare(b.turn.due_date));
   const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, today, periods, m)])) as Record<Meal, number>;
   const { noCook, noCookMeals } = cookStatusOn(members, today, periods);
 
@@ -215,6 +219,43 @@ export default async function TodayPage() {
               )}
             </Card>
           )}
+
+          {myMonthly.length ? (
+            <Card className="flex flex-col gap-2">
+              <SectionHeading
+                title="Your monthly jobs"
+                meta={
+                  <Link
+                    href="/chores"
+                    className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-full px-2 text-sm font-bold text-accent hover:bg-accent-tint"
+                  >
+                    Hand over
+                    <ChevronRightIcon size={16} />
+                  </Link>
+                }
+              />
+              <ul className="flex flex-col divide-y divide-line">
+                {myMonthly.map(({ chore, turn }) => {
+                  const late = turn.due_date < today;
+                  return (
+                    <li key={turn.id} className="flex flex-col gap-3 py-3 first:pt-1 last:pb-0">
+                      <span className="flex min-w-0 flex-col">
+                        <span className="text-lg font-bold">{chore.name}</span>
+                        <span className={cx("text-sm font-semibold", late ? "text-warn-ink" : "text-muted")}>
+                          {late
+                            ? `Overdue since ${formatShortDate(turn.due_date)}`
+                            : turn.due_date === today
+                              ? "Due today"
+                              : `Due ${formatShortDate(turn.due_date)}`}
+                        </span>
+                      </span>
+                      <DutyButton assignmentId={turn.id} done={false} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          ) : null}
 
           <Card className="flex flex-col gap-4">
             <SectionHeading

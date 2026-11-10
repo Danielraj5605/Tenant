@@ -5,7 +5,8 @@
 import { addDays } from "./calendar";
 import { isPresent, type AwayPeriod, type PresenceMember } from "./presence";
 
-export type ChoreFrequency = "daily" | "weekly" | "custom";
+/** "monthly" chores are planned by the app (lib/engine/monthly.ts), never by the daily job. */
+export type ChoreFrequency = "daily" | "weekly" | "custom" | "monthly";
 
 export type Chore = {
   id: string;
@@ -22,6 +23,7 @@ export function isoWeekday(iso: string): number {
 }
 
 export function isDue(chore: Chore, date: string): boolean {
+  if (chore.frequency === "monthly") return false;
   return chore.frequency === "daily" || chore.days_of_week.includes(isoWeekday(date));
 }
 

@@ -10,6 +10,8 @@ import { Avatar, Card, Notice, Pill, cx } from "@/components/ui";
 import { Badge } from "@/components/away";
 import { DutyButton } from "@/components/chore-duty";
 import { AlertIcon, CheckIcon, ChevronRightIcon, PencilIcon, PlusIcon } from "@/components/icons";
+import { monthlyLabel } from "@/lib/engine/monthly";
+import { MonthlyCard } from "./monthly-card";
 
 export const metadata = { title: "Chores · Tenant" };
 
@@ -26,10 +28,13 @@ const weekdayOf = (iso: string) => formatShortDate(iso).split(" ")[0];
 
 export default async function ChoresPage({ searchParams }: PageProps<"/chores">) {
   const { me, flat } = await requireFlat();
-  const { tab, saved } = await searchParams;
+  const { tab, saved, handed, always } = await searchParams;
   const view = tab === "rotation" ? "rotation" : "week";
   const today = todayIn(flat.timezone);
-  const { views, members, periods } = await loadChoreWeek(flat.id, today);
+  const { views, monthly, members, periods } = await loadChoreWeek(flat.id, today);
+  const flatmates = members
+    .filter((m) => m.role === "flatmate" && (!m.left_on || m.left_on >= today))
+    .map((m) => ({ id: m.id, name: m.name }));
   const nameOf = new Map(members.map((m) => [m.id, m.name]));
   const shortName = (id: string) => (id === me.id ? "You" : (nameOf.get(id) ?? "Former member"));
 
@@ -72,6 +77,14 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
         </div>
       </header>
 
+      {typeof handed === "string" && nameOf.has(handed) ? (
+        <div className="mb-4">
+          <Notice tone="success">
+            Handed over to {handed === me.id ? "you" : nameOf.get(handed)}
+            {always ? " from now on." : " for this time. Later turns stay with the usual person."}
+          </Notice>
+        </div>
+      ) : null}
       {saved === "all" ? (
         <div className="mb-4">
           <Notice tone="success">Chores saved. Turns from today follow the new settings.</Notice>
@@ -105,11 +118,12 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
         </div>
       ) : null}
 
-      {views.length === 0 ? (
+      {views.length === 0 && monthly.length === 0 ? (
         <Card className="flex flex-col gap-3 lg:max-w-xl">
           <h2 className="text-title font-bold">No chores yet</h2>
           <p className="text-muted">
-            Add garbage, kitchen cleaning, water cans or anything else that rotates. Tenant skips whoever is away.
+            Add garbage, kitchen cleaning, water cans or anything else that rotates. Tenant skips whoever is away. Rent,
+            salaries and bills can be monthly chores for one person.
           </p>
           <Link
             href="/chores/new"
@@ -120,110 +134,162 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
           </Link>
         </Card>
       ) : view === "week" ? (
-        <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
-          {views.map(({ chore, today: duty, upcoming }) => {
-            const ownerId = duty?.member_id ?? null;
-            const mine = ownerId === me.id;
-            const time = formatTime(chore.due_time);
-            const pendingMine = mine && duty?.status === "pending";
-            return (
-              <li key={chore.id} className="min-w-0">
-                <Card className="flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-col">
-                      <h2 className="truncate text-title font-bold">{chore.name}</h2>
-                      <p className="text-sm text-muted">
-                        {scheduleLabel(chore)}
-                        {time ? `, by ${time}` : ""}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/chores/${chore.id}`}
-                      aria-label={`Edit ${chore.name}`}
-                      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-line-strong px-3.5 text-sm font-bold text-accent-dark hover:border-accent hover:bg-accent-tint"
-                    >
-                      <PencilIcon size={15} />
-                      Edit
-                    </Link>
-                  </div>
-
-                  <div
-                    className={cx(
-                      "flex min-h-14 items-center gap-3 rounded-xl px-3 py-2",
-                      pendingMine ? "bg-surface ring-2 ring-accent ring-inset" : "bg-sunk",
-                    )}
-                  >
-                    {!duty ? (
-                      <p className="text-sm font-semibold text-muted">Not due today</p>
-                    ) : duty.status === "skipped" ? (
-                      <p className="text-sm font-semibold text-muted">Skipped today: everyone in the rotation is away</p>
-                    ) : (
-                      <>
-                        <Avatar name={nameOf.get(ownerId!) ?? "?"} size={36} />
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="text-xs font-semibold text-muted">Today</span>
-                          <span className="truncate font-bold">{shortName(ownerId!)}</span>
-                        </span>
-                        {duty.status === "done" ? (
-                          <Pill>
-                            <CheckIcon size={14} strokeWidth={2.5} /> Done
-                          </Pill>
-                        ) : (
-                          <Pill tone={pendingMine ? "accent" : "neutral"}>To do</Pill>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  {duty && duty.status !== "skipped" && canMarkDuty(me, duty) ? (
-                    <DutyButton
-                      assignmentId={duty.id}
-                      done={duty.status === "done"}
-                      forName={mine ? undefined : nameOf.get(ownerId!)}
-                    />
-                  ) : null}
-
-                  {upcoming.length ? (
-                    <div className="flex flex-col gap-2">
-                      <h3 className="text-sm font-bold">Who&rsquo;s next</h3>
-                      <ol className="grid grid-cols-4 gap-2">
-                        {upcoming.slice(0, 4).map((d) => (
-                          <li
-                            key={d.date}
-                            className={cx(
-                              "flex min-w-0 flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center",
-                              d.memberId === me.id ? "border-accent bg-surface ring-1 ring-accent" : "border-line",
-                            )}
+        <div className="flex flex-col gap-6">
+          {monthly.length ? (
+            <section aria-labelledby="monthly" className="flex flex-col gap-3">
+              <h2 id="monthly" className="px-1 text-sm font-bold tracking-wide text-muted uppercase">
+                Monthly
+              </h2>
+              <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
+                {monthly.map((m) => (
+                  <li key={m.chore.id} className="min-w-0">
+                    <MonthlyCard view={m} me={me} today={today} nameOf={nameOf} flatmates={flatmates} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {views.length ? (
+            <section aria-labelledby={monthly.length ? "weekly" : undefined} className="flex flex-col gap-3">
+              {monthly.length ? (
+                <h2 id="weekly" className="px-1 text-sm font-bold tracking-wide text-muted uppercase">
+                  This week
+                </h2>
+              ) : null}
+              <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
+                {views.map(({ chore, today: duty, upcoming }) => {
+                  const ownerId = duty?.member_id ?? null;
+                  const mine = ownerId === me.id;
+                  const time = formatTime(chore.due_time);
+                  const pendingMine = mine && duty?.status === "pending";
+                  return (
+                    <li key={chore.id} className="min-w-0">
+                      <Card className="flex flex-col gap-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 flex-col">
+                            <h2 className="truncate text-title font-bold">{chore.name}</h2>
+                            <p className="text-sm text-muted">
+                              {scheduleLabel(chore)}
+                              {time ? `, by ${time}` : ""}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/chores/${chore.id}`}
+                            aria-label={`Edit ${chore.name}`}
+                            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-line-strong px-3.5 text-sm font-bold text-accent-dark hover:border-accent hover:bg-accent-tint"
                           >
-                            <span className="text-xs font-semibold text-muted">
-                              <abbr title={formatShortDate(d.date)} className="no-underline">
-                                {weekdayOf(d.date)}
-                              </abbr>
-                            </span>
-                            {d.memberId ? (
-                              <Avatar name={nameOf.get(d.memberId) ?? "?"} size={28} />
-                            ) : (
-                              <span className="size-7 rounded-full border-2 border-dashed border-line-strong" aria-hidden="true" />
-                            )}
-                            <span
-                              className={cx(
-                                "w-full truncate text-xs",
-                                d.memberId ? "font-bold" : "font-semibold text-muted",
+                            <PencilIcon size={15} />
+                            Edit
+                          </Link>
+                        </div>
+
+                        <div
+                          className={cx(
+                            "flex min-h-14 items-center gap-3 rounded-xl px-3 py-2",
+                            pendingMine ? "bg-surface ring-2 ring-accent ring-inset" : "bg-sunk",
+                          )}
+                        >
+                          {!duty ? (
+                            <p className="text-sm font-semibold text-muted">Not due today</p>
+                          ) : duty.status === "skipped" ? (
+                            <p className="text-sm font-semibold text-muted">Skipped today: everyone in the rotation is away</p>
+                          ) : (
+                            <>
+                              <Avatar name={nameOf.get(ownerId!) ?? "?"} size={36} />
+                              <span className="flex min-w-0 flex-1 flex-col">
+                                <span className="text-xs font-semibold text-muted">Today</span>
+                                <span className="truncate font-bold">{shortName(ownerId!)}</span>
+                              </span>
+                              {duty.status === "done" ? (
+                                <Pill>
+                                  <CheckIcon size={14} strokeWidth={2.5} /> Done
+                                </Pill>
+                              ) : (
+                                <Pill tone={pendingMine ? "accent" : "neutral"}>To do</Pill>
                               )}
-                            >
-                              {d.memberId ? shortName(d.memberId) : "Skipped"}
-                            </span>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  ) : null}
-                </Card>
-              </li>
-            );
-          })}
-        </ul>
+                            </>
+                          )}
+                        </div>
+                        {duty && duty.status !== "skipped" && canMarkDuty(me, duty) ? (
+                          <DutyButton
+                            assignmentId={duty.id}
+                            done={duty.status === "done"}
+                            forName={mine ? undefined : nameOf.get(ownerId!)}
+                          />
+                        ) : null}
+
+                        {upcoming.length ? (
+                          <div className="flex flex-col gap-2">
+                            <h3 className="text-sm font-bold">Who&rsquo;s next</h3>
+                            <ol className="grid grid-cols-4 gap-2">
+                              {upcoming.slice(0, 4).map((d) => (
+                                <li
+                                  key={d.date}
+                                  className={cx(
+                                    "flex min-w-0 flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center",
+                                    d.memberId === me.id ? "border-accent bg-surface ring-1 ring-accent" : "border-line",
+                                  )}
+                                >
+                                  <span className="text-xs font-semibold text-muted">
+                                    <abbr title={formatShortDate(d.date)} className="no-underline">
+                                      {weekdayOf(d.date)}
+                                    </abbr>
+                                  </span>
+                                  {d.memberId ? (
+                                    <Avatar name={nameOf.get(d.memberId) ?? "?"} size={28} />
+                                  ) : (
+                                    <span className="size-7 rounded-full border-2 border-dashed border-line-strong" aria-hidden="true" />
+                                  )}
+                                  <span
+                                    className={cx(
+                                      "w-full truncate text-xs",
+                                      d.memberId ? "font-bold" : "font-semibold text-muted",
+                                    )}
+                                  >
+                                    {d.memberId ? shortName(d.memberId) : "Skipped"}
+                                  </span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        ) : null}
+                      </Card>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+        </div>
       ) : (
         <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
+          {monthly.map(({ chore, ownerId }) => (
+            <li key={chore.id} className="min-w-0">
+              <Card className="flex flex-col gap-2 px-3">
+                <Link
+                  href={`/chores/${chore.id}`}
+                  aria-label={`Edit ${chore.name}`}
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl px-2 hover:bg-bg"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-title font-bold">{chore.name}</span>
+                    <span className="text-sm text-muted">{monthlyLabel(chore)}</span>
+                  </span>
+                  <span className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-accent">
+                    Edit
+                    <ChevronRightIcon size={18} />
+                  </span>
+                </Link>
+                <div className="flex min-h-12 items-center gap-3 px-2">
+                  <Avatar name={nameOf.get(ownerId ?? "") ?? "?"} size={32} />
+                  <span className="min-w-0 flex-1 truncate font-semibold">
+                    {ownerId === me.id ? "You" : ownerId ? (nameOf.get(ownerId) ?? "Former member") : "Nobody yet"}
+                  </span>
+                  <Badge tone="neutral">Does it every time</Badge>
+                </div>
+              </Card>
+            </li>
+          ))}
           {views.map(({ chore, rotation, today: duty }) => (
             <li key={chore.id} className="min-w-0">
               <Card className="flex flex-col gap-2 px-3">

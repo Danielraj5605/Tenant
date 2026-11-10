@@ -8,7 +8,7 @@ import type { WorkSchedule } from "../engine/schedule";
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type MemberRole = "flatmate" | "cook" | "maid";
-export type ChoreFrequency = "daily" | "weekly" | "custom";
+export type ChoreFrequency = "daily" | "weekly" | "custom" | "monthly";
 export type AssignmentStatus = "pending" | "done" | "skipped";
 export type MenuPlan = "cook" | "order_in" | "self_cook";
 export type AwaySlot = "morning" | "afternoon" | "night";
@@ -28,6 +28,10 @@ type ChoreRow = {
   frequency: ChoreFrequency;
   days_of_week: number[];
   due_time: string | null;
+  /** Monthly chores only: every N months, due by this day, starting this month (yyyy-mm-01). */
+  every_months: number | null;
+  day_of_month: number | null;
+  start_month: string | null;
   created_at: string;
 };
 type ChoreRotationRow = { chore_id: string; member_id: string; flat_id: string; position: number; created_at: string };

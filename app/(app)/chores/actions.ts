@@ -18,11 +18,22 @@ export async function saveChore(_prev: ChoreFormState, form: FormData): Promise<
     days: form.getAll("days").join(","),
     dueTime: form.get("dueTime") ?? "",
     rotation: form.get("rotation") ?? "[]",
+    everyMonths: form.get("everyMonths") || undefined,
+    dayOfMonth: form.get("dayOfMonth") || undefined,
+    startMonth: form.get("startMonth") || undefined,
   });
   if (!parsed.success) {
     const fe = z.flattenError(parsed.error).fieldErrors;
     return {
-      fieldErrors: { name: fe.name?.[0], days: fe.days?.[0], dueTime: fe.dueTime?.[0], rotation: fe.rotation?.[0] },
+      fieldErrors: {
+        name: fe.name?.[0],
+        days: fe.days?.[0],
+        dueTime: fe.dueTime?.[0],
+        rotation: fe.rotation?.[0],
+        everyMonths: fe.everyMonths?.[0],
+        dayOfMonth: fe.dayOfMonth?.[0],
+        startMonth: fe.startMonth?.[0],
+      },
     };
   }
   const v = parsed.data;
@@ -36,7 +47,15 @@ export async function saveChore(_prev: ChoreFormState, form: FormData): Promise<
     .eq("role", "flatmate")
     .in("id", v.rotation);
   if ((valid ?? []).length !== v.rotation.length) return { error: "Someone in the rotation isn't in this flat." };
-  const row = { name: v.name, frequency: v.frequency, days_of_week: v.days, due_time: v.dueTime };
+  const row = {
+    name: v.name,
+    frequency: v.frequency,
+    days_of_week: v.days,
+    due_time: v.dueTime,
+    every_months: v.everyMonths,
+    day_of_month: v.dayOfMonth,
+    start_month: v.startMonth,
+  };
 
   let choreId: string;
   if (id.success) {
@@ -64,8 +83,76 @@ export async function saveChore(_prev: ChoreFormState, form: FormData): Promise<
     .insert(v.rotation.map((member_id, position) => ({ chore_id: choreId, member_id, flat_id: flat.id, position })));
   if (rotErr) return { error: "The rotation couldn't be saved. Try again." };
 
+  // A monthly chore's new owner takes over the turns not done yet.
+  if (v.frequency === "monthly") {
+    await supabase
+      .from("chore_assignments")
+      .update({ member_id: v.rotation[0] })
+      .eq("chore_id", choreId)
+      .eq("flat_id", flat.id)
+      .eq("status", "pending");
+  }
+
   revalidatePath("/", "layout");
   redirect("/chores");
+}
+
+export type HandOverState = { error?: string };
+
+/**
+ * Monthly chore: the person on duty (or the admin) hands this turn to someone
+ * else. "From now on" also makes them the chore's owner for later months.
+ */
+export async function handOverDuty(_prev: HandOverState, form: FormData): Promise<HandOverState> {
+  const { me, flat } = await requireFlat();
+  const assignmentId = z.uuid().safeParse(form.get("assignmentId"));
+  const to = z.uuid().safeParse(form.get("to"));
+  const always = form.get("always") === "true";
+  if (!assignmentId.success) return { error: "Something went wrong. Reload and try again." };
+  if (!to.success) return { error: "Pick who takes it over." };
+
+  const supabase = await createClient();
+  const [{ data: duty }, { data: person }] = await Promise.all([
+    supabase
+      .from("chore_assignments")
+      .select("id, chore_id, member_id, status")
+      .eq("id", assignmentId.data)
+      .eq("flat_id", flat.id)
+      .maybeSingle(),
+    supabase
+      .from("members")
+      .select("id, name")
+      .eq("id", to.data)
+      .eq("flat_id", flat.id)
+      .eq("role", "flatmate")
+      .is("left_on", null)
+      .maybeSingle(),
+  ]);
+  if (!duty) return { error: "This turn no longer exists. Reload and try again." };
+  if (!(me.is_admin || duty.member_id === me.id)) return { error: "Only the person on duty or the admin can hand this over." };
+  if (duty.status !== "pending") return { error: "This is already done." };
+  if (!person) return { error: "Pick someone who lives in the flat." };
+  if (person.id === duty.member_id) return { error: `It's already ${person.id === me.id ? "yours" : `${person.name}'s`}.` };
+
+  const { error } = await supabase
+    .from("chore_assignments")
+    .update({ member_id: person.id })
+    .eq("id", duty.id)
+    .eq("flat_id", flat.id)
+    .eq("status", "pending");
+  if (error) return { error: "It couldn't be handed over. Try again." };
+
+  if (always) {
+    await supabase.from("chore_rotation").delete().eq("chore_id", duty.chore_id).eq("flat_id", flat.id);
+    const { error: rotErr } = await supabase
+      .from("chore_rotation")
+      .insert({ chore_id: duty.chore_id, member_id: person.id, flat_id: flat.id, position: 0 });
+    if (rotErr) return { error: "This turn moved, but later months couldn't be changed. Edit the chore to set who does it." };
+  }
+
+  revalidatePath("/", "layout");
+  // Said at the top of Chores: the card itself may no longer show the hand-over control.
+  redirect(`/chores?handed=${person.id}${always ? "&always=1" : ""}`);
 }
 
 export async function deleteChore(form: FormData) {
@@ -123,7 +210,19 @@ export async function saveAllChores(_prev: AllChoresState, form: FormData): Prom
   if (!list.success) return { error: "Something went wrong. Reload the page and try again." };
 
   const errors: Record<string, ChoreFieldErrors> = {};
-  const writes: { id: string | null; row: { name: string; frequency: "daily" | "weekly" | "custom"; days_of_week: number[]; due_time: string | null }; rotation: string[] }[] = [];
+  const writes: {
+    id: string | null;
+    row: {
+      name: string;
+      frequency: "daily" | "weekly" | "custom";
+      days_of_week: number[];
+      due_time: string | null;
+      every_months: null;
+      day_of_month: null;
+      start_month: null;
+    };
+    rotation: string[];
+  }[] = [];
   const deletes: string[] = [];
   for (const c of list.data) {
     if (c.deleted) {
@@ -151,7 +250,8 @@ export async function saveAllChores(_prev: AllChoresState, form: FormData): Prom
     const v = parsed.data;
     writes.push({
       id: c.id,
-      row: { name: v.name, frequency: v.frequency, days_of_week: v.days, due_time: v.dueTime },
+      // This screen only edits weekday chores, so monthly settings are cleared.
+      row: { name: v.name, frequency, days_of_week: v.days, due_time: v.dueTime, every_months: null, day_of_month: null, start_month: null },
       rotation: v.rotation,
     });
   }

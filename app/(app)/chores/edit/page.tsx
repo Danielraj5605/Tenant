@@ -9,7 +9,8 @@ export default async function EditAllChoresPage() {
   const { flat } = await requireFlat();
   const supabase = await createClient();
   const [{ data: chores }, { data: rotationRows }, flatmates] = await Promise.all([
-    supabase.from("chores").select("*").eq("flat_id", flat.id).order("created_at"),
+    // Monthly chores are edited one at a time; this screen is for weekday chores.
+    supabase.from("chores").select("*").eq("flat_id", flat.id).neq("frequency", "monthly").order("created_at"),
     supabase.from("chore_rotation").select("chore_id, member_id").eq("flat_id", flat.id).order("position"),
     rotationCandidates(flat.id),
   ]);

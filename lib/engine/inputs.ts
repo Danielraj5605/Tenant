@@ -100,7 +100,14 @@ export type MemberEditInput = z.infer<typeof MemberEditInput>;
 export const ChoreInput = z
   .object({
     name: z.string().trim().min(1, "Enter a chore name").max(40, "Keep the name under 41 characters"),
-    frequency: z.enum(["daily", "weekly", "custom"]),
+    frequency: z.enum(["daily", "weekly", "custom", "monthly"]),
+    /** Monthly only (ignored otherwise). */
+    everyMonths: z.coerce.number().int().min(1).max(12).optional(),
+    dayOfMonth: z.coerce.number().int().min(1, "Pick a day").max(31, "Pick a day").optional(),
+    startMonth: z
+      .string()
+      .optional()
+      .refine((v) => !v || /^\d{4}-(0[1-9]|1[0-2])$/.test(v), "Pick a month"),
     days: z
       .string()
       .transform((v) => [...new Set(v.split(",").filter(Boolean).map(Number))].sort((x, y) => x - y))
@@ -129,11 +136,30 @@ export const ChoreInput = z
   })
   .superRefine((v, ctx) => {
     if (v.frequency === "daily") return;
+    if (v.frequency === "monthly") {
+      if (!v.everyMonths) ctx.addIssue({ code: "custom", path: ["everyMonths"], message: "Pick how often" });
+      if (!v.dayOfMonth) ctx.addIssue({ code: "custom", path: ["dayOfMonth"], message: "Pick a day" });
+      if (!v.startMonth) ctx.addIssue({ code: "custom", path: ["startMonth"], message: "Pick the first month" });
+      if (v.rotation.length !== 1) ctx.addIssue({ code: "custom", path: ["rotation"], message: "Choose one person" });
+      return;
+    }
     if (v.days.length === 0) ctx.addIssue({ code: "custom", path: ["days"], message: "Pick at least one day" });
     if (v.frequency === "weekly" && v.days.length > 1)
       ctx.addIssue({ code: "custom", path: ["days"], message: "Pick one day for a weekly chore" });
   })
-  .transform((v) => ({ ...v, days: v.frequency === "daily" ? [] : v.days }));
+  .transform((v) => {
+    const monthly = v.frequency === "monthly";
+    return {
+      name: v.name,
+      frequency: v.frequency,
+      days: v.frequency === "daily" || monthly ? [] : v.days,
+      dueTime: v.dueTime,
+      rotation: v.rotation,
+      everyMonths: monthly ? v.everyMonths! : null,
+      dayOfMonth: monthly ? v.dayOfMonth! : null,
+      startMonth: monthly ? `${v.startMonth}-01` : null,
+    };
+  });
 export type ChoreInput = z.infer<typeof ChoreInput>;
 
 const paise = z.number().int().min(0).max(100_000_000);

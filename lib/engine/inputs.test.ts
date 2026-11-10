@@ -139,7 +139,16 @@ describe("ChoreInput", () => {
   it("parses a daily chore with an ordered rotation", () => {
     expect(
       ChoreInput.parse({ name: " Garbage ", frequency: "daily", days: "", dueTime: "", rotation: JSON.stringify([b, a]) }),
-    ).toEqual({ name: "Garbage", frequency: "daily", days: [], dueTime: null, rotation: [b, a] });
+    ).toEqual({
+      name: "Garbage",
+      frequency: "daily",
+      days: [],
+      dueTime: null,
+      rotation: [b, a],
+      everyMonths: null,
+      dayOfMonth: null,
+      startMonth: null,
+    });
   });
 
   it("requires days for weekly and custom chores, and exactly one for weekly", () => {
@@ -235,5 +244,22 @@ describe("ScheduleInput", () => {
   it("refuses the wrong number of days or bad JSON", () => {
     expect(parse("maid", [day("every")]).success).toBe(false);
     expect(ScheduleInput.safeParse({ memberId: id, role: "maid", schedule: "{" }).success).toBe(false);
+  });
+});
+
+describe("ChoreInput, monthly", () => {
+  const base = { name: "Rent", frequency: "monthly", days: "", dueTime: "", rotation: JSON.stringify([id]) };
+  it("needs how often, a day, a first month and one person", () => {
+    const ok = ChoreInput.parse({ ...base, everyMonths: "2", dayOfMonth: "10", startMonth: "2026-11" });
+    expect(ok).toMatchObject({ frequency: "monthly", days: [], everyMonths: 2, dayOfMonth: 10, startMonth: "2026-11-01" });
+    expect(ChoreInput.safeParse({ ...base, everyMonths: "1", startMonth: "2026-11" }).success).toBe(false);
+    expect(ChoreInput.safeParse({ ...base, everyMonths: "1", dayOfMonth: "5" }).success).toBe(false);
+    const two = JSON.stringify([id, "8d3c1a54-2f7e-4c11-9a0b-1f2e3d4c5b6a"]);
+    expect(ChoreInput.safeParse({ ...base, rotation: two, everyMonths: "1", dayOfMonth: "5", startMonth: "2026-11" }).success).toBe(false);
+  });
+
+  it("weekly chores ignore the monthly fields", () => {
+    const w = ChoreInput.parse({ ...base, frequency: "weekly", days: "3", everyMonths: "2", dayOfMonth: "5", startMonth: "2026-11" });
+    expect(w).toMatchObject({ everyMonths: null, dayOfMonth: null, startMonth: null, days: [3] });
   });
 });
