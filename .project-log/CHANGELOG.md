@@ -7,6 +7,7 @@
 - Fixed: the chore form no longer clears after a refused save.
 - Migration 20261118000001 (applied to production). Daily job unchanged (already skips monthly chores).
 - E2E on dev through the UI, test chores deleted afterwards. 198/198 tests.
+- Deployed 18560b6 (Vercel: success); live pages checked at 375/768/1440.
 
 ## 2026-11-10 — Cook & maid weekly schedule
 
