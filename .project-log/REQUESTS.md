@@ -7,8 +7,8 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-10 Separate Cook & maid page, not mixed with flatmates; every flatmate can view and edit. Decided: own page at /staff linked from Today and Settings (bottom bar stays 5 tabs); shows phone (tap to call) and this month's days worked and leave; any flatmate can edit (medium)
 - [x] 2026-11-10 Polish the remaining forms: Scan a bill review step, single chore, away and member edit forms (small)
-- [ ] 2026-11-10 Away flatmates pay only rent: WiFi becomes 'only people at home' by default, for new flats and the current flat (small)
 - [x] 2026-11-09 Easy editing for chores and a whole-week menu. Decided: one screen to plan the week's menu with Copy last week and a saved usual menu; one screen to edit all chores, and a clearer Edit. Current permission rules kept. Done now, before UI polish 2 (medium)
 - [x] 2026-11-07 Upload a bill image or document for splitting. Decided: two buttons (take a photo / upload a photo or PDF); PDFs read by Gemini only. Then: don't store the photo or PDF at all, only read it (medium)
 - [x] 2026-11-07 Improve the UI so it looks good and aesthetic. Decided: polish the current look (keep Manrope, cream, teal); tighter hierarchy, focal duty block, lighter list rows, consistent states and skeletons, nav and header polish. Done in sections (large)
@@ -32,4 +32,5 @@ and asks which to do now, later, or skip.
 - [ ] 2026-11-06 Per-meal menu plan (Order in / We'll cook per meal) (medium)
 ## Declined
 
+- [ ] 2026-11-10 Away flatmates pay only rent (WiFi split only among people at home). Removed 2026-11-10 at the user's request; WiFi stays split among all members.
 - [ ] 2026-11-06 Who owes whom + settle up on the Money tab. Declined 2026-11-10: the user wants only each person's share per bill and per month; leaving flatmates settle outside the app.

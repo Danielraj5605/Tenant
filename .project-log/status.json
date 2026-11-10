@@ -320,32 +320,41 @@
       ],
       "summary": "Scan a bill review step: a two-step indicator (Items and people → Each person's share, with Back to items on step 2); the bill total, Details (shop, date, category, paid by, who shares) and Lines on the bill as cards; two columns on desktop with Next in the lines card; a sticky 'Splitting ₹… · N people' + Next bar on phones; 'Pick at least one person' hint; unticked lines are greyed. The single chore, away, member and day-menu forms now sit in a white card; the chosen person in 'Who is away?' is outlined so the avatar stays visible. Found and fixed: on phones the scan review step was wider than the screen (amounts cut off on the right) because the two-column grid had no column template below desktop; every two-column page now uses grid-cols-1 below desktop. The test suites' 'no sideways scroll' check missed this (phone emulation zooms out instead of scrolling), so all seven suites now compare the page width with the real screen width. E2E on a production build: 40/40, including a real Gemini read of a sample bill → untick a line → save; ₹314 total, shares add to ₹274 in the database. The other six suites pass with the stricter check (28, 33, 31, 40, 38, 38). Typecheck, lint, 162/162 tests pass. Deployed (97260d0); re-run on the live site: 40/40.",
       "screenshots": true
+    },
+    {
+      "id": "staff-page",
+      "title": "Cook & maid page",
+      "status": "done",
+      "date": "2026-11-10",
+      "commits": [],
+      "summary": "The cook and maid now have their own page (/staff), separate from the flatmates. Each person's card shows whether they're working today, a tap-to-call phone number, days worked so far this month, full and part days of leave, and the month's leave list, with links to Mark leave and Edit. A month switcher covers past months. Anyone in the flat can add, edit and mark leave; removing someone stays admin-only. Settings → Members lists only flatmates now, with a Cook & maid link. Today has a Cook & maid card (Working / On leave / Out at night). The add form moved from Settings to this page. Migration 20261116000001 adds an optional phone column (applied to production with the user's OK). Browser-checked as a non-admin flatmate at 375/768/1440: no sideways scroll, an invalid phone is refused and the typed text stays, Mark leave opens with the cook picked and returns here. Typecheck, lint and 172/172 tests pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
-  "next_section": {
-    "id": "wifi-present-only",
-    "title": "WiFi split only among people at home",
-    "summary": "User's answer: a long-away flatmate pays only rent. WiFi's default becomes 'only people at home' for new flats and the current flat."
-  },
+  "next_section": null,
   "changed_files": [
-    "app/(app)/money/scan/scan-flow.tsx",
-    "app/(app)/money/split-form.tsx",
-    "app/(app)/chores/new/page.tsx",
-    "app/(app)/chores/[id]/page.tsx",
-    "app/(app)/calendar/away/new/page.tsx",
-    "app/(app)/calendar/away/[id]/page.tsx",
-    "app/(app)/calendar/away/away-form.tsx",
-    "app/(app)/settings/members/[id]/page.tsx",
-    "app/(app)/menu/[date]/page.tsx",
-    "app/(app)/calendar/page.tsx",
-    "app/(app)/chores/page.tsx",
-    "app/(app)/chores/edit/edit-all-chores.tsx",
-    "app/(app)/menu/page.tsx",
-    "app/(app)/money/page.tsx",
-    "app/(app)/money/[id]/page.tsx",
+    "supabase/migrations/20261116000001_staff_phone.sql",
+    "lib/engine/staff.ts",
+    "lib/engine/staff.test.ts",
+    "lib/engine/inputs.ts",
+    "lib/engine/inputs.test.ts",
+    "lib/supabase/types.ts",
+    "app/(app)/staff/page.tsx",
+    "app/(app)/staff/forms.tsx",
+    "app/(app)/staff/actions.ts",
+    "app/(app)/staff/[id]/page.tsx",
+    "app/(app)/staff/loading.tsx",
+    "app/(app)/staff/[id]/loading.tsx",
     "app/(app)/settings/page.tsx",
+    "app/(app)/settings/actions.ts",
+    "app/(app)/settings/member-forms.tsx",
+    "app/(app)/settings/members/[id]/page.tsx",
+    "app/(app)/calendar/away/new/page.tsx",
+    "app/(app)/calendar/away/away-form.tsx",
+    "app/(app)/calendar/away/actions.ts",
     "app/(app)/today/page.tsx",
+    "components/icons.tsx",
     "components/skeletons.tsx"
   ],
   "test_coverage": [
@@ -500,6 +509,10 @@
     {
       "date": "2026-11-10",
       "text": "Money answers: no who-owes-whom balances (each person's share per bill and month only); someone leaving the flat settles outside the app; a long-away flatmate pays only rent, so WiFi becomes 'only people at home'."
+    },
+    {
+      "date": "2026-11-10",
+      "text": "Cook & maid get their own page at /staff, linked from Today and Settings; the bottom bar stays at 5 tabs. It shows phone and the month's days worked and leave. Any flatmate can add and edit them; removing stays admin-only. The WiFi 'only people at home' change is dropped: WiFi stays split among all members."
     }
   ],
   "open_questions": [],

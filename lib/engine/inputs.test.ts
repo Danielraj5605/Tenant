@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AwayPeriodInput, ChoreInput, ExpensePayload, MemberEditInput, StaffInput } from "./inputs";
+import { AwayPeriodInput, ChoreInput, ExpensePayload, MemberEditInput, StaffEditInput, StaffInput } from "./inputs";
 
 const id = "7d3c1a54-2f7e-4c11-9a0b-1f2e3d4c5b6a";
 
@@ -85,12 +85,33 @@ describe("AwayPeriodInput", () => {
 
 describe("StaffInput", () => {
   it("accepts a cook or maid with a name", () => {
-    expect(StaffInput.parse({ name: " Lakshmi ", role: "cook" })).toEqual({ name: "Lakshmi", role: "cook" });
+    expect(StaffInput.parse({ name: " Lakshmi ", role: "cook" })).toEqual({ name: "Lakshmi", role: "cook", phone: null });
     expect(StaffInput.safeParse({ name: "Meena", role: "maid" }).success).toBe(true);
   });
 
   it("refuses flatmates (they join by invite link)", () => {
     expect(StaffInput.safeParse({ name: "Arun", role: "flatmate" }).success).toBe(false);
+  });
+});
+
+describe("StaffEditInput", () => {
+  const base = { memberId: id, name: "Mary", role: "cook" };
+  it("accepts an optional phone number and leaving date", () => {
+    expect(StaffEditInput.parse({ ...base, phone: " +91 98765  43210 ", leftOn: "" })).toEqual({
+      ...base,
+      phone: "+91 98765 43210",
+      leftOn: null,
+    });
+    expect(StaffEditInput.parse({ ...base, phone: "" }).phone).toBeNull();
+  });
+
+  it("refuses something that isn't a phone number", () => {
+    expect(StaffEditInput.safeParse({ ...base, phone: "call me" }).success).toBe(false);
+    expect(StaffEditInput.safeParse({ ...base, phone: "123" }).success).toBe(false);
+  });
+
+  it("only allows cook or maid", () => {
+    expect(StaffEditInput.safeParse({ ...base, role: "flatmate" }).success).toBe(false);
   });
 });
 

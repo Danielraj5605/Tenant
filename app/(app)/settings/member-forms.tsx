@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button, Field, Notice, cx } from "@/components/ui";
 import {
-  addStaff,
   decideJoinRequest,
   handOverAdmin,
   removeMember,
@@ -15,55 +14,6 @@ import {
 } from "./actions";
 
 const initial: SettingsFormState = {};
-
-type StaffRole = "cook" | "maid";
-
-function RolePicker({ role, onChange }: { role: StaffRole; onChange: (r: StaffRole) => void }) {
-  return (
-    <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-semibold">Role</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(["cook", "maid"] as const).map((r) => (
-            <label
-              key={r}
-              className={cx(
-                "flex min-h-11 cursor-pointer items-center justify-center rounded-full border font-semibold",
-                "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
-                role === r ? "border-accent bg-accent-tint text-accent-dark" : "border-line-strong hover:border-ink/40",
-              )}
-            >
-              <input
-                type="radio"
-                name="role"
-                value={r}
-                checked={role === r}
-                onChange={() => onChange(r)}
-                className="sr-only"
-              />
-              {r === "cook" ? "Cook" : "Maid"}
-            </label>
-          ))}
-        </div>
-    </fieldset>
-  );
-}
-
-export function AddStaffForm() {
-  const [state, action, pending] = useActionState(addStaff, initial);
-  const [role, setRole] = useState<StaffRole>("cook");
-
-  return (
-    <form action={action} className="flex flex-col gap-4" noValidate key={state.ok}>
-      {state.ok ? <Notice tone="success">{state.ok}</Notice> : null}
-      {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
-      <RolePicker role={role} onChange={setRole} />
-      <Field id="staffName" name="name" label="Name" maxLength={40} autoComplete="off" error={state.fieldErrors?.name} />
-      <Button type="submit" variant="secondary" loading={pending}>
-        Add {role}
-      </Button>
-    </form>
-  );
-}
 
 export function MenuOwnerForm({
   flatmates,
@@ -106,17 +56,14 @@ export function MenuOwnerForm({
 export function EditMemberForm({
   member,
 }: {
-  member: { id: string; name: string; role: "flatmate" | StaffRole; joined_on: string; left_on: string | null };
+  member: { id: string; name: string; joined_on: string; left_on: string | null };
 }) {
   const [state, action, pending] = useActionState(updateMember, initial);
-  const [role, setRole] = useState<StaffRole>(member.role === "maid" ? "maid" : "cook");
-  const isStaff = member.role !== "flatmate";
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
       {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
       <input type="hidden" name="memberId" value={member.id} />
-      {isStaff ? <RolePicker role={role} onChange={setRole} /> : null}
       <Field
         id="name"
         name="name"

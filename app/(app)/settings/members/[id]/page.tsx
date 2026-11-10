@@ -25,6 +25,8 @@ export default async function EditMemberPage({ params }: PageProps<"/settings/me
     .eq("flat_id", flat.id)
     .maybeSingle();
   if (!member) notFound();
+  // The cook and maid are edited on their own page.
+  if (member.role !== "flatmate") redirect(`/staff/${member.id}`);
 
   return (
     <>

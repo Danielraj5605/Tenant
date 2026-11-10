@@ -230,3 +230,42 @@ export function SettingsSkeleton() {
     </div>
   );
 }
+
+/** Cook & maid placeholder: month switcher and one card per person, add form on the right. */
+export function StaffSkeleton() {
+  return (
+    <div data-wide className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">
+      <div className="mb-1 flex flex-col gap-2">
+        <Skeleton className="h-9 w-44" />
+        <Skeleton className="h-4 w-2/3 max-w-80" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-start">
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-[52px] w-full rounded-full" />
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="flex flex-col gap-4 rounded-[var(--radius-card)] bg-surface p-5">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-12 rounded-full" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <Skeleton className="h-5 w-28" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+              </div>
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-24 rounded-xl" />
+                <Skeleton className="h-24 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-5">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-11 w-full rounded-full" />
+          <Skeleton className="h-[52px] w-full rounded-xl" />
+          <Skeleton className="h-[52px] w-full rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}

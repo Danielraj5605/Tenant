@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-10 — Cook & maid page
+
+- New /staff page, separate from the flatmates: per person, today's status, tap-to-call phone, days worked so far, full and part days of leave, and the month's leave list; month switcher.
+- Any flatmate can add, edit and mark leave; removing stays admin-only. Settings lists only flatmates, with a Cook & maid link; Today has a Cook & maid card.
+- Migration 20261116000001: optional phone column on members (applied to production).
+- WiFi 'only people at home' request dropped at the user's request.
+- Checked as a non-admin at 375/768/1440. 172/172 tests, typecheck and lint pass.
+
 ## 2026-11-10 — Deployed UI polish 4–6
 
 - Pushed 78ed7c6, c6ad1ec and 97260d0 (deploy 97260d0). Re-run on the live site: Settings/sign-in/onboarding 33/33, New split 28/28, remaining forms 40/40 (including a real bill read and saved).

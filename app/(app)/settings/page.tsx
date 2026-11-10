@@ -7,10 +7,10 @@ import { formatShortDate } from "@/lib/engine/calendar";
 import { awayOn, isLongAway } from "@/lib/engine/presence";
 import { Avatar, Card, Notice, Pill, SectionHeading } from "@/components/ui";
 import { Badge, ROLE_LABEL } from "@/components/away";
-import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
+import { ChevronLeftIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
 import { FlatCode } from "./flat-code";
 import { SignOutButton } from "./sign-out";
-import { AddStaffForm, JoinRequestItem, MenuOwnerForm, UsualSkipsForm } from "./member-forms";
+import { JoinRequestItem, MenuOwnerForm, UsualSkipsForm } from "./member-forms";
 import { formatFlatCode } from "@/lib/engine/onboarding";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
@@ -48,8 +48,9 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   const people = members ?? [];
   const awayToday = awayOn(today, periods ?? []);
   const flatmates = people.filter((m) => m.role === "flatmate");
-  const order = { flatmate: 0, cook: 1, maid: 2 } as const;
-  const sorted = [...people].sort((a, b) => order[a.role] - order[b.role] || a.sort_order - b.sort_order);
+  // The cook and maid have their own page (/staff).
+  const sorted = flatmates;
+  const staff = people.filter((m) => m.role !== "flatmate" && (!m.left_on || m.left_on >= today));
 
   return (
     <div data-wide>
@@ -131,10 +132,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                         {m.name}
                         {m.id === me.id ? <span className="font-medium text-muted"> (you)</span> : null}
                       </span>
-                      <span className="text-sm text-muted">
-                        {ROLE_LABEL[m.role]}
-                        {m.role !== "flatmate" ? ", no login" : null}
-                      </span>
+                      <span className="text-sm text-muted">{ROLE_LABEL[m.role]}</span>
                     </span>
                     {badges}
                   </>
@@ -159,6 +157,22 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             </ul>
           </Card>
 
+          <Link
+            href="/staff"
+            className="group flex min-h-20 items-center gap-3 rounded-[var(--radius-card)] bg-surface px-5 py-4 transition-shadow hover:ring-2 hover:ring-line-strong"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-tint text-accent-dark">
+              <UsersIcon size={20} />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="font-bold">Cook &amp; maid</span>
+              <span className="truncate text-sm text-muted">
+                {staff.length ? staff.map((s) => `${s.name} (${ROLE_LABEL[s.role].toLowerCase()})`).join(", ") : "Add them, with their phone numbers"}
+              </span>
+            </span>
+            <ChevronRightIcon size={20} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" />
+          </Link>
+
           {me.is_admin ? (
             <>
               <Card className="flex flex-col gap-3">
@@ -172,15 +186,6 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                 <FlatCode code={flat.flat_code} shown={formatFlatCode(flat.flat_code)} flatName={flat.name} siteUrl={siteUrl} />
               </Card>
 
-              <Card className="flex flex-col gap-3">
-                <div className="flex flex-col gap-1">
-                  <h2 id="add-staff" className="scroll-mt-6 text-title font-bold">Add the cook or maid</h2>
-                  <p className="text-sm text-muted">
-                    They don&rsquo;t sign in. Any flatmate can mark their leave on the calendar.
-                  </p>
-                </div>
-                <AddStaffForm />
-              </Card>
             </>
           ) : null}
         </div>

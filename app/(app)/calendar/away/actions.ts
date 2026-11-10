@@ -109,7 +109,8 @@ export async function saveAway(_prev: AwayFormState, form: FormData): Promise<Aw
   }
 
   revalidatePath("/", "layout");
-  redirect(`/calendar?d=${v.startDate}`);
+  // Opened from the Cook & maid page: go back there, on the leave's month.
+  redirect(form.get("from") === "staff" ? `/staff?m=${v.startDate.slice(0, 7)}` : `/calendar?d=${v.startDate}`);
 }
 
 export async function deleteAway(form: FormData) {

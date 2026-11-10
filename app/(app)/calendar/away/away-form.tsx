@@ -19,7 +19,16 @@ export type AwayFormValues = {
   reason: string;
 };
 
-export function AwayForm({ members, initial }: { members: AwayFormMember[]; initial: AwayFormValues }) {
+export function AwayForm({
+  members,
+  initial,
+  from,
+}: {
+  members: AwayFormMember[];
+  initial: AwayFormValues;
+  /** "staff" when opened from the Cook & maid page, to return there after saving. */
+  from?: "staff";
+}) {
   const [state, action, pending] = useActionState(saveAway, {} as AwayFormState);
   const [memberId, setMemberId] = useState(initial.memberId);
   const [startDate, setStartDate] = useState(initial.startDate);
@@ -32,6 +41,7 @@ export function AwayForm({ members, initial }: { members: AwayFormMember[]; init
     <form action={action} className="flex flex-col gap-6" noValidate>
       {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
       {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
+      {from ? <input type="hidden" name="from" value={from} /> : null}
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-semibold">Who is away?</legend>

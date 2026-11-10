@@ -174,6 +174,8 @@ export type Database = {
           left_on: string | null;
           sort_order: number;
           usual_skips: ("breakfast" | "lunch" | "dinner")[];
+          /** Cook and maid only: a number flatmates can call. */
+          phone: string | null;
           created_at: string;
         };
         Insert: {
@@ -187,6 +189,7 @@ export type Database = {
           left_on?: string | null;
           sort_order?: number;
           usual_skips?: ("breakfast" | "lunch" | "dinner")[];
+          phone?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["members"]["Insert"]>;

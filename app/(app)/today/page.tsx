@@ -8,6 +8,8 @@ import { formatMonth, monthOf } from "@/lib/engine/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { MEALS, headcount, slotsPhrase, type Meal } from "@/lib/engine/presence";
 import { cookStatusOn, weekStart } from "@/lib/engine/menu";
+import { staffStatusOn } from "@/lib/engine/staff";
+import { ROLE_LABEL } from "@/components/away";
 import { DutyButton } from "@/components/chore-duty";
 import { InstallCard } from "@/components/install-card";
 import { NoCookCard } from "@/components/no-cook";
@@ -68,7 +70,7 @@ export default async function TodayPage() {
   const setupSteps = me.is_admin
     ? [
         { key: "flatmates", label: "Add your flatmates", hint: "Share the flat code; you accept each request.", href: "/settings#add-flatmate", done: members.filter((m) => m.role === "flatmate" && employedToday(m)).length >= 2 },
-        { key: "staff", label: "Add the cook or maid", hint: "Meals and leave alerts follow them.", href: "/settings#add-staff", done: members.some((m) => m.role !== "flatmate" && employedToday(m)) },
+        { key: "staff", label: "Add the cook or maid", hint: "Meals and leave alerts follow them.", href: "/staff#add-staff", done: members.some((m) => m.role !== "flatmate" && employedToday(m)) },
         { key: "chores", label: "Add a chore", hint: "Trash, kitchen, water cans: turns rotate by themselves.", href: "/chores/new", done: views.length > 0 },
         { key: "menu", label: "Plan this week's meals", hint: "Everyone sees what's cooking and who's eating.", href: "/menu", done: (menuWeek ?? []).some(hasDishes) },
       ]
@@ -103,6 +105,11 @@ export default async function TodayPage() {
       }
     }
   }
+
+  const staffToday = members
+    .filter((m) => m.role !== "flatmate")
+    .map((person) => ({ person, status: staffStatusOn(person, today, periods) }))
+    .filter(({ status }) => status.kind !== "not_employed");
 
   const pendingDuties = myDuties.filter((d) => d.today && d.today.status !== "done");
   const monthName = formatMonth(monthOf(today)).split(" ")[0];
@@ -310,6 +317,37 @@ export default async function TodayPage() {
               <span className="leading-snug font-bold">Mark someone away</span>
             </Link>
           </div>
+
+          {staffToday.length ? (
+            <Link
+              href="/staff"
+              className="group flex flex-col gap-2 rounded-[var(--radius-card)] bg-surface p-4 transition-shadow hover:ring-2 hover:ring-line-strong"
+            >
+              <span className="flex items-center justify-between gap-2 text-sm font-semibold text-muted">
+                Cook &amp; maid
+                <ChevronRightIcon size={16} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </span>
+              <ul className="flex flex-col gap-2">
+                {staffToday.map(({ person, status }) => (
+                  <li key={person.id} className="flex items-center gap-3">
+                    <Avatar name={person.name} size={32} away={status.kind === "off"} />
+                    <span className="min-w-0 flex-1 truncate font-semibold">
+                      {person.name}
+                      <span className="font-medium text-muted"> · {ROLE_LABEL[person.role]}</span>
+                    </span>
+                    <span
+                      className={cx(
+                        "shrink-0 text-sm font-semibold",
+                        status.kind === "off" ? "text-warn-ink" : status.kind === "part" ? "text-info-ink" : "text-accent-dark",
+                      )}
+                    >
+                      {status.kind === "off" ? "On leave" : status.kind === "part" ? `Out ${slotsPhrase(status.slots)}` : "Working"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Link>
+          ) : null}
         </div>
       </div>
     </div>

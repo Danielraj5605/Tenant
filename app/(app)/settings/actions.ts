@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireFlat } from "@/lib/flat";
-import { MemberEditInput, StaffInput } from "@/lib/engine/inputs";
+import { MemberEditInput } from "@/lib/engine/inputs";
 import { Password } from "@/lib/engine/onboarding";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 
@@ -55,36 +55,6 @@ export async function resetMemberPassword(_prev: SettingsFormState, form: FormDa
 export type SettingsFormState = { error?: string; ok?: string; fieldErrors?: Record<string, string | undefined> };
 
 const ADMIN_ONLY = "Only the flat admin can change this.";
-
-export async function addStaff(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
-  const { me, flat } = await requireFlat();
-  if (!me.is_admin) return { error: ADMIN_ONLY };
-  const parsed = StaffInput.safeParse({ name: form.get("name") ?? "", role: form.get("role") ?? "" });
-  if (!parsed.success) {
-    const fe = z.flattenError(parsed.error).fieldErrors;
-    return { fieldErrors: { name: fe.name?.[0], role: fe.role?.[0] } };
-  }
-
-  const supabase = await createClient();
-  const { data: last } = await supabase
-    .from("members")
-    .select("sort_order")
-    .eq("flat_id", flat.id)
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const { error } = await supabase.from("members").insert({
-    flat_id: flat.id,
-    name: parsed.data.name,
-    role: parsed.data.role,
-    sort_order: (last?.sort_order ?? 0) + 1,
-  });
-  if (error) return { error: "The member couldn't be added. Try again." };
-
-  revalidatePath("/", "layout");
-  return { ok: `${parsed.data.name} added as ${parsed.data.role}.` };
-}
 
 export async function updateMember(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
   const { me, flat } = await requireFlat();
@@ -162,11 +132,13 @@ export async function removeMember(_prev: SettingsFormState, form: FormData): Pr
   if (id.data === me.id) return { error: "You can't remove yourself." };
 
   const supabase = await createClient();
+  const { data: member } = await supabase.from("members").select("role").eq("id", id.data).maybeSingle();
   const { data, error } = await supabase.rpc("remove_member", { p_user_id: userId, p_member_id: id.data });
   if (error || !data) return { error: "They couldn't be removed. Try again." };
 
   revalidatePath("/", "layout");
-  redirect(`/settings?removed=${data}`);
+  // The cook and maid live on their own page.
+  redirect(member && member.role !== "flatmate" ? `/staff?removed=${data}` : `/settings?removed=${data}`);
 }
 
 const MEAL_NAMES = ["breakfast", "lunch", "dinner"] as const;

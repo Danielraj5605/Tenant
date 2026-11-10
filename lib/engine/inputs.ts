@@ -50,10 +50,33 @@ export const AwayPeriodInput = z
   .transform((v) => ({ ...v, slots: v.fullDay ? null : v.slots }));
 export type AwayPeriodInput = z.infer<typeof AwayPeriodInput>;
 
+/** Optional phone: digits with an optional leading +, spaces and dashes allowed. */
+const phone = z
+  .string()
+  .trim()
+  .optional()
+  .transform((v) => (v ? v.replace(/\s+/g, " ") : null))
+  .refine((v) => v === null || /^\+?[0-9][0-9 -]{5,18}[0-9]$/.test(v), "Enter a phone number, like 98765 43210");
+
 export const StaffInput = z.object({
   name: memberName,
   role: z.enum(["cook", "maid"], "Choose cook or maid"),
+  phone,
 });
+
+/** Cook & maid page: any flatmate edits the cook's or maid's details. */
+export const StaffEditInput = z.object({
+  memberId: z.uuid(),
+  name: memberName,
+  role: z.enum(["cook", "maid"], "Choose cook or maid"),
+  phone,
+  leftOn: z
+    .string()
+    .optional()
+    .transform((v) => (v ? v : null))
+    .refine((v) => v === null || isIsoDate(v), "Pick a valid date"),
+});
+export type StaffEditInput = z.infer<typeof StaffEditInput>;
 export type StaffInput = z.infer<typeof StaffInput>;
 
 export const MemberEditInput = z.object({
