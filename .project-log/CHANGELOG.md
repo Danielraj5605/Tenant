@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-11 — Away edits: confirmation and reasons
+
+- Saving looked like 'nothing happens' (Kishore's reason did change). Now a 'Saved…' notice after adding, editing or removing away days, and reasons show in the day panel.
+- Deployed d44e292; checked live.
+
 ## 2026-11-11 — Calendar: cook & maid apart; Default splits removed
 
 - Calendar: 'Flatmates away' and a separate 'Cook & maid leave' card; the day panel groups the cook and maid separately.

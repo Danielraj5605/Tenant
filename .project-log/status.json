@@ -376,15 +376,24 @@
       ],
       "summary": "Calendar: 'Who's away in <month>' is now 'Flatmates away in <month>' (flatmates only), with a new 'Cook & maid leave in <month>' card below it (Details → Cook & maid page). The selected-day panel lists flatmates first and then a separate 'Cook & maid' group; 'All flatmates are in.' when only staff are off. Settings: the Default splits card is removed (and its editor component and setCategoryRule action deleted). The categories keep their current default rules, which new splits still use; they can no longer be changed in the app. Deployed and checked live as Madan at 375/768/1440: Mary only in the cook & maid card and group, no sideways scroll, no page errors; Settings has no Default splits. Not checked signed in as the admin (the check would need the admin's account); the card's code is deleted, so it can't show. 198/198 tests, typecheck and lint pass.",
       "screenshots": true
+    },
+    {
+      "id": "away-save-feedback",
+      "title": "Away edits: confirmation and reasons",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "d44e292"
+      ],
+      "summary": "The user changed Kishore's reason and saw 'nothing happen'. The save had worked (reason 'Early client visit' → 'home' in the database), but the Calendar gave no confirmation and the day panel didn't show reasons. Now: after adding, editing or removing away days the Calendar shows 'Saved. <Name>'s away days are updated.' (or 'leave' for the cook and maid, 'Removed.' for deletes); the Cook & maid page shows 'Saved.' when leave was marked from there; the day panel shows the reason next to the times. Read-only view for other people's entries is unchanged (own-data rule). Deployed and checked live as Madan by saving his own entry unchanged: notice shown, 12 Nov shows 'Kishore · Out: morning and afternoon · home', data unchanged. 198/198 tests, typecheck and lint pass.",
+      "screenshots": false
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    "app/(app)/calendar/page.tsx",
-    "app/(app)/settings/page.tsx",
-    "app/(app)/settings/category-rules.tsx (deleted)",
-    "app/(app)/money/actions.ts"
+    "app/(app)/calendar/away/actions.ts",
+    "app/(app)/calendar/page.tsx"
   ],
   "test_coverage": [
     {
