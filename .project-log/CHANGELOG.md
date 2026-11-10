@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-10 — Cook & maid weekly schedule
+
+- Per weekday: Weekly / Alternate (this or next week) / Off; the cook also picks meals. Set on the cook's or maid's edit page by any flatmate.
+- Drives No cook on Menu, Today and Calendar, pay by days worked (scheduled days only) and the Cook & maid page (week strip, notes, Day off).
+- Migration 20261117000001: members.work_schedule (applied to production).
+- E2E on dev through the UI, then reset to every day. 189/189 tests.
+
 ## 2026-11-10 — Deployed Cook & maid page
 
 - Vercel deploy of c5e9223 succeeded. Live check signed in as Madan: /staff, /settings and /today load at 375/768/1440, no sideways scroll.

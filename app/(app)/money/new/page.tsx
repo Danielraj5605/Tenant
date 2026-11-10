@@ -16,7 +16,7 @@ export default async function NewSplitPage({ searchParams }: PageProps<"/money/n
   const { edit } = await searchParams;
   const supabase = await createClient();
   const [{ data: members }, { data: periods }, { data: categories }] = await Promise.all([
-    supabase.from("members").select("id, name, role, joined_on, left_on").eq("flat_id", flat.id).order("sort_order"),
+    supabase.from("members").select("id, name, role, joined_on, left_on, work_schedule").eq("flat_id", flat.id).order("sort_order"),
     supabase.from("away_periods").select("member_id, start_date, end_date, full_day").eq("flat_id", flat.id),
     supabase.from("expense_categories").select("id, name, default_rule, staff_role").eq("flat_id", flat.id).order("created_at"),
   ]);

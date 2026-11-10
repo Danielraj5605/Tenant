@@ -1,6 +1,7 @@
 /** Menu helpers (SPEC §4.4). Headcount itself comes from presence.headcount. */
 import { addDays } from "./calendar";
-import { MEALS, cookWorkedOn, isPresentFor, type AwayPeriod, type Meal, type PresenceMember } from "./presence";
+import { MEALS, cookWorkedOn, isPresentFor, type AwayPeriod, type Meal } from "./presence";
+import { scheduledFor, scheduledOn, type ScheduledMember } from "./schedule";
 
 /** Monday of the week containing `date`. */
 export function weekStart(date: string): string {
@@ -21,17 +22,21 @@ export type CookStatus = {
 };
 
 /**
- * Whether the cook is missing on a date, per meal. Full-day leave means
+ * Whether the cook is missing on a date, per meal. Days and meals off in the
+ * weekly schedule count as no cook, and an off day isn't paid. Full-day leave means
  * "No cook" for every meal and is unpaid; part-day leave means "No cook" only
  * for the meals in its slots, and the day is still paid (SPEC §2, §5.1).
  */
-export function cookStatusOn(members: readonly PresenceMember[], date: string, periods: readonly AwayPeriod[]): CookStatus {
+export function cookStatusOn(members: readonly ScheduledMember[], date: string, periods: readonly AwayPeriod[]): CookStatus {
   const cooks = members.filter((m) => m.role === "cook" && m.joined_on <= date && (!m.left_on || date <= m.left_on));
   if (cooks.length === 0) return { noCook: false, noCookMeals: [], paid: false };
-  const noCookMeals = MEALS.filter((meal) => cooks.every((c) => !isPresentFor(c, date, periods, meal)));
+  // A meal has no cook when every cook is on leave for it or isn't scheduled to cook it.
+  const noCookMeals = MEALS.filter((meal) =>
+    cooks.every((c) => !isPresentFor(c, date, periods, meal) || !scheduledFor(c, date, meal)),
+  );
   return {
     noCook: noCookMeals.length > 0,
     noCookMeals,
-    paid: cooks.some((c) => cookWorkedOn(c, date, periods)),
+    paid: cooks.some((c) => scheduledOn(c, date).works && cookWorkedOn(c, date, periods)),
   };
 }

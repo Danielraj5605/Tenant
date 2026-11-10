@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { requireFlat } from "@/lib/flat";
-import { StaffEditInput, StaffInput } from "@/lib/engine/inputs";
+import { ScheduleInput, StaffEditInput, StaffInput } from "@/lib/engine/inputs";
 
 export type StaffFormState = {
   error?: string;
@@ -90,4 +90,41 @@ export async function updateStaff(_prev: StaffFormState, form: FormData): Promis
 
   revalidatePath("/", "layout");
   redirect("/staff?saved=1");
+}
+
+/** Any flatmate: set the cook's or maid's weekly schedule. */
+export async function saveSchedule(_prev: StaffFormState, form: FormData): Promise<StaffFormState> {
+  const { flat } = await requireFlat();
+  const memberId = z.uuid().safeParse(form.get("memberId"));
+  if (!memberId.success) return { error: "Pick the cook or maid." };
+  const supabase = await createClient();
+  // The role decides whether meals matter, so take it from the database, not the form.
+  const { data: person } = await supabase
+    .from("members")
+    .select("role")
+    .eq("id", memberId.data)
+    .eq("flat_id", flat.id)
+    .neq("role", "flatmate")
+    .maybeSingle();
+  if (!person) return { error: "This person isn't the flat's cook or maid." };
+  const parsed = ScheduleInput.safeParse({ memberId: memberId.data, role: person.role, schedule: form.get("schedule") ?? "" });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    // Issues on a day carry its index: say which day.
+    const day = issue?.path[0] === "schedule" && typeof issue.path[1] === "number" ? issue.path[1] : null;
+    const names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    return { error: day !== null ? `${names[day]}: ${issue.message}` : (issue?.message ?? "Check the schedule.") };
+  }
+
+  const { error, count } = await supabase
+    .from("members")
+    .update({ work_schedule: parsed.data.schedule }, { count: "exact" })
+    .eq("id", parsed.data.memberId)
+    .eq("flat_id", flat.id)
+    .neq("role", "flatmate");
+  if (error) return { error: "The schedule couldn't be saved. Try again." };
+  if (!count) return { error: "This person isn't the flat's cook or maid." };
+
+  revalidatePath("/", "layout");
+  redirect("/staff?saved=schedule");
 }

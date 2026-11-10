@@ -3,13 +3,14 @@
  * Pure functions over plain data; no database access.
  */
 import { addDays } from "./calendar";
-import { periodSlots, type AwayPeriod, type AwaySlot, type PresenceMember } from "./presence";
+import { periodSlots, type AwayPeriod, type AwaySlot, type Meal, type PresenceMember } from "./presence";
+import { scheduledOn, type ScheduledMember } from "./schedule";
 
 const employedOn = (m: PresenceMember, date: string) => m.joined_on <= date && (m.left_on === null || date <= m.left_on);
 const covers = (p: AwayPeriod, date: string) => p.start_date <= date && date <= p.end_date;
 
 export type StaffMonth = {
-  /** Days employed in the month up to today (the whole month once it's over). */
+  /** Scheduled working days in the month up to today (the whole month once it's over). */
   daysSoFar: number;
   /** Of those, days without full-day leave. Part days count as worked, like pay. */
   workedSoFar: number;
@@ -22,11 +23,12 @@ export type StaffMonth = {
 };
 
 /** A staff member's month: days worked so far and leave taken or planned. */
-export function staffMonth(member: PresenceMember, month: string, today: string, periods: readonly AwayPeriod[]): StaffMonth {
+export function staffMonth(member: ScheduledMember, month: string, today: string, periods: readonly AwayPeriod[]): StaffMonth {
   const mine = periods.filter((p) => p.member_id === member.id);
   const out: StaffMonth = { daysSoFar: 0, workedSoFar: 0, fullDaysOff: 0, partDaysOff: 0, fullDaysOffAhead: 0 };
   for (let d = `${month}-01`; d.startsWith(month); d = addDays(d, 1)) {
-    if (!employedOn(member, d)) continue;
+    // Days off in the weekly schedule aren't working days, so leave on them doesn't count either.
+    if (!employedOn(member, d) || !scheduledOn(member, d).works) continue;
     const full = mine.some((p) => p.full_day && covers(p, d));
     const part = !full && mine.some((p) => !p.full_day && covers(p, d));
     if (full) out.fullDaysOff += 1;
@@ -43,17 +45,22 @@ export function staffMonth(member: PresenceMember, month: string, today: string,
 
 export type StaffStatus =
   | { kind: "not_employed" }
-  | { kind: "working" }
+  /** `meals`: the cook's meals that day when the schedule doesn't cover all three. */
+  | { kind: "working"; meals?: readonly Meal[] }
+  /** Not a working day in their weekly schedule. */
+  | { kind: "day_off" }
   | { kind: "off" }
   | { kind: "part"; slots: readonly AwaySlot[] };
 
 /** Is the cook or maid working on this date? */
-export function staffStatusOn(member: PresenceMember, date: string, periods: readonly AwayPeriod[]): StaffStatus {
+export function staffStatusOn(member: ScheduledMember, date: string, periods: readonly AwayPeriod[]): StaffStatus {
   if (!employedOn(member, date)) return { kind: "not_employed" };
+  const plan = scheduledOn(member, date);
+  if (!plan.works) return { kind: "day_off" };
   const mine = periods.filter((p) => p.member_id === member.id && covers(p, date));
   if (mine.some((p) => p.full_day)) return { kind: "off" };
   if (mine.length) return { kind: "part", slots: [...new Set(mine.flatMap((p) => periodSlots(p)))] };
-  return { kind: "working" };
+  return member.role === "cook" && plan.meals.length < 3 ? { kind: "working", meals: plan.meals } : { kind: "working" };
 }
 
 /** "tel:" link for a stored phone number (spaces and dashes dropped). */

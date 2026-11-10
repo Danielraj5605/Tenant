@@ -338,10 +338,18 @@ export default async function TodayPage() {
                     <span
                       className={cx(
                         "shrink-0 text-sm font-semibold",
-                        status.kind === "off" ? "text-warn-ink" : status.kind === "part" ? "text-info-ink" : "text-accent-dark",
+                        status.kind === "off" ? "text-warn-ink" : status.kind === "day_off" ? "text-muted" : status.kind === "part" || (status.kind === "working" && status.meals) ? "text-info-ink" : "text-accent-dark",
                       )}
                     >
-                      {status.kind === "off" ? "On leave" : status.kind === "part" ? `Out ${slotsPhrase(status.slots)}` : "Working"}
+                      {status.kind === "off"
+                        ? "On leave"
+                        : status.kind === "day_off"
+                          ? "Day off"
+                          : status.kind === "part"
+                            ? `Out ${slotsPhrase(status.slots)}`
+                            : status.kind === "working" && status.meals
+                              ? `${mealsPhrase(status.meals).replace(/^./, (c) => c.toUpperCase())} only`
+                              : "Working"}
                     </span>
                   </li>
                 ))}

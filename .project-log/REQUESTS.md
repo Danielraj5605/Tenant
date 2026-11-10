@@ -7,6 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-10 Weekly work schedule for the cook and maid (e.g. maid Tue and Thu only; cook off alternate Sundays and no dinner on Sundays), settable and editable; then deploy. Decided by Claude as asked: per weekday Every week / Alternate weeks / Off, plus meals for the cook; schedule drives No cook on Menu/Today/Calendar and pay by days worked (medium)
 - [x] 2026-11-10 Separate Cook & maid page, not mixed with flatmates; every flatmate can view and edit. Decided: own page at /staff linked from Today and Settings (bottom bar stays 5 tabs); shows phone (tap to call) and this month's days worked and leave; any flatmate can edit (medium)
 - [x] 2026-11-10 Polish the remaining forms: Scan a bill review step, single chore, away and member edit forms (small)
 - [x] 2026-11-09 Easy editing for chores and a whole-week menu. Decided: one screen to plan the week's menu with Copy last week and a saved usual menu; one screen to edit all chores, and a clearer Edit. Current permission rules kept. Done now, before UI polish 2 (medium)

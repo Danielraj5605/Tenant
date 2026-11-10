@@ -1,7 +1,8 @@
 /** Shared Zod schemas for Phase 2 forms (used by server actions). */
 import { z } from "zod";
 import { isIsoDate } from "./dates";
-import { SLOTS, type AwaySlot } from "./presence";
+import { MEALS, SLOTS, type AwaySlot } from "./presence";
+import { isEveryDay, weekdayIndex, type WorkSchedule } from "./schedule";
 
 const isoDate = (label: string) => z.string().refine(isIsoDate, `Pick ${label}`);
 
@@ -174,3 +175,49 @@ export const ExpensePayload = z
     if (sum !== split) ctx.addIssue({ code: "custom", path: ["shares"], message: "Shares must add up to the split total" });
   });
 export type ExpensePayload = z.infer<typeof ExpensePayload>;
+
+const DayPlanInput = z.object({
+  mode: z.enum(["every", "alternate", "off"]),
+  meals: z.array(z.enum(MEALS)).max(3),
+  anchor: z.string().refine(isIsoDate).nullable(),
+});
+
+/**
+ * Cook & maid weekly schedule, sent as JSON (Monday first). Normalised: anchors
+ * only on alternate days, the maid always "all meals", and a plain every-day
+ * schedule becomes null.
+ */
+export const ScheduleInput = z
+  .object({
+    memberId: z.uuid(),
+    role: z.enum(["cook", "maid"]),
+    schedule: z
+      .string()
+      .transform((v, ctx) => {
+        try {
+          return JSON.parse(v) as unknown;
+        } catch {
+          ctx.addIssue({ code: "custom", message: "The schedule couldn't be read. Try again." });
+          return z.NEVER;
+        }
+      })
+      .pipe(z.array(DayPlanInput).length(7)),
+  })
+  .superRefine((v, ctx) => {
+    v.schedule.forEach((d, i) => {
+      if (d.mode === "alternate" && (!d.anchor || weekdayIndex(d.anchor) !== i)) {
+        ctx.addIssue({ code: "custom", path: ["schedule", i], message: "Pick which week they work" });
+      }
+      if (v.role === "cook" && d.mode !== "off" && d.meals.length === 0) {
+        ctx.addIssue({ code: "custom", path: ["schedule", i], message: "Pick at least one meal, or set the day to Off" });
+      }
+    });
+  })
+  .transform((v) => {
+    const schedule: WorkSchedule = v.schedule.map((d) => ({
+      mode: d.mode,
+      meals: v.role === "maid" ? [...MEALS] : MEALS.filter((m) => d.meals.includes(m)),
+      anchor: d.mode === "alternate" ? d.anchor : null,
+    }));
+    return { memberId: v.memberId, schedule: isEveryDay(schedule) ? null : schedule };
+  });

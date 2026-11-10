@@ -331,33 +331,37 @@
       ],
       "summary": "The cook and maid now have their own page (/staff), separate from the flatmates. Each person's card shows whether they're working today, a tap-to-call phone number, days worked so far this month, full and part days of leave, and the month's leave list, with links to Mark leave and Edit. A month switcher covers past months. Anyone in the flat can add, edit and mark leave; removing someone stays admin-only. Settings → Members lists only flatmates now, with a Cook & maid link. Today has a Cook & maid card (Working / On leave / Out at night). The add form moved from Settings to this page. Migration 20261116000001 adds an optional phone column (applied to production with the user's OK). Browser-checked as a non-admin flatmate at 375/768/1440: no sideways scroll, an invalid phone is refused and the typed text stays, Mark leave opens with the cook picked and returns here. Typecheck, lint and 172/172 tests pass. Deployed (c5e9223, Vercel: success); live check signed in as Madan: /staff, /settings and /today load at 375/768/1440 with no sideways scroll.",
       "screenshots": true
+    },
+    {
+      "id": "staff-schedule",
+      "title": "Cook & maid weekly schedule",
+      "status": "done",
+      "date": "2026-11-10",
+      "commits": [],
+      "summary": "Each cook or maid has a weekly schedule, set on their edit page by any flatmate. Each weekday is Weekly, Alternate (pick 'this' or 'next' week as a working one) or Off, and the cook also has Breakfast/Lunch/Dinner chips. Example: maid Tue and Thu only; cook Sundays on alternate weeks, breakfast and lunch only. The schedule drives No cook on Menu, Today and Calendar (same as leave), pay by days worked (only scheduled days count, so a Tue/Thu maid is paid for those minus leave), and the Cook & maid page (week strip, notes like 'Sun: alternate weeks (next 15 Nov), breakfast and lunch only', 'Day off today'). No schedule = every day, every meal, so nothing changed until one is set. Migration 20261117000001 adds members.work_schedule (applied to production with the user's OK). Schedule logic lives in lib/engine/schedule.ts, not presence.ts, so the Edge Functions didn't need a redeploy. E2E through the UI on dev: set Selvi to Tue/Thu and Mary to alternate Sundays without dinner, checked the saved JSON, Menu showed 'No cook for dinner on Sun 15 Nov', a cook day with no meals blocks Save, then both reset to every day through the UI (data back to null). 375/768/1440, no sideways scroll, no page errors. 189/189 tests, typecheck and lint pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    "supabase/migrations/20261116000001_staff_phone.sql",
+    "supabase/migrations/20261117000001_work_schedule.sql",
+    "lib/engine/schedule.ts",
+    "lib/engine/schedule.test.ts",
+    "lib/engine/menu.ts",
+    "lib/engine/money.ts",
     "lib/engine/staff.ts",
-    "lib/engine/staff.test.ts",
     "lib/engine/inputs.ts",
     "lib/engine/inputs.test.ts",
     "lib/supabase/types.ts",
-    "app/(app)/staff/page.tsx",
-    "app/(app)/staff/forms.tsx",
+    "app/(app)/staff/schedule-form.tsx",
     "app/(app)/staff/actions.ts",
+    "app/(app)/staff/page.tsx",
     "app/(app)/staff/[id]/page.tsx",
-    "app/(app)/staff/loading.tsx",
-    "app/(app)/staff/[id]/loading.tsx",
-    "app/(app)/settings/page.tsx",
-    "app/(app)/settings/actions.ts",
-    "app/(app)/settings/member-forms.tsx",
-    "app/(app)/settings/members/[id]/page.tsx",
-    "app/(app)/calendar/away/new/page.tsx",
-    "app/(app)/calendar/away/away-form.tsx",
-    "app/(app)/calendar/away/actions.ts",
     "app/(app)/today/page.tsx",
-    "components/icons.tsx",
-    "components/skeletons.tsx"
+    "app/(app)/money/split-form.tsx",
+    "app/(app)/money/new/page.tsx",
+    "app/(app)/money/scan/page.tsx"
   ],
   "test_coverage": [
     {
@@ -515,6 +519,10 @@
     {
       "date": "2026-11-10",
       "text": "Cook & maid get their own page at /staff, linked from Today and Settings; the bottom bar stays at 5 tabs. It shows phone and the month's days worked and leave. Any flatmate can add and edit them; removing stays admin-only. The WiFi 'only people at home' change is dropped: WiFi stays split among all members."
+    },
+    {
+      "date": "2026-11-10",
+      "text": "Weekly schedule for the cook and maid: per weekday Weekly / Alternate / Off, plus meals for the cook. Scheduled-off meals count as No cook like leave; only scheduled days count for pay; leave on an off day doesn't count. No schedule means every day. Scheduled days off don't send push alerts (only leave does)."
     }
   ],
   "open_questions": [],
@@ -539,7 +547,8 @@
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
     "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
-    "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye."
+    "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye.",
+    "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

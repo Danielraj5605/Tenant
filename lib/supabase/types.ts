@@ -3,6 +3,8 @@
  * Hand-written to match supabase/migrations. Regenerate once the project is
  * linked with: npm run db:types
  */
+import type { WorkSchedule } from "../engine/schedule";
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type MemberRole = "flatmate" | "cook" | "maid";
@@ -176,6 +178,8 @@ export type Database = {
           usual_skips: ("breakfast" | "lunch" | "dinner")[];
           /** Cook and maid only: a number flatmates can call. */
           phone: string | null;
+          /** Cook and maid only: weekly schedule, Monday first. Null = every day, every meal. */
+          work_schedule: WorkSchedule | null;
           created_at: string;
         };
         Insert: {
@@ -190,6 +194,7 @@ export type Database = {
           sort_order?: number;
           usual_skips?: ("breakfast" | "lunch" | "dinner")[];
           phone?: string | null;
+          work_schedule?: WorkSchedule | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["members"]["Insert"]>;

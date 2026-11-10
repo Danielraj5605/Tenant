@@ -5,6 +5,7 @@
  */
 import { addDays } from "./calendar";
 import { cookWorkedOn, isPresent, type AwayPeriod, type PresenceMember } from "./presence";
+import { scheduledOn, type ScheduledMember } from "./schedule";
 
 export type SplitRule = "all_members" | "present_only" | "per_day_worked" | "custom";
 export type ItemKind = "item" | "fee" | "tax" | "discount";
@@ -169,9 +170,18 @@ export function daysPresentInMonth(member: PresenceMember, month: string, period
   return monthDays(month).filter((d) => isPresent(member, d, periods)).length;
 }
 
-/** Cook's monthly pay = daily rate × days worked (SPEC §5.4 per_day_worked). */
-export function cookPay(ratePaise: number, cook: PresenceMember, month: string, periods: readonly AwayPeriod[]) {
-  const days = monthDays(month).filter((d) => cook.joined_on <= d && (!cook.left_on || d <= cook.left_on));
+/** Days in a month the cook or maid is employed and scheduled to work. */
+const scheduledDays = (person: ScheduledMember, month: string) =>
+  monthDays(month).filter(
+    (d) => person.joined_on <= d && (!person.left_on || d <= person.left_on) && scheduledOn(person, d).works,
+  );
+
+/**
+ * Cook's monthly pay = daily rate × days worked (SPEC §5.4 per_day_worked).
+ * Only days in their weekly schedule count; full days of leave on those are unpaid.
+ */
+export function cookPay(ratePaise: number, cook: ScheduledMember, month: string, periods: readonly AwayPeriod[]) {
+  const days = scheduledDays(cook, month);
   const daysWorked = days.filter((d) => cookWorkedOn(cook, d, periods)).length;
   return { daysWorked, days: days.length, totalPaise: ratePaise * daysWorked };
 }
@@ -181,13 +191,13 @@ export type StaffRole = "cook" | "maid";
 /**
  * The cook's or maid's pay for a month across everyone in that role employed in
  * it, e.g. when one cook replaces another mid-month: daily rate × all days worked.
- * `days` counts the days anyone in the role was employed. Full days off are
+ * `days` counts the days anyone in the role was employed and scheduled. Full days off are
  * unpaid; part days are paid. Null when nobody in the role worked that month.
  */
 export function staffPay(
   role: StaffRole,
   ratePaise: number,
-  members: readonly PresenceMember[],
+  members: readonly ScheduledMember[],
   month: string,
   periods: readonly AwayPeriod[],
 ) {
@@ -199,7 +209,7 @@ export function staffPay(
     const pay = cookPay(ratePaise, person, month, periods);
     if (pay.days === 0) continue;
     daysWorked += pay.daysWorked;
-    for (const d of monthDays(month)) if (person.joined_on <= d && (!person.left_on || d <= person.left_on)) employed.add(d);
+    for (const d of scheduledDays(person, month)) employed.add(d);
   }
   if (employed.size === 0) return null;
   return { daysWorked, days: employed.size, totalPaise: ratePaise * daysWorked };

@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import type { SplitRule } from "@/lib/supabase/types";
 import { monthOf, formatMonth } from "@/lib/engine/calendar";
-import { isPresent, type AwayPeriod, type PresenceMember } from "@/lib/engine/presence";
+import { isPresent, type AwayPeriod } from "@/lib/engine/presence";
+import type { ScheduledMember } from "@/lib/engine/schedule";
 import {
   computeShares,
   staffPay,
@@ -22,7 +23,8 @@ import { Badge } from "@/components/away";
 import { PlusIcon } from "@/components/icons";
 import { saveSplit, type SplitFormState } from "./actions";
 
-export type SplitMember = PresenceMember & { name: string };
+/** Carries the cook's and maid's weekly schedule, which pay by days worked uses. */
+export type SplitMember = ScheduledMember & { name: string };
 export type SplitCategory = { id: string; name: string; default_rule: SplitRule; staff_role: "cook" | "maid" | null };
 
 type ItemDraft = { key: number; name: string; amount: string; kind: ItemKind; included: boolean; personal: string };

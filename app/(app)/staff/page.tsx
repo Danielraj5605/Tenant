@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { todayIn } from "@/lib/engine/dates";
 import { addDays, formatMonth, formatRange, formatShortDate, isMonth, monthOf, shiftMonth } from "@/lib/engine/calendar";
 import { staffMonth, staffStatusOn, telHref } from "@/lib/engine/staff";
+import { scheduleNotes, weekStrip, weekdayIndex } from "@/lib/engine/schedule";
+import { MEAL_LABEL } from "@/lib/engine/presence";
 import type { AwaySlot } from "@/lib/engine/presence";
 import type { Member } from "@/lib/supabase/types";
 import { Avatar, Card, Notice, cx } from "@/components/ui";
@@ -73,7 +75,11 @@ export default async function StaffPage({ searchParams }: PageProps<"/staff">) {
       </header>
 
       <div className="mb-4 flex flex-col gap-3 empty:hidden">
-        {saved ? <Notice tone="success">Saved.</Notice> : null}
+        {saved === "schedule" ? (
+          <Notice tone="success">Schedule saved. Menu, Today and pay now follow it.</Notice>
+        ) : saved ? (
+          <Notice tone="success">Saved.</Notice>
+        ) : null}
         {removed === "left" ? (
           <Notice tone="success">Removed. Their past pay and leave are kept.</Notice>
         ) : removed === "deleted" ? (
@@ -166,8 +172,8 @@ export default async function StaffPage({ searchParams }: PageProps<"/staff">) {
           <Card className="flex flex-col gap-1.5">
             <h2 className="font-bold">How days worked are counted</h2>
             <p className="text-sm text-muted">
-              A full day of leave is unpaid. Out for part of the day still counts as a day worked. The Cook&rsquo;s pay and
-              Maid&rsquo;s pay splits on Money use the same count.
+              Only days in their weekly schedule count. A full day of leave on one of those is unpaid; out for part of the
+              day still counts as worked. The Cook&rsquo;s pay and Maid&rsquo;s pay splits on Money use the same count.
             </p>
           </Card>
         </div>
@@ -202,7 +208,9 @@ function StaffCard({
 
   const statusBadge =
     status.kind === "working" ? (
-      <Badge>Working today</Badge>
+      <Badge>{status.meals ? `Today: ${status.meals.map((m) => MEAL_LABEL[m].toLowerCase()).join(", ")}` : "Working today"}</Badge>
+    ) : status.kind === "day_off" ? (
+      <Badge tone="neutral">Day off today</Badge>
     ) : status.kind === "off" ? (
       <Badge tone="warn">On leave today</Badge>
     ) : status.kind === "part" ? (
@@ -254,6 +262,9 @@ function StaffCard({
           Add {person.name}&rsquo;s phone number
         </Link>
       )}
+
+      {/* Someone who has left has no schedule to set. */}
+      {!person.left_on || person.left_on >= today ? <WeekStrip person={person} today={today} /> : null}
 
       <dl className="grid grid-cols-2 gap-3">
         <div className="flex min-w-0 flex-col gap-0.5 rounded-xl bg-sunk p-3">
@@ -326,5 +337,59 @@ function StaffCard({
         ) : null}
       </div>
     </Card>
+  );
+}
+
+const CHIP: Record<"works" | "part" | "alternate" | "off", { className: string; label: string }> = {
+  works: { className: "bg-accent text-white", label: "works" },
+  part: { className: "bg-accent-tint text-accent-dark ring-1 ring-inset ring-accent", label: "works, some meals" },
+  alternate: { className: "border-2 border-dashed border-accent bg-surface text-accent-dark", label: "alternate weeks" },
+  off: { className: "bg-sunk text-muted line-through decoration-muted/60", label: "off" },
+};
+
+/** Mon–Sun chips showing the weekly schedule, with notes for alternate and short days. */
+function WeekStrip({ person, today }: { person: Member; today: string }) {
+  const chips = weekStrip(person);
+  const notes = scheduleNotes(person, today);
+  const todayIdx = weekdayIndex(today);
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-bold tracking-wide text-muted uppercase">Weekly schedule</h3>
+        <Link
+          href={`/staff/${person.id}#schedule`}
+          className="-mr-2 inline-flex min-h-11 items-center rounded-full px-3 text-sm font-bold text-accent hover:bg-accent-tint"
+        >
+          {person.work_schedule ? "Change" : "Set days"}
+        </Link>
+      </div>
+      <ul className="grid grid-cols-7 gap-1.5" aria-label={`${person.name}'s weekly schedule`}>
+        {chips.map((c, i) => (
+          <li
+            key={c.day}
+            className={cx(
+              "flex h-10 items-center justify-center rounded-lg text-xs font-bold",
+              CHIP[c.state].className,
+              i === todayIdx && "outline-2 outline-offset-2 outline-ink/30",
+            )}
+            title={`${c.day}: ${CHIP[c.state].label}`}
+          >
+            <span aria-hidden="true">{c.short.slice(0, 2)}</span>
+            <span className="sr-only">
+              {c.day}: {CHIP[c.state].label}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {notes.length ? (
+        <ul className="flex flex-col gap-0.5 text-sm text-muted">
+          {notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      ) : !person.work_schedule ? (
+        <p className="text-sm text-muted">Every day, every meal.</p>
+      ) : null}
+    </div>
   );
 }

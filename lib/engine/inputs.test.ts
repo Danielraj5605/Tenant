@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AwayPeriodInput, ChoreInput, ExpensePayload, MemberEditInput, StaffEditInput, StaffInput } from "./inputs";
+import { AwayPeriodInput, ChoreInput, ExpensePayload, MemberEditInput, ScheduleInput, StaffEditInput, StaffInput } from "./inputs";
 
 const id = "7d3c1a54-2f7e-4c11-9a0b-1f2e3d4c5b6a";
 
@@ -198,5 +198,42 @@ describe("ExpensePayload", () => {
     expect(
       ExpensePayload.safeParse({ ...base, totalPaise: 25600, items, shares: [{ ...shares[0], amountPaise: 25600 }] }).success,
     ).toBe(false);
+  });
+});
+
+describe("ScheduleInput", () => {
+  const day = (mode: string, meals = ["breakfast", "lunch", "dinner"], anchor: string | null = null) => ({ mode, meals, anchor });
+  const parse = (role: string, days: unknown[]) => ScheduleInput.safeParse({ memberId: id, role, schedule: JSON.stringify(days) });
+
+  it("stores a maid's Tue/Thu week, and an every-day week as null", () => {
+    const week = [day("off"), day("every"), day("off"), day("every"), day("off"), day("off"), day("off")];
+    const r = parse("maid", week);
+    expect(r.success && r.data.schedule?.map((d) => d.mode)).toEqual(["off", "every", "off", "every", "off", "off", "off"]);
+    const all = parse("cook", Array.from({ length: 7 }, () => day("every")));
+    expect(all.success && all.data.schedule).toBeNull();
+  });
+
+  it("alternate weeks needs a date on that weekday", () => {
+    const week = Array.from({ length: 7 }, () => day("every"));
+    week[6] = day("alternate", ["breakfast", "lunch"], "2026-11-15"); // a Sunday
+    expect(parse("cook", week).success).toBe(true);
+    week[6] = day("alternate", ["breakfast"], "2026-11-16"); // a Monday
+    expect(parse("cook", week).success).toBe(false);
+    week[6] = day("alternate", ["breakfast"], null);
+    expect(parse("cook", week).success).toBe(false);
+  });
+
+  it("a cook's working day needs a meal; anchors are dropped on other days", () => {
+    const week = Array.from({ length: 7 }, () => day("every"));
+    week[0] = day("every", []);
+    expect(parse("cook", week).success).toBe(false);
+    week[0] = day("off", [], "2026-11-09");
+    const r = parse("cook", week);
+    expect(r.success && r.data.schedule?.[0]).toEqual({ mode: "off", meals: [], anchor: null });
+  });
+
+  it("refuses the wrong number of days or bad JSON", () => {
+    expect(parse("maid", [day("every")]).success).toBe(false);
+    expect(ScheduleInput.safeParse({ memberId: id, role: "maid", schedule: "{" }).success).toBe(false);
   });
 });
