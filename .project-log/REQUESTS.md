@@ -7,7 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
-- [ ] 2026-11-11 Scan a bill: bring back the camera option (it was hidden on screens 1024 px and wider since 7 Nov). Decided: 'Take a photo' on every screen; phones use the native camera, laptops/desktops/landscape tablets get an in-app camera (small)
+- [x] 2026-11-11 Scan a bill: bring back the camera option (it was hidden on screens 1024 px and wider since 7 Nov). Decided: 'Take a photo' on every screen; phones use the native camera, laptops/desktops/landscape tablets get an in-app camera (small)
 - [x] 2026-11-10 Monthly / every-N-months chores (cook and maid salary, rent monthly; EB bill every 2 months), assigned to one person who can hand it over to someone they choose. Decided by Claude as asked: new 'Monthly' frequency with every N months, due day and first month; one owner; per-occurrence Hand over (just this time or from now on); no auto-skip when away, a hint instead (medium)
 - [x] 2026-11-10 Weekly work schedule for the cook and maid (e.g. maid Tue and Thu only; cook off alternate Sundays and no dinner on Sundays), settable and editable; then deploy. Decided by Claude as asked: per weekday Every week / Alternate weeks / Off, plus meals for the cook; schedule drives No cook on Menu/Today/Calendar and pay by days worked (medium)
 - [x] 2026-11-10 Separate Cook & maid page, not mixed with flatmates; every flatmate can view and edit. Decided: own page at /staff linked from Today and Settings (bottom bar stays 5 tabs); shows phone (tap to call) and this month's days worked and leave; any flatmate can edit (medium)

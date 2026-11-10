@@ -353,31 +353,25 @@
       ],
       "summary": "New 'Monthly' chore type for rent, the cook's and maid's salary, the EB bill and the like. Set: every 1/2/3/4/6/12 months, due by a day of the month (29–31 fall on the last day of shorter months), the first month (defaults to next month if this month's day has passed), and one person who does it. Each cycle's turn is created when the flat opens Chores or Today and stays until done: 'Due Sat 5 Dec' / 'Overdue since …' (amber) / Done, plus 'Next: …'. The person on duty (or the admin) can Mark done or Hand over to another flatmate, just this time or from now on; a notice confirms it. If the person is away on the due date, the card suggests handing it over (nobody is skipped automatically). Today shows 'Your monthly jobs'. Rotation tab lists monthly chores with their owner; the Edit chores screen stays weekday-only. Changing a monthly chore's person moves the turns not yet done. The daily job ignores monthly chores (its deployed code already skips chores with no weekdays; rotation.ts now says so explicitly, synced), so the Edge Functions weren't redeployed; its 'Your duty today' push includes a monthly turn on its due date once the turn exists. Fixed: the chore form no longer resets after a refused save. Migration 20261118000001 (applied with the user's OK). E2E on dev as a non-admin through the UI: refused save keeps choices; rent (monthly by the 5th from Nov → overdue) and EB bill (every 2 months by the 10th → due today) saved correctly; Today lists both; hand over to Karthik just this time moved only that turn; EB marked done; test chores deleted afterwards. 375/768/1440 with no sideways scroll or page errors. 198/198 tests, typecheck and lint pass. Deployed (18560b6, Vercel: success); live check as Madan: Chores, Add chore (Monthly fields show, first month defaults to Dec for the 5th), Rotation and Today load at 375/768/1440. Nothing saved on the live site.",
       "screenshots": true
+    },
+    {
+      "id": "scan-camera",
+      "title": "Scan a bill: camera on every screen",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "0974d53"
+      ],
+      "summary": "The user missed the camera option. Cause: since 7 Nov (4fb6a5c, UI polish 1) 'Take a photo' was hidden on screens 1024 px and wider, because laptop browsers ignore the file input's capture setting. Now 'Take a photo' shows on every screen: touch devices (phones, tablets) open the native camera via capture=environment; laptops and desktops open an in-app camera (live preview, Take photo, Cancel, Escape or click outside to close, focus on the shutter, camera stopped on close). Blocked, missing or busy cameras show a clear message pointing to Upload. Upload a photo or PDF and drag-and-drop are unchanged. Deployed (0974d53, Vercel: success) at the user's choice and tested on the live site with Chromium's fake camera: button visible at 1440/768/375 with no sideways scroll; camera live at 1920x1440; at 1440 the photo went into 'Reading the bill…' (nothing saved); Escape closes; a touch phone gets the native picker with capture=environment; a denied permission shows 'Camera access is blocked…'. No page errors. 198/198 tests, typecheck and lint pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    ".project-log/REQUESTS.md",
-    "app/(app)/chores/[id]/page.tsx",
-    "app/(app)/chores/actions.ts",
-    "app/(app)/chores/chore-form.tsx",
-    "app/(app)/chores/edit/page.tsx",
-    "app/(app)/chores/new/page.tsx",
-    "app/(app)/chores/page.tsx",
-    "app/(app)/today/page.tsx",
-    "lib/chores.ts",
-    "lib/engine/inputs.test.ts",
-    "lib/engine/inputs.ts",
-    "lib/engine/rotation.ts",
-    "lib/supabase/types.ts",
-    "supabase/functions/_shared/engine/rotation.ts",
-    ".project-log/shots/monthly-chores/",
-    "app/(app)/chores/monthly-card.tsx",
-    "components/hand-over.tsx",
-    "lib/engine/monthly.test.ts",
-    "lib/engine/monthly.ts",
-    "supabase/migrations/20261118000001_monthly_chores.sql"
+    "components/camera-capture.tsx",
+    "components/ui.tsx",
+    "app/(app)/money/scan/scan-flow.tsx"
   ],
   "test_coverage": [
     {
@@ -543,6 +537,10 @@
     {
       "date": "2026-11-10",
       "text": "Monthly chores: one owner (stored as a one-person rotation), every N months by a day of the month. Away owners aren't skipped (rent can't be skipped); the card suggests handing over. Hand over is per turn, or 'from now on' to change the owner. Turns are created by the app, not the daily job."
+    },
+    {
+      "date": "2026-11-11",
+      "text": "Take a photo on every screen: native camera on touch devices, in-app camera (getUserMedia) on laptops and desktops."
     }
   ],
   "open_questions": [

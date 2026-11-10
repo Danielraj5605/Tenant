@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 — Scan a bill: camera on every screen
+
+- 'Take a photo' was hidden on screens 1024 px and wider since 7 Nov; it's back everywhere.
+- Phones and tablets: native camera. Laptops and desktops: in-app camera with live preview; clear message if the camera is blocked or missing.
+- Deployed 0974d53; tested live with a fake camera at 1440/768/375, a touch phone and a denied permission. Nothing saved.
+
 ## 2026-11-10 — Monthly chores and hand over
 
 - 'Monthly' chores: every N months, due by a day, first month, one person (rent, salaries, EB bill every 2 months).
