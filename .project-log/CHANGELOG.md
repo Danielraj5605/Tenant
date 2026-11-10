@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-10 — Deployed Cook & maid page
+
+- Vercel deploy of c5e9223 succeeded. Live check signed in as Madan: /staff, /settings and /today load at 375/768/1440, no sideways scroll.
+
 ## 2026-11-10 — Cook & maid page
 
 - New /staff page, separate from the flatmates: per person, today's status, tap-to-call phone, days worked so far, full and part days of leave, and the month's leave list; month switcher.
