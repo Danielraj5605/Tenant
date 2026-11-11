@@ -387,13 +387,35 @@
       ],
       "summary": "The user changed Kishore's reason and saw 'nothing happen'. The save had worked (reason 'Early client visit' → 'home' in the database), but the Calendar gave no confirmation and the day panel didn't show reasons. Now: after adding, editing or removing away days the Calendar shows 'Saved. <Name>'s away days are updated.' (or 'leave' for the cook and maid, 'Removed.' for deletes); the Cook & maid page shows 'Saved.' when leave was marked from there; the day panel shows the reason next to the times. Read-only view for other people's entries is unchanged (own-data rule). Deployed and checked live as Madan by saving his own entry unchanged: notice shown, 12 Nov shows 'Kishore · Out: morning and afternoon · home', data unchanged. 198/198 tests, typecheck and lint pass.",
       "screenshots": false
+    },
+    {
+      "id": "notifications",
+      "title": "Notifications outside the app",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "0e8b1d4"
+      ],
+      "summary": "Found: push was fully set up on the server (VAPID keys, notify and daily functions, cron) but no device had ever subscribed (0 rows), because the Settings check ran before the service worker registered and wrongly said 'works in the installed app' with no button. Fixed: the page now waits for the service worker (and registers it if needed), so notifications turn on in Chrome/Edge on desktop and Android; iPhone still needs Add to Home Screen. New: a 'Get notified, even with Tenant closed' card on Today (Turn on / Not now), Settings 'Notifications on this device' with 'Send a test notification', clearer blocked/unsupported help. New alerts: a new split tells everyone with a share their amount (creator excluded; edits stay quiet); a monthly job reminds its person 2 days before and on overdue days 1, 4, 7…, and the daily job now creates each cycle's turn itself; a handed-over job tells the new person. Existing alerts unchanged (duty each morning, cook/maid leave, Sunday away prompt, join requests). Shared callNotify helper in lib/notify.ts; monthly.ts added to the Edge Function engine copy. Edge Functions notify and daily redeployed and Vercel deployed, with the user's OK. Live test as Madan in Chromium: prompt shown, turned on, test sent and the browser displayed 'Notifications are on'; test device removed afterwards. Smoke-tested notify (test) and daily (incl. monthly step). 199/199 tests, typecheck and lint pass.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
+    "components/push-setup.tsx",
+    "lib/notify.ts",
+    "app/(app)/settings/push-actions.ts",
+    "app/(app)/settings/page.tsx",
+    "app/(app)/today/page.tsx",
+    "app/(app)/money/actions.ts",
+    "app/(app)/chores/actions.ts",
     "app/(app)/calendar/away/actions.ts",
-    "app/(app)/calendar/page.tsx"
+    "app/onboarding/actions.ts",
+    "supabase/functions/notify/index.ts",
+    "supabase/functions/daily/index.ts",
+    "scripts/sync-engine.mjs",
+    "supabase/functions/_shared/engine/monthly.ts"
   ],
   "test_coverage": [
     {
@@ -567,11 +589,13 @@
     {
       "date": "2026-11-11",
       "text": "Default splits removed from Settings at the user's request; each category keeps its current default rule (Rent and WiFi: everyone; Groceries, Gas, Household: people at home; Cook's and Maid's pay: by days worked)."
+    },
+    {
+      "date": "2026-11-11",
+      "text": "Notifications: one on/off per device; alerts for duty, new split share, monthly job due/overdue, hand over, cook/maid leave, Sunday away prompt and join requests. New splits notify; edits don't."
     }
   ],
-  "open_questions": [
-    "Monthly chores: should handing over send a push to the new person? Not done yet (it would need the notify Edge Function to be updated and redeployed)."
-  ],
+  "open_questions": [],
   "known_issues": [
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",

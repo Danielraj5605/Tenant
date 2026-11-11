@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-11 — Notifications outside the app
+
+- Turning on now works in desktop and Android browsers (the old check said 'installed app only'); 0 devices had ever subscribed.
+- Today prompt, Settings 'Send a test notification'.
+- New alerts: new split with your share, monthly job 2 days before and when overdue, job handed to you.
+- notify and daily Edge Functions redeployed; app deployed 0e8b1d4. Live test: notification displayed by the browser.
+
 ## 2026-11-11 — Away edits: confirmation and reasons
 
 - Saving looked like 'nothing happens' (Kishore's reason did change). Now a 'Saved…' notice after adding, editing or removing away days, and reasons show in the day panel.

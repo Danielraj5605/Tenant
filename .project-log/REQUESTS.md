@@ -7,7 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
-- [ ] 2026-11-11 Proper notifications outside the app. Found: nobody had ever subscribed (0 devices) because the Settings check raced the service worker and showed 'works in the installed app' with no button. Decided: fix turning on (desktop and Android browsers too), a prompt on Today, 'Send a test notification', and new alerts: new split with your share, monthly job due in 2 days / overdue, job handed to you (medium)
+- [x] 2026-11-11 Proper notifications outside the app. Found: nobody had ever subscribed (0 devices) because the Settings check raced the service worker and showed 'works in the installed app' with no button. Decided: fix turning on (desktop and Android browsers too), a prompt on Today, 'Send a test notification', and new alerts: new split with your share, monthly job due in 2 days / overdue, job handed to you (medium)
 - [x] 2026-11-11 Editing an away entry (Kishore's reason) looked like 'nothing happens' on Save. Cause: the save worked, but there was no confirmation and the day panel didn't show reasons. Fix: 'Saved…' notice after saving or removing, reason shown in the day panel (small)
 - [x] 2026-11-11 Remove 'Default splits' from Settings; on the Calendar, show cook and maid leave in its own section, not mixed with the flatmates (small)
 - [x] 2026-11-11 Scan a bill: bring back the camera option (it was hidden on screens 1024 px and wider since 7 Nov). Decided: 'Take a photo' on every screen; phones use the native camera, laptops/desktops/landscape tablets get an in-app camera (small)
