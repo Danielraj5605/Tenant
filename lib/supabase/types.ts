@@ -287,6 +287,7 @@ export type Database = {
       hand_over_admin: { Args: { p_user_id: string; p_member_id: string }; Returns: undefined };
       set_chore_done: { Args: { p_user_id: string; p_assignment_id: string; p_done: boolean }; Returns: undefined };
       save_expense: { Args: { p_user_id: string; p: Json }; Returns: string };
+      save_chores: { Args: { p_flat_id: string; p: Json }; Returns: undefined };
       set_expense_settled: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
       delete_expense: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
     };

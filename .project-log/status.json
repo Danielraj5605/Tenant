@@ -439,6 +439,17 @@
       ],
       "summary": "1) 'Page not found' (unknown address, HTTP 404) and in-app 'Not found' (deleted split, chore or away entry; keeps the tab bar) pages in the app's style with Go to Today. 2) Monthly jobs whose person has left the flat: the 6 am job and the Chores page no longer create turns for them; the card says '<Name> has left the flat. Edit this job to choose who does it now.'; a turn still assigned to them can be handed over by any flatmate; saving a chore refuses people who have left (same as Edit chores). 3) Opening the day or week menu editor as a non-owner now lands on the week with 'Only the flat admin can plan meals until they pick a menu owner in Settings…' (or names the owner). daily Edge Function type-checked and redeployed, app deployed (a2a551d), with the user's OK. Verified: daily via the cron path returns 200; live as Madan at 375 and 1440 the three cases show as described, no page errors. The departed-owner path was not exercised live (no flatmate has left, and creating one would change real data). 199/199 tests, typecheck, lint pass.",
       "screenshots": true
+    },
+    {
+      "id": "fresh-data",
+      "title": "Fresh data on revisits",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "d6f439c"
+      ],
+      "summary": "Revisited tabs still open instantly from the router cache, then refresh in the background (router.refresh, no loading state); coming back to the app after 15 s or more away also refreshes. First visits aren't fetched twice. Live check as Madan: back to Calendar shown in 82–92 ms, one background refresh at about +250 ms; returning after 16 s hidden: one refresh (plus Next's usual link prefetches). No page errors. 199/199 tests.",
+      "screenshots": false
     }
   ],
   "current_section": null,
@@ -644,7 +655,6 @@
     "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",
     "Sample logins use one shared sample password on the live site. Remove or change them before real use.",
     "First tap on a tab still waits for one server trip (~0.35 s). Prefetching signed-in data would need \"use cache: private\" data caching; not done.",
-    "A visited tab can show data up to 60 s old when another flatmate changes something (your own saves refresh at once).",
     "If you were signed out on your phone, likely causes were switching between tenant-plum.vercel.app and wecohabit.vercel.app (separate cookies) or the 30-day expiry. Not reproduced on desktop Chromium.",
     "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
     "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
@@ -659,7 +669,8 @@
     "A push sent within seconds of a device first turning notifications on can be dropped by the push service (seen once in testing); later pushes arrive.",
     "The first scheduled 6 am run after the Vault fix is 12 Nov; check Supabase → Integrations → Cron (or cron.job_run_details) shows it succeeded.",
     "The departed-owner handling for monthly jobs is type-checked but not exercised live (no flatmate has left).",
-    "An in-app 'Not found' (e.g. a deleted split) still returns HTTP 200 with the Not found page (streaming); only matters to crawlers."
+    "An in-app 'Not found' (e.g. a deleted split) still returns HTTP 200 with the Not found page (streaming); only matters to crawlers.",
+    "A revisited tab shows its remembered data for a fraction of a second before the background refresh lands."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Fresh data on revisits
+
+- Revisited tabs open instantly, then refresh in the background; returning to the app refreshes too. Deployed d6f439c, checked live.
+
 ## 2026-11-11 — Audit fixes
 
 - Styled 'Page not found' and in-app 'Not found' pages with Go to Today.

@@ -293,25 +293,27 @@ export async function saveAllChores(_prev: AllChoresState, form: FormData): Prom
     if ((valid ?? []).length !== people.length) return { error: "Someone in a rotation isn't in this flat any more. Reload and try again." };
   }
 
-  if (deletes.length) {
-    const { error } = await supabase.from("chores").delete().eq("flat_id", flat.id).in("id", deletes);
-    if (error) return { error: "The chores couldn't be saved. Try again." };
-  }
-  for (const w of writes) {
-    let choreId = w.id;
-    if (choreId) {
-      const { error } = await supabase.from("chores").update(w.row).eq("id", choreId).eq("flat_id", flat.id);
-      if (error) return { error: `“${w.row.name}” couldn't be saved. Try again.` };
-      await supabase.from("chore_rotation").delete().eq("chore_id", choreId).eq("flat_id", flat.id);
-    } else {
-      const { data, error } = await supabase.from("chores").insert({ ...w.row, flat_id: flat.id }).select("id").single();
-      if (error || !data) return { error: `“${w.row.name}” couldn't be added. Try again.` };
-      choreId = data.id;
-    }
-    const { error: rotErr } = await supabase
-      .from("chore_rotation")
-      .insert(w.rotation.map((member_id, position) => ({ chore_id: choreId, member_id, flat_id: flat.id, position })));
-    if (rotErr) return { error: `The rotation for “${w.row.name}” couldn't be saved. Try again.` };
+  // One transaction: every change is saved, or none is.
+  const { error } = await supabase.rpc("save_chores", {
+    p_flat_id: flat.id,
+    p: {
+      deletes,
+      writes: writes.map((w) => ({
+        id: w.id,
+        name: w.row.name,
+        frequency: w.row.frequency,
+        days_of_week: w.row.days_of_week,
+        due_time: w.row.due_time,
+        rotation: w.rotation,
+      })),
+    },
+  });
+  if (error) {
+    return {
+      error: error.message.includes("no longer in this flat")
+        ? "Some of these chores are no longer in this flat. Reload and try again."
+        : "The chores couldn't be saved, so nothing was changed. Try again.",
+    };
   }
 
   revalidatePath("/", "layout");

@@ -7,7 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
-- [ ] 2026-11-11 Fresh data: tabs open instantly then refresh in the background, and on returning to the app (user's choice) (small)
+- [x] 2026-11-11 Fresh data: tabs open instantly then refresh in the background, and on returning to the app (user's choice) (small)
 - [ ] 2026-11-11 Edit chores saves all or nothing (one transaction) (small)
 - [ ] 2026-11-11 Order in / We'll cook per meal, not per day (medium)
 - [ ] 2026-11-11 Menu owner as a chore with one person who can hand it over (user's choice) (small)
