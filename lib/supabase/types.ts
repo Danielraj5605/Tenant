@@ -34,6 +34,20 @@ type ChoreRow = {
   start_month: string | null;
   created_at: string;
 };
+export type SwapStatus = "pending" | "accepted" | "declined" | "cancelled";
+type ChoreSwapRow = {
+  id: string;
+  flat_id: string;
+  chore_id: string;
+  from_member: string;
+  from_date: string;
+  to_member: string;
+  to_date: string;
+  status: SwapStatus;
+  created_at: string;
+  decided_at: string | null;
+};
+export type ChoreSwap = ChoreSwapRow;
 type ChoreRotationRow = { chore_id: string; member_id: string; flat_id: string; position: number; created_at: string };
 type ChoreAssignmentRow = {
   id: string;
@@ -43,6 +57,8 @@ type ChoreAssignmentRow = {
   due_date: string;
   status: AssignmentStatus;
   done_at: string | null;
+  /** Whose turn the rotation gave this day; differs from member_id after a swap. Null = member_id. */
+  rotation_member_id: string | null;
   created_at: string;
 };
 type MenuDayRow = {
@@ -253,6 +269,7 @@ export type Database = {
       chores: Table<ChoreRow, "flat_id" | "name" | "frequency">;
       chore_rotation: Table<ChoreRotationRow, "chore_id" | "member_id" | "flat_id" | "position">;
       chore_assignments: Table<ChoreAssignmentRow, "chore_id" | "flat_id" | "due_date">;
+      chore_swaps: Table<ChoreSwapRow, "flat_id" | "chore_id" | "from_member" | "from_date" | "to_member" | "to_date">;
       menu_days: Table<MenuDayRow, "flat_id" | "date">;
       menu_templates: Table<MenuTemplateRow, "flat_id" | "weekday">;
       expense_categories: Table<ExpenseCategoryRow, "flat_id" | "name" | "default_rule">;
@@ -290,6 +307,7 @@ export type Database = {
       set_chore_done: { Args: { p_user_id: string; p_assignment_id: string; p_done: boolean }; Returns: undefined };
       save_expense: { Args: { p_user_id: string; p: Json }; Returns: string };
       save_chores: { Args: { p_flat_id: string; p: Json }; Returns: undefined };
+      accept_chore_swap: { Args: { p_swap_id: string; p_from_rotation: string; p_to_rotation: string }; Returns: undefined };
       set_expense_settled: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
       delete_expense: { Args: { p_user_id: string; p_expense_id: string }; Returns: undefined };
     };

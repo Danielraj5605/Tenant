@@ -1,5 +1,8 @@
 "use server";
 
+import { loadChoreWeek } from "@/lib/chores";
+import { isPresent } from "@/lib/engine/presence";
+import { openTurns, swapExpired, swapProblem } from "@/lib/engine/swaps";
 import { todayIn } from "@/lib/engine/dates";
 import { after } from "next/server";
 import { callNotify } from "@/lib/notify";
@@ -351,4 +354,137 @@ export async function setMenuPlanner(_prev: MenuPlannerState, form: FormData): P
 
   revalidatePath("/", "layout");
   redirect(`/chores?menu=${person.id}`);
+}
+
+export type SwapState = { error?: string };
+
+/** The chore's open turns this week and a "home that day" check, for swap rules. */
+async function swapContext(flatId: string, today: string, choreId: string) {
+  const { views, members, periods } = await loadChoreWeek(flatId, today);
+  const view = views.find((v) => v.chore.id === choreId);
+  if (!view) return null;
+  const byId = new Map(members.map((m) => [m.id, m]));
+  return {
+    view,
+    turns: openTurns(today, view.today, view.upcoming),
+    isHome: (memberId: string, date: string) => {
+      const m = byId.get(memberId);
+      return Boolean(m && isPresent(m, date, periods));
+    },
+  };
+}
+
+/** Ask to swap one of my days on a chore for someone else's day; they accept or decline. */
+export async function requestSwap(_prev: SwapState, form: FormData): Promise<SwapState> {
+  const { me, flat } = await requireFlat();
+  const choreId = z.uuid().safeParse(form.get("choreId"));
+  const fromDate = z.iso.date().safeParse(form.get("fromDate"));
+  const toDate = z.iso.date().safeParse(form.get("toDate"));
+  if (!choreId.success) return { error: "Something went wrong. Reload and try again." };
+  if (!fromDate.success) return { error: "Pick your day." };
+  if (!toDate.success) return { error: "Pick their day." };
+  const today = todayIn(flat.timezone);
+  const ctx = await swapContext(flat.id, today, choreId.data);
+  if (!ctx) return { error: "This chore no longer exists." };
+  const toMember = ctx.turns.find((t) => t.date === toDate.data)?.memberId;
+  if (!toMember) return { error: "Nobody has that day." };
+  const problem = swapProblem({
+    turns: ctx.turns,
+    fromMember: me.id,
+    fromDate: fromDate.data,
+    toMember,
+    toDate: toDate.data,
+    today,
+    isHome: ctx.isHome,
+  });
+  if (problem) return { error: problem };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("chore_swaps")
+    .insert({ flat_id: flat.id, chore_id: choreId.data, from_member: me.id, from_date: fromDate.data, to_member: toMember, to_date: toDate.data })
+    .select("id")
+    .single();
+  if (error || !data) {
+    return { error: error?.code === "23505" ? "One of these days already has a swap request waiting." : "The request couldn't be sent. Try again." };
+  }
+  after(() => callNotify({ swap: { swapId: data.id, event: "requested" } }));
+  revalidatePath("/", "layout");
+  redirect("/chores?swap=sent#swaps");
+}
+
+/** The person asked accepts or declines a swap. */
+export async function respondSwap(_prev: SwapState, form: FormData): Promise<SwapState> {
+  const { me, flat } = await requireFlat();
+  const id = z.uuid().safeParse(form.get("swapId"));
+  const accept = form.get("answer") === "accept";
+  if (!id.success) return { error: "Something went wrong. Reload and try again." };
+  const supabase = await createClient();
+  const { data: swap } = await supabase.from("chore_swaps").select("*").eq("id", id.data).eq("flat_id", flat.id).maybeSingle();
+  if (!swap || swap.status !== "pending") return { error: "This request is no longer open." };
+  if (swap.to_member !== me.id) return { error: "Only the person asked can answer this." };
+  const today = todayIn(flat.timezone);
+  if (swapExpired(swap, today)) return { error: "One of these days has passed, so this request has expired." };
+
+  if (!accept) {
+    await supabase.from("chore_swaps").update({ status: "declined", decided_at: new Date().toISOString() }).eq("id", swap.id).eq("status", "pending");
+    after(() => callNotify({ swap: { swapId: swap.id, event: "declined" } }));
+    revalidatePath("/", "layout");
+    redirect("/chores?swap=declined#swaps");
+  }
+
+  // Both turns must still be as they were when asked.
+  const ctx = await swapContext(flat.id, today, swap.chore_id);
+  if (!ctx) return { error: "This chore no longer exists." };
+  const problem = swapProblem({
+    turns: ctx.turns,
+    fromMember: swap.from_member,
+    fromDate: swap.from_date,
+    toMember: swap.to_member,
+    toDate: swap.to_date,
+    today,
+    isHome: ctx.isHome,
+  });
+  if (problem) {
+    // Turns moved (someone went away, or the rotation changed) since it was asked.
+    return { error: "This swap no longer works: the days have changed since it was asked. Decline it, and they can ask again." };
+  }
+  // Keep whose turn each day was by the rotation, so the rotation doesn't shift.
+  const { data: rows } = await supabase
+    .from("chore_assignments")
+    .select("due_date, member_id, rotation_member_id")
+    .eq("chore_id", swap.chore_id)
+    .in("due_date", [swap.from_date, swap.to_date]);
+  const rotationOn = (date: string, fallback: string) => {
+    const r = (rows ?? []).find((x) => x.due_date === date);
+    return r?.rotation_member_id ?? r?.member_id ?? fallback;
+  };
+  const { error } = await supabase.rpc("accept_chore_swap", {
+    p_swap_id: swap.id,
+    p_from_rotation: rotationOn(swap.from_date, swap.from_member),
+    p_to_rotation: rotationOn(swap.to_date, swap.to_member),
+  });
+  if (error) return { error: "The swap couldn't be saved, so nothing changed. Try again." };
+  after(() => callNotify({ swap: { swapId: swap.id, event: "accepted" } }));
+  revalidatePath("/", "layout");
+  redirect("/chores?swap=accepted#swaps");
+}
+
+/** Withdraw my own request while it's waiting. */
+export async function cancelSwap(_prev: SwapState, form: FormData): Promise<SwapState> {
+  const { me, flat } = await requireFlat();
+  const id = z.uuid().safeParse(form.get("swapId"));
+  if (!id.success) return { error: "Something went wrong. Reload and try again." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("chore_swaps")
+    .update({ status: "cancelled", decided_at: new Date().toISOString() })
+    .eq("id", id.data)
+    .eq("flat_id", flat.id)
+    .eq("from_member", me.id)
+    .eq("status", "pending")
+    .select("id");
+  if (error || !data?.length) return { error: "This request is no longer open." };
+  revalidatePath("/", "layout");
+  redirect("/chores?swap=cancelled#swaps");
 }

@@ -5,6 +5,7 @@
 //   { handOver }      right after a monthly job is handed over: tells the person who takes it.
 //   { choreDone }     right after a chore is marked done: tells every other flatmate.
 //   { menuPlanner }   right after "Plan the menu" is handed to someone: tells them.
+//   { swap }          a chore-day swap was requested (tells the person asked) or answered (tells the asker).
 //   { testMemberId }  "Send a test notification" in Settings: pushes that member's own devices.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
@@ -19,15 +20,43 @@ Deno.serve(async (req) => {
   const secret = Deno.env.get("CRON_SECRET");
   if (!secret || req.headers.get("x-cron-secret") !== secret) return new Response("Forbidden", { status: 403 });
 
-  const { awayPeriodId, joinRequestId, expenseId, handOver, choreDone, menuPlanner, testMemberId } = (await req.json().catch(() => ({}))) as {
+  const { awayPeriodId, joinRequestId, expenseId, handOver, choreDone, menuPlanner, swap, testMemberId } = (await req.json().catch(() => ({}))) as {
     awayPeriodId?: string;
     joinRequestId?: string;
     expenseId?: string;
     handOver?: { assignmentId: string; fromMemberId: string; always: boolean };
     choreDone?: { assignmentId: string; byMemberId: string };
     menuPlanner?: { toMemberId: string; fromMemberId: string };
+    swap?: { swapId: string; event: "requested" | "accepted" | "declined" };
     testMemberId?: string;
   };
+
+  if (swap) {
+    const { data: s } = await admin
+      .from("chore_swaps")
+      .select("from_member, from_date, to_member, to_date, chore:chores(name)")
+      .eq("id", swap.swapId)
+      .maybeSingle();
+    if (!s) return Response.json({ sent: 0 });
+    const { data: people } = await admin.from("members").select("id, name").in("id", [s.from_member, s.to_member]);
+    const nameOf = new Map((people ?? []).map((p) => [p.id, p.name as string]));
+    const chore = (s.chore as { name?: string } | null)?.name ?? "a chore";
+    const asker = nameOf.get(s.from_member) ?? "Someone";
+    const asked = nameOf.get(s.to_member) ?? "They";
+    const day = (d: string) => formatRange(d, d);
+    const payload =
+      swap.event === "requested"
+        ? {
+            to: s.to_member,
+            title: `${asker} asks to swap ${chore}`,
+            body: `You'd do ${day(s.from_date)} and ${asker} does your ${day(s.to_date)}. Accept or decline in Chores.`,
+          }
+        : swap.event === "accepted"
+          ? { to: s.from_member, title: `${asked} accepted your swap`, body: `${chore}: you do ${day(s.to_date)} now, ${asked} does ${day(s.from_date)}.` }
+          : { to: s.from_member, title: `${asked} declined your swap`, body: `${chore}: your ${day(s.from_date)} stays with you.` };
+    const result = await sendToMembers(admin, [payload.to], { title: payload.title, body: payload.body, url: "/chores#swaps", tag: `swap-${swap.swapId}` });
+    return Response.json(result);
+  }
 
   if (menuPlanner) {
     const { data: from } = await admin.from("members").select("name").eq("id", menuPlanner.fromMemberId).maybeSingle();

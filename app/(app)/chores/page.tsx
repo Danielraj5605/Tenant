@@ -13,6 +13,8 @@ import { AlertIcon, CheckIcon, ChevronRightIcon, PencilIcon, PlusIcon } from "@/
 import { monthlyLabel } from "@/lib/engine/monthly";
 import { MonthlyCard } from "./monthly-card";
 import { MenuChoreCard } from "./menu-card";
+import { SwapAnswer, SwapButton, SwapCancel } from "@/components/swap";
+import { openTurns, swapExpired } from "@/lib/engine/swaps";
 import { createClient } from "@/lib/supabase/server";
 import { weekDates, weekStart } from "@/lib/engine/menu";
 
@@ -31,18 +33,23 @@ const weekdayOf = (iso: string) => formatShortDate(iso).split(" ")[0];
 
 export default async function ChoresPage({ searchParams }: PageProps<"/chores">) {
   const { me, flat } = await requireFlat();
-  const { tab, saved, handed, always, menu } = await searchParams;
+  const { tab, saved, handed, always, menu, swap } = await searchParams;
   const view = tab === "rotation" ? "rotation" : "week";
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
   const week = weekDates(weekStart(today));
-  const [{ views, monthly, members, periods }, { data: menuWeek }, { data: menuOwner }] = await Promise.all([
+  const [{ views, monthly, members, periods }, { data: menuWeek }, { data: menuOwner }, { data: openSwaps }] = await Promise.all([
     loadChoreWeek(flat.id, today),
     supabase.from("menu_days").select("breakfast, lunch, dinner").eq("flat_id", flat.id).gte("date", week[0]).lte("date", week[6]),
     flat.menu_owner_id
       ? supabase.from("members").select("id, name, left_on").eq("id", flat.menu_owner_id).maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from("chore_swaps").select("*").eq("flat_id", flat.id).eq("status", "pending").order("created_at"),
   ]);
+  // Swap requests I sent or was sent, while both days are still ahead.
+  const swaps = (openSwaps ?? []).filter((s) => !swapExpired(s, today) && (s.from_member === me.id || s.to_member === me.id));
+  const choreName = new Map(views.map((v) => [v.chore.id, v.chore.name]));
+  const inSwap = new Set((openSwaps ?? []).flatMap((s) => [`${s.chore_id}|${s.from_date}`, `${s.chore_id}|${s.to_date}`]));
   const weekPlanned = (menuWeek ?? []).filter((d) => d.breakfast || d.lunch || d.dinner).length;
   const menuOwnerLeft = Boolean(menuOwner?.left_on && menuOwner.left_on < today);
   const flatmates = members
@@ -90,6 +97,56 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
         </div>
       </header>
 
+      {swap === "sent" || swap === "accepted" || swap === "declined" || swap === "cancelled" ? (
+        <div className="mb-4">
+          <Notice tone="success">
+            {swap === "sent"
+              ? "Swap request sent. They'll get a notification; nothing changes until they accept."
+              : swap === "accepted"
+                ? "Swapped. Both days have changed hands, and they've been told."
+                : swap === "declined"
+                  ? "Declined. Your day stays as it was, and they've been told."
+                  : "Request cancelled."}
+          </Notice>
+        </div>
+      ) : null}
+      {swaps.length ? (
+        <section id="swaps" aria-labelledby="swaps-title" className="mb-4 flex scroll-mt-6 flex-col gap-3 rounded-[var(--radius-card)] bg-surface p-5 ring-2 ring-accent ring-inset">
+          <h2 id="swaps-title" className="text-title font-bold">
+            Swap requests
+          </h2>
+          <ul className="flex flex-col divide-y divide-line">
+            {swaps.map((s) => {
+              const theirs = s.from_member === me.id ? s.to_member : s.from_member;
+              const name = nameOf.get(theirs) ?? "A former flatmate";
+              const what = choreName.get(s.chore_id) ?? "A chore";
+              return (
+                <li key={s.id} className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-start gap-3">
+                    <Avatar name={name} size={36} />
+                    <p className="min-w-0 flex-1">
+                      {s.to_member === me.id ? (
+                        <>
+                          <span className="font-bold">{name}</span> asks to swap <span className="font-bold">{what}</span>: you&rsquo;d do{" "}
+                          <span className="font-semibold">{formatShortDate(s.from_date)}</span>, they&rsquo;d do your{" "}
+                          <span className="font-semibold">{formatShortDate(s.to_date)}</span>.
+                        </>
+                      ) : (
+                        <>
+                          Waiting for <span className="font-bold">{name}</span>: <span className="font-bold">{what}</span>, your{" "}
+                          <span className="font-semibold">{formatShortDate(s.from_date)}</span> for their{" "}
+                          <span className="font-semibold">{formatShortDate(s.to_date)}</span>.
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  {s.to_member === me.id ? <SwapAnswer swapId={s.id} /> : <SwapCancel swapId={s.id} />}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
       {typeof menu === "string" && nameOf.has(menu) ? (
         <div className="mb-4">
           <Notice tone="success">{menu === me.id ? "You plan the menu now." : `${nameOf.get(menu)} plans the menu now. They'll get a notification.`}</Notice>
@@ -186,6 +243,12 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
               ) : null}
               <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:items-start">
                 {views.map(({ chore, today: duty, upcoming }) => {
+                  // Days still open for swapping: not passed, not done, not already in a request.
+                  const turns = openTurns(today, duty, upcoming).filter((t) => !inSwap.has(`${chore.id}|${t.date}`));
+                  const myDays = turns.filter((t) => t.memberId === me.id).map((t) => t.date);
+                  const theirDays = turns
+                    .filter((t) => t.memberId && t.memberId !== me.id && flatmates.some((f) => f.id === t.memberId))
+                    .map((t) => ({ date: t.date, memberId: t.memberId!, name: nameOf.get(t.memberId!) ?? "?" }));
                   const ownerId = duty?.member_id ?? null;
                   const mine = ownerId === me.id;
                   const time = formatTime(chore.due_time);
@@ -276,10 +339,16 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                                   >
                                     {d.memberId ? shortName(d.memberId) : "Skipped"}
                                   </span>
+                                  {"swapped" in d && d.swapped ? (
+                                    <span className="-mt-0.5 text-[11px] font-semibold text-muted">swapped</span>
+                                  ) : null}
                                 </li>
                               ))}
                             </ol>
                           </div>
+                        ) : null}
+                        {myDays.length && theirDays.length ? (
+                          <SwapButton choreId={chore.id} choreName={chore.name} myDays={myDays} theirDays={theirDays} />
                         ) : null}
                       </Card>
                     </li>

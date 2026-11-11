@@ -7,12 +7,17 @@ import { planToday, projectAssignments, type ProjectedDay } from "@/lib/engine/r
 import { dueDateIn, occurrenceAfter, occurrenceOnOrBefore, type MonthlyChore } from "@/lib/engine/monthly";
 import type { Chore, ChoreAssignment } from "@/lib/supabase/types";
 
+export type UpcomingDay = ProjectedDay & {
+  /** Fixed by an accepted swap: someone other than the rotation's pick does it. */
+  swapped?: boolean;
+};
+
 export type ChoreView = {
   chore: Chore;
   rotation: string[];
   today: ChoreAssignment | null;
-  /** Projected owners for the following days (not saved). */
-  upcoming: ProjectedDay[];
+  /** Owners for the following days: the rotation's projection, with swapped days applied. */
+  upcoming: UpcomingDay[];
 };
 
 /** A monthly chore with its owner, its turns still to do (oldest first) and the next due date. */
@@ -55,7 +60,7 @@ export async function loadChoreWeek(
     loadAvailability(flatId, today, end),
     supabase
       .from("chore_assignments")
-      .select("chore_id, member_id, due_date")
+      .select("chore_id, member_id, rotation_member_id, due_date")
       .eq("flat_id", flatId)
       .not("member_id", "is", null)
       .lt("due_date", today)
@@ -63,6 +68,13 @@ export async function loadChoreWeek(
       .limit(500),
     fetchToday(),
   ]);
+  // Days ahead already fixed by an accepted swap.
+  const { data: ahead } = await supabase
+    .from("chore_assignments")
+    .select("chore_id, member_id, rotation_member_id, due_date")
+    .eq("flat_id", flatId)
+    .gt("due_date", today)
+    .lte("due_date", end);
   const all = chores ?? [];
   const list = all.filter((c) => c.frequency !== "monthly");
   const monthlyChores = all.filter(
@@ -73,7 +85,8 @@ export async function loadChoreWeek(
   for (const r of rotationRows ?? []) (rotations[r.chore_id] ??= []).push(r.member_id);
 
   const lastAssignees: Record<string, string | null> = {};
-  for (const h of history ?? []) if (!(h.chore_id in lastAssignees)) lastAssignees[h.chore_id] = h.member_id;
+  // The rotation counts from whose turn it was, not who swapped in.
+  for (const h of history ?? []) if (!(h.chore_id in lastAssignees)) lastAssignees[h.chore_id] = h.rotation_member_id ?? h.member_id;
 
   let todays = firstTodays;
   const missing = planToday({
@@ -102,21 +115,13 @@ export async function loadChoreWeek(
   const views = list.map((chore) => {
     const todayRow = todays.find((a) => a.chore_id === chore.id) ?? null;
     const rotation = rotations[chore.id] ?? [];
-    const last = todayRow?.member_id ?? lastAssignees[chore.id] ?? null;
-    return {
-      chore,
-      rotation,
-      today: todayRow,
-      upcoming: projectAssignments(
-        chore,
-        rotation,
-        last,
-        addDays(today, 1),
-        days - 1,
-        availability.members,
-        availability.periods,
-      ),
-    };
+    const last = todayRow?.rotation_member_id ?? todayRow?.member_id ?? lastAssignees[chore.id] ?? null;
+    const projected = projectAssignments(chore, rotation, last, addDays(today, 1), days - 1, availability.members, availability.periods);
+    const upcoming: UpcomingDay[] = projected.map((d) => {
+      const fixed = (ahead ?? []).find((a) => a.chore_id === chore.id && a.due_date === d.date);
+      return fixed && fixed.member_id ? { date: d.date, memberId: fixed.member_id, swapped: fixed.member_id !== d.memberId } : d;
+    });
+    return { chore, rotation, today: todayRow, upcoming };
   });
 
   const currentFlatmates = new Set(

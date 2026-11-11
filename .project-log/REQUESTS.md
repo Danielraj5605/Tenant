@@ -10,7 +10,7 @@ and asks which to do now, later, or skip.
 - [x] 2026-11-11 Fresh data: tabs open instantly then refresh in the background, and on returning to the app (user's choice) (small)
 - [x] 2026-11-11 Edit chores saves all or nothing (one transaction) (small)
 - [x] 2026-11-11 Order in / We'll cook per meal, not per day (medium)
-- [ ] 2026-11-11 Menu owner as a chore with one person who can hand it over (user's choice) (small)
+- [x] 2026-11-11 Menu owner as a chore with one person who can hand it over (user's choice) (small)
 - [ ] 2026-11-11 Swap chore days within a rotation: request, the other person accepts (user's choice) (large)
 - [x] 2026-11-11 Fix audit findings 1-3: styled 'not found' pages; monthly jobs whose person left the flat; explain why non-owners can't plan the menu (small)
 - [x] 2026-11-11 Fix the scheduled jobs (6 am daily, Sunday prompt): missing Vault values (small)

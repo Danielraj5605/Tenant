@@ -10,6 +10,7 @@ export type NotifyRequest =
   | { handOver: { assignmentId: string; fromMemberId: string; always: boolean } }
   | { choreDone: { assignmentId: string; byMemberId: string } }
   | { menuPlanner: { toMemberId: string; fromMemberId: string } }
+  | { swap: { swapId: string; event: "requested" | "accepted" | "declined" } }
   | { testMemberId: string };
 
 export type NotifyResult = { ok: true; sent: number } | { ok: false; reason: "not-configured" | "failed" };

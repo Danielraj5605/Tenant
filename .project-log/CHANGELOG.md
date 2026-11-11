@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Plan the menu as a chore
+
+- One-person 'Plan the menu' chore on Chores with Hand over / Choose who plans; replaces the admin-only Menu owner setting. Checked live, restored after.
+
 ## 2026-11-11 — Order in / We'll cook per meal
 
 - Per-meal choice with an 'All meals' shortcut; meal lists and Today's alert follow it. Migration 20261120000001. Checked live with temporary data, removed after.

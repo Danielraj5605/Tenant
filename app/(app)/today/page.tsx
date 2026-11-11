@@ -46,6 +46,14 @@ export default async function TodayPage() {
       : Promise.resolve({ data: [] as { name: string }[] }),
   ]);
   const joinNames = (requests ?? []).map((r) => r.name);
+  const { data: swapAsks } = await supabase
+    .from("chore_swaps")
+    .select("id, from_member, from_date, to_date, chore:chores(name)")
+    .eq("flat_id", flat.id)
+    .eq("to_member", me.id)
+    .eq("status", "pending")
+    .gte("from_date", today)
+    .gte("to_date", today);
   const menu = (menuWeek ?? []).find((d) => d.date === today) ?? null;
   const plansOn = new Map((menuWeek ?? []).map((d) => [d.date, mealPlans(d)]));
   const hasDishes = (d: { breakfast: string | null; lunch: string | null; dinner: string | null }) => Boolean(d.breakfast || d.lunch || d.dinner);
@@ -157,7 +165,7 @@ export default async function TodayPage() {
       <GetStarted steps={setupSteps} />
       <NotifyPrompt />
 
-      {joinNames.length || alerts.length ? (
+      {joinNames.length || alerts.length || swapAsks?.length ? (
         <section aria-label="Alerts" className="flex flex-col gap-2">
           {joinNames.length ? (
             <AlertLink href="/settings#requests" tone="info" icon={<UsersIcon size={20} />}>
@@ -165,6 +173,13 @@ export default async function TodayPage() {
               Review
             </AlertLink>
           ) : null}
+          {(swapAsks ?? []).map((s) => (
+            <AlertLink key={s.id} href="/chores#swaps" tone="info" icon={<UsersIcon size={20} />}>
+              {members.find((m) => m.id === s.from_member)?.name ?? "A flatmate"} asks to swap{" "}
+              {(s.chore as { name?: string } | null)?.name ?? "a chore"}: you&rsquo;d do {formatShortDate(s.from_date)}, they&rsquo;d do your{" "}
+              {formatShortDate(s.to_date)}. Answer
+            </AlertLink>
+          ))}
           {alerts.map((a) => (
             <AlertLink key={a.key} href={a.href} tone={a.tone} icon={<AlertIcon size={20} />}>
               {a.text}

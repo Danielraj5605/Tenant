@@ -23,7 +23,7 @@ async function runDaily(flat: FlatRow) {
     db.from("chore_rotation").select("chore_id, member_id, position").eq("flat_id", flat.id).order("position"),
     db
       .from("chore_assignments")
-      .select("chore_id, member_id, due_date")
+      .select("chore_id, member_id, rotation_member_id, due_date")
       .eq("flat_id", flat.id)
       .not("member_id", "is", null)
       .lt("due_date", today)
@@ -42,7 +42,9 @@ async function runDaily(flat: FlatRow) {
   const rotations: Record<string, string[]> = {};
   for (const r of rotation.data ?? []) (rotations[r.chore_id] ??= []).push(r.member_id);
   const lastAssignees: Record<string, string | null> = {};
-  for (const h of history.data ?? []) if (!(h.chore_id in lastAssignees)) lastAssignees[h.chore_id] = h.member_id;
+  // The rotation counts from whose turn it was, not who swapped in.
+  for (const h of history.data ?? [])
+    if (!(h.chore_id in lastAssignees)) lastAssignees[h.chore_id] = h.rotation_member_id ?? h.member_id;
 
   const rows = planToday({
     date: today,

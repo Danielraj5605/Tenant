@@ -472,6 +472,17 @@
       ],
       "summary": "menu_days.meal_plans (migration 20261120000001) stores Order in / We'll cook per meal; a meal without its own choice follows the old day plan, so earlier choices still show. The No-cook card has a row per missed meal and an 'All N meals' row when several are undecided; meal lists say 'No cook · ordering in' / 'we're cooking'; Today's alert asks only about undecided meals and summarises mixed choices. Live test with a temporary part-day leave for Mary on 20 Nov (lunch and dinner), removed afterwards: All 2 meals → Order in saved both; switching dinner saved only dinner; the day row was deleted again. Not seen: the Today alert (20 Nov is outside its 7-day window). Note: 7 Nov shows no No-cook because two cooks (Lakshmi until 9 Nov, and Mary) overlap that day. 201/201 tests.",
       "screenshots": true
+    },
+    {
+      "id": "menu-chore",
+      "title": "Plan the menu as a chore",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "d53de9a"
+      ],
+      "summary": "Menu planning is a one-person chore (the user's choice): a 'Plan the menu' card at the top of Chores shows who does it and how many days this week are planned. The person who has it, or the admin, can hand it over; when nobody has it (or they left), any flatmate can choose who does it. The new person gets a notification ('You plan the menu now'). Settings' admin-only Menu owner picker is replaced by a link to Chores; the Menu page wording points to the chore. Stored as before in flats.menu_owner_id (no migration). notify redeployed. Live as Madan with nobody set: the card offered 'Choose who plans'; choosing Madan saved it, the card showed 'You · 6 of 7 days planned · Hand over' and Menu showed 'Planned by you'; restored to nobody afterwards.",
+      "screenshots": true
     }
   ],
   "current_section": null,
