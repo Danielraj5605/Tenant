@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-11 — Audit fixes
+
+- Styled 'Page not found' and in-app 'Not found' pages with Go to Today.
+- Monthly jobs whose person has left: no new turns, a clear note on the card, anyone can hand over the open turn; chores can't be given to people who have left.
+- Non-owners opening the menu editor see why they can't plan.
+- daily redeployed; app deployed a2a551d; checked live.
+
 ## 2026-11-11 — Full app audit (read-only)
 
 - All checks pass; 27 routes × 2 widths load clean; 147 links OK; 28 interactions pass; no data changed.
