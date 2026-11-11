@@ -7,6 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [ ] 2026-11-11 Fix audit findings 1-3: styled 'not found' pages; monthly jobs whose person left the flat; explain why non-owners can't plan the menu (small)
 - [x] 2026-11-11 Fix the scheduled jobs (6 am daily, Sunday prompt): missing Vault values (small)
 - [x] 2026-11-11 Notify when someone marks a chore done. Decided by the user: the whole flat, every chore (everyone except the person who pressed it; Undo sends nothing) (small)
 - [x] 2026-11-11 Proper notifications outside the app. Found: nobody had ever subscribed (0 devices) because the Settings check raced the service worker and showed 'works in the installed app' with no button. Decided: fix turning on (desktop and Android browsers too), a prompt on Today, 'Send a test notification', and new alerts: new split with your share, monthly job due in 2 days / overdue, job handed to you (medium)

@@ -24,7 +24,8 @@ export default async function PlanWeekPage({ searchParams }: PageProps<"/menu/we
   const today = todayIn(flat.timezone);
   const monday = weekStart(typeof w === "string" && isIsoDate(w) ? w : today);
   const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
-  if (!canPlan) redirect(`/menu?w=${monday}`);
+  // Say why instead of silently bouncing back to the week.
+  if (!canPlan) redirect(`/menu?w=${monday}&denied=1`);
 
   const dates = weekDates(monday);
   const lastMonday = addDays(monday, -7);

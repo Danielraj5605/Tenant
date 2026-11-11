@@ -1,5 +1,6 @@
 "use server";
 
+import { todayIn } from "@/lib/engine/dates";
 import { after } from "next/server";
 import { callNotify } from "@/lib/notify";
 import { redirect } from "next/navigation";
@@ -47,8 +48,9 @@ export async function saveChore(_prev: ChoreFormState, form: FormData): Promise<
     .select("id")
     .eq("flat_id", flat.id)
     .eq("role", "flatmate")
+    .is("left_on", null)
     .in("id", v.rotation);
-  if ((valid ?? []).length !== v.rotation.length) return { error: "Someone in the rotation isn't in this flat." };
+  if ((valid ?? []).length !== v.rotation.length) return { error: "Someone in the rotation isn't in this flat any more. Reload and try again." };
   const row = {
     name: v.name,
     frequency: v.frequency,
@@ -131,7 +133,15 @@ export async function handOverDuty(_prev: HandOverState, form: FormData): Promis
       .maybeSingle(),
   ]);
   if (!duty) return { error: "This turn no longer exists. Reload and try again." };
-  if (!(me.is_admin || duty.member_id === me.id)) return { error: "Only the person on duty or the admin can hand this over." };
+  // The person on duty, the admin, or anyone when the person on duty has left the flat.
+  let assigneeLeft = false;
+  if (duty.member_id && duty.member_id !== me.id && !me.is_admin) {
+    const { data: assignee } = await supabase.from("members").select("left_on").eq("id", duty.member_id).maybeSingle();
+    assigneeLeft = !assignee || (assignee.left_on !== null && assignee.left_on < todayIn(flat.timezone));
+  }
+  if (!(me.is_admin || duty.member_id === me.id || assigneeLeft)) {
+    return { error: "Only the person on duty or the admin can hand this over." };
+  }
   if (duty.status !== "pending") return { error: "This is already done." };
   if (!person) return { error: "Pick someone who lives in the flat." };
   if (person.id === duty.member_id) return { error: `It's already ${person.id === me.id ? "yours" : `${person.name}'s`}.` };

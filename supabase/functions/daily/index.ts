@@ -89,7 +89,12 @@ async function runDaily(flat: FlatRow) {
     });
     sent += r.sent;
   }
-  const monthly = await runMonthly(flat.id, today, chores.data ?? [], rotations);
+  const current = new Set(
+    (members.data ?? [])
+      .filter((m) => m.role === "flatmate" && (!m.left_on || m.left_on >= today))
+      .map((m) => m.id as string),
+  );
+  const monthly = await runMonthly(flat.id, today, chores.data ?? [], rotations, current);
   return { created: rows.length, reminded: byMember.size, sent: sent + monthly.sent, monthly };
 }
 
@@ -100,7 +105,13 @@ type ChoreRow = { id: string; name: string; frequency: string } & Partial<Monthl
  * its owner, then remind 2 days before the due date and on overdue days 1, 4,
  * 7, ... The due day itself is covered by "Your duty today" above.
  */
-async function runMonthly(flatId: string, today: string, chores: ChoreRow[], rotations: Record<string, string[]>) {
+async function runMonthly(
+  flatId: string,
+  today: string,
+  chores: ChoreRow[],
+  rotations: Record<string, string[]>,
+  currentFlatmates: Set<string>,
+) {
   const list = chores.filter(
     (c): c is ChoreRow & MonthlyChore =>
       c.frequency === "monthly" && Boolean(c.every_months && c.day_of_month && c.start_month),
@@ -111,7 +122,8 @@ async function runMonthly(flatId: string, today: string, chores: ChoreRow[], rot
   const turns = list.flatMap((c) => {
     const occ = occurrenceOnOrBefore(c, month);
     const owner = rotations[c.id]?.[0];
-    return occ && owner ? [{ chore_id: c.id, flat_id: flatId, member_id: owner, due_date: dueDateIn(c, occ), status: "pending" }] : [];
+    // Someone who has left the flat gets no new turns; the Chores card asks for a new person.
+    return occ && owner && currentFlatmates.has(owner) ? [{ chore_id: c.id, flat_id: flatId, member_id: owner, due_date: dueDateIn(c, occ), status: "pending" }] : [];
   });
   if (turns.length) {
     await db.from("chore_assignments").upsert(turns, { onConflict: "chore_id,due_date", ignoreDuplicates: true });

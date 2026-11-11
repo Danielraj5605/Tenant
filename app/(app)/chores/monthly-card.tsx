@@ -24,8 +24,9 @@ export function MonthlyCard({
   nameOf: Map<string, string>;
   flatmates: { id: string; name: string }[];
 }) {
-  const { chore, turns, ownerId, nextDue, awayOnDue } = view;
-  const who = (id: string | null) => (id === me.id ? "You" : id ? (nameOf.get(id) ?? "Former member") : "Nobody");
+  const { chore, turns, ownerId, nextDue, awayOnDue, ownerLeft, leftTurns, leftNames } = view;
+  const who = (id: string | null) =>
+    id === me.id ? "You" : id ? (nameOf.get(id) ?? leftNames.get(id) ?? "Former member") : "Nobody";
 
   return (
     <Card className="flex flex-col gap-4">
@@ -44,6 +45,19 @@ export function MonthlyCard({
         </Link>
       </div>
 
+      {ownerLeft ? (
+        <p className="flex gap-2 rounded-xl bg-warn-bg px-3 py-2 text-sm font-semibold text-warn-ink">
+          <AlertIcon size={18} className="mt-0.5 shrink-0" />
+          <span>
+            {who(ownerId)} has left the flat.{" "}
+            <Link href={`/chores/${chore.id}`} className="underline underline-offset-2">
+              Edit this job
+            </Link>{" "}
+            to choose who does it now.
+          </span>
+        </p>
+      ) : null}
+
       {turns.length === 0 ? (
         <div className="flex min-h-14 items-center gap-3 rounded-xl bg-sunk px-3 py-2">
           {ownerId ? <Avatar name={nameOf.get(ownerId) ?? "?"} size={36} /> : null}
@@ -58,6 +72,8 @@ export function MonthlyCard({
           const mine = turn.member_id === me.id;
           const pendingMine = mine && turn.status === "pending";
           const canAct = canMarkDuty(me, turn);
+          // Their person has left: anyone can pass the turn on.
+          const orphaned = leftTurns.has(turn.id);
           return (
             <div key={turn.id} className="flex flex-col gap-3">
               <div
@@ -70,7 +86,7 @@ export function MonthlyCard({
                       : "bg-sunk",
                 )}
               >
-                <Avatar name={nameOf.get(turn.member_id ?? "") ?? "?"} size={36} />
+                <Avatar name={who(turn.member_id)} size={36} />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className={cx("text-xs font-semibold", status.kind === "overdue" ? "text-warn-ink" : "text-muted")}>
                     {status.kind === "overdue"
@@ -98,6 +114,16 @@ export function MonthlyCard({
                   {mine ? "You're" : `${who(turn.member_id)} is`} away on {formatShortDate(turn.due_date)}. Hand it over to someone at
                   home?
                 </p>
+              ) : null}
+
+              {orphaned && !canAct ? (
+                <HandOverButton
+                  assignmentId={turn.id}
+                  choreName={chore.name}
+                  currentId={turn.member_id}
+                  flatmates={flatmates}
+                  meId={me.id}
+                />
               ) : null}
 
               {canAct ? (

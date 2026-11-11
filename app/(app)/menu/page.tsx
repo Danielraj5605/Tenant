@@ -15,7 +15,7 @@ export const metadata = { title: "Menu · Tenant" };
 
 export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
   const { me, flat } = await requireFlat();
-  const { w, saved } = await searchParams;
+  const { w, saved, denied } = await searchParams;
   const today = todayIn(flat.timezone);
   const monday = weekStart(typeof w === "string" && isIsoDate(w) ? w : today);
   const dates = weekDates(monday);
@@ -120,6 +120,15 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
         </p>
       </header>
 
+      {denied ? (
+        <div className="mb-4">
+          <Notice tone="info">
+            {owner
+              ? `Only ${owner.name}, the menu owner, can plan meals. You can still choose Order in or We’ll cook on a No-cook day.`
+              : "Only the flat admin can plan meals until they pick a menu owner in Settings. You can still choose Order in or We’ll cook on a No-cook day."}
+          </Notice>
+        </div>
+      ) : null}
       {saved === "week" ? (
         <div className="mb-4">
           <Notice tone="success">Week saved. Everyone sees the new menu now.</Notice>

@@ -25,6 +25,12 @@ export type MonthlyView = {
   nextDue: string;
   /** Turn ids whose person is away (whole day) on the due date. */
   awayOnDue: Set<string>;
+  /** The chore's person has left the flat: nobody gets new turns until someone is chosen. */
+  ownerLeft: boolean;
+  /** Names of people who have left, for turns and owners shown on this card. */
+  leftNames: Map<string, string>;
+  /** Turn ids still assigned to someone who has left; any flatmate can hand these over. */
+  leftTurns: Set<string>;
 };
 
 /**
@@ -113,7 +119,10 @@ export async function loadChoreWeek(
     };
   });
 
-  const monthly = await loadMonthly(flatId, today, monthlyChores, rotations);
+  const currentFlatmates = new Set(
+    availability.members.filter((m) => m.role === "flatmate" && (!m.left_on || m.left_on >= today)).map((m) => m.id),
+  );
+  const monthly = await loadMonthly(flatId, today, monthlyChores, rotations, currentFlatmates);
   return { views, monthly, ...availability };
 }
 
@@ -126,6 +135,7 @@ async function loadMonthly(
   today: string,
   chores: (Chore & MonthlyChore)[],
   rotations: Record<string, string[]>,
+  currentFlatmates: Set<string>,
 ): Promise<MonthlyView[]> {
   if (chores.length === 0) return [];
   const supabase = await createClient();
@@ -152,9 +162,11 @@ async function loadMonthly(
     ).data ?? [];
 
   let turns = await fetchTurns();
+  // New turns only go to someone still in the flat.
   const missing = chores.filter((c) => {
     const due = current.get(c.id);
-    return due && (rotations[c.id]?.length ?? 0) > 0 && !turns.some((t) => t.chore_id === c.id && t.due_date === due);
+    const owner = rotations[c.id]?.[0];
+    return due && owner && currentFlatmates.has(owner) && !turns.some((t) => t.chore_id === c.id && t.due_date === due);
   });
   if (missing.length) {
     await supabase.from("chore_assignments").upsert(
@@ -190,6 +202,19 @@ async function loadMonthly(
       .map((t) => t.id),
   );
 
+  // Names of people who have left but still own a job or a turn (current names come from the page).
+  const goneIds = [
+    ...new Set([
+      ...chores.map((c) => rotations[c.id]?.[0]).filter((id): id is string => Boolean(id) && !currentFlatmates.has(id!)),
+      ...open.map((t) => t.member_id!).filter((id) => !currentFlatmates.has(id)),
+    ]),
+  ];
+  const leftNames = new Map(
+    goneIds.length
+      ? ((await supabase.from("members").select("id, name").in("id", goneIds)).data ?? []).map((m) => [m.id, m.name] as const)
+      : [],
+  );
+
   return chores.map((chore) => {
     const due = current.get(chore.id) ?? null;
     const mine = turns.filter((t) => t.chore_id === chore.id);
@@ -202,6 +227,9 @@ async function loadMonthly(
       turns: shown,
       nextDue: dueDateIn(chore, occurrenceAfter(chore, month)),
       awayOnDue,
+      ownerLeft: Boolean(rotations[chore.id]?.[0]) && !currentFlatmates.has(rotations[chore.id][0]),
+      leftNames,
+      leftTurns: new Set(shown.filter((t) => t.status === "pending" && t.member_id && !currentFlatmates.has(t.member_id)).map((t) => t.id)),
     };
   });
 }

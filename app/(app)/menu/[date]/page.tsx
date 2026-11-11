@@ -15,7 +15,8 @@ export default async function PlanDayPage({ params }: PageProps<"/menu/[date]">)
   const { date } = await params;
   if (!isIsoDate(date)) notFound();
   const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
-  if (!canPlan) redirect(`/menu?w=${weekStart(date)}`);
+  // Say why instead of silently bouncing back to the week.
+  if (!canPlan) redirect(`/menu?w=${weekStart(date)}&denied=1`);
 
   const supabase = await createClient();
   const { data: day } = await supabase.from("menu_days").select("*").eq("flat_id", flat.id).eq("date", date).maybeSingle();
