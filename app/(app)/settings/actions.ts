@@ -172,17 +172,3 @@ export async function handOverAdmin(_prev: SettingsFormState, form: FormData): P
   redirect("/settings?admin=handed");
 }
 
-export async function setMenuOwner(_prev: SettingsFormState, form: FormData): Promise<SettingsFormState> {
-  const { me, flat } = await requireFlat();
-  if (!me.is_admin) return { error: ADMIN_ONLY };
-  const raw = String(form.get("menuOwnerId") ?? "");
-  const id = raw === "" ? null : z.uuid().safeParse(raw).data;
-  if (id === undefined) return { error: "Choose a flatmate." };
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("flats").update({ menu_owner_id: id }).eq("id", flat.id);
-  if (error) return { error: "The menu owner couldn't be saved. Try again." };
-
-  revalidatePath("/", "layout");
-  return { ok: "Menu owner saved." };
-}

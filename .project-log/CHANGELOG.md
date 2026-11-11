@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Order in / We'll cook per meal
+
+- Per-meal choice with an 'All meals' shortcut; meal lists and Today's alert follow it. Migration 20261120000001. Checked live with temporary data, removed after.
+
 ## 2026-11-11 — Edit chores: all or nothing
 
 - One transaction for the whole Edit chores save (migration 20261119000001). Proven to roll back; checked live.

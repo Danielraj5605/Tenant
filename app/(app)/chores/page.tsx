@@ -12,6 +12,9 @@ import { DutyButton } from "@/components/chore-duty";
 import { AlertIcon, CheckIcon, ChevronRightIcon, PencilIcon, PlusIcon } from "@/components/icons";
 import { monthlyLabel } from "@/lib/engine/monthly";
 import { MonthlyCard } from "./monthly-card";
+import { MenuChoreCard } from "./menu-card";
+import { createClient } from "@/lib/supabase/server";
+import { weekDates, weekStart } from "@/lib/engine/menu";
 
 export const metadata = { title: "Chores · Tenant" };
 
@@ -28,10 +31,20 @@ const weekdayOf = (iso: string) => formatShortDate(iso).split(" ")[0];
 
 export default async function ChoresPage({ searchParams }: PageProps<"/chores">) {
   const { me, flat } = await requireFlat();
-  const { tab, saved, handed, always } = await searchParams;
+  const { tab, saved, handed, always, menu } = await searchParams;
   const view = tab === "rotation" ? "rotation" : "week";
   const today = todayIn(flat.timezone);
-  const { views, monthly, members, periods } = await loadChoreWeek(flat.id, today);
+  const supabase = await createClient();
+  const week = weekDates(weekStart(today));
+  const [{ views, monthly, members, periods }, { data: menuWeek }, { data: menuOwner }] = await Promise.all([
+    loadChoreWeek(flat.id, today),
+    supabase.from("menu_days").select("breakfast, lunch, dinner").eq("flat_id", flat.id).gte("date", week[0]).lte("date", week[6]),
+    flat.menu_owner_id
+      ? supabase.from("members").select("id, name, left_on").eq("id", flat.menu_owner_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const weekPlanned = (menuWeek ?? []).filter((d) => d.breakfast || d.lunch || d.dinner).length;
+  const menuOwnerLeft = Boolean(menuOwner?.left_on && menuOwner.left_on < today);
   const flatmates = members
     .filter((m) => m.role === "flatmate" && (!m.left_on || m.left_on >= today))
     .map((m) => ({ id: m.id, name: m.name }));
@@ -77,6 +90,11 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
         </div>
       </header>
 
+      {typeof menu === "string" && nameOf.has(menu) ? (
+        <div className="mb-4">
+          <Notice tone="success">{menu === me.id ? "You plan the menu now." : `${nameOf.get(menu)} plans the menu now. They'll get a notification.`}</Notice>
+        </div>
+      ) : null}
       {typeof handed === "string" && nameOf.has(handed) ? (
         <div className="mb-4">
           <Notice tone="success">
@@ -135,6 +153,16 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
         </Card>
       ) : view === "week" ? (
         <div className="flex flex-col gap-6">
+          <section aria-label="Plan the menu" className="lg:max-w-[calc(50%-0.375rem)]">
+            <MenuChoreCard
+              me={me}
+              ownerId={flat.menu_owner_id}
+              ownerName={menuOwner?.name ?? null}
+              ownerLeft={menuOwnerLeft}
+              flatmates={flatmates}
+              weekPlanned={weekPlanned}
+            />
+          </section>
           {monthly.length ? (
             <section aria-labelledby="monthly" className="flex flex-col gap-3">
               <h2 id="monthly" className="px-1 text-sm font-bold tracking-wide text-muted uppercase">

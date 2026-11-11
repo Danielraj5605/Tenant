@@ -10,7 +10,7 @@ import { Badge, ROLE_LABEL } from "@/components/away";
 import { ChevronLeftIcon, ChevronRightIcon, UsersIcon } from "@/components/icons";
 import { FlatCode } from "./flat-code";
 import { SignOutButton } from "./sign-out";
-import { JoinRequestItem, MenuOwnerForm, UsualSkipsForm } from "./member-forms";
+import { JoinRequestItem, UsualSkipsForm } from "./member-forms";
 import { formatFlatCode } from "@/lib/engine/onboarding";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
@@ -192,10 +192,19 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           {me.is_admin ? (
             <>
               <h2 className="mt-2 px-1 text-sm font-bold tracking-wide text-muted uppercase first:mt-0">How the flat runs</h2>
-              <Card className="flex flex-col gap-3">
-                <h2 className="text-title font-bold">Menu owner</h2>
-                <MenuOwnerForm flatmates={flatmates.map(({ id, name }) => ({ id, name }))} current={flat.menu_owner_id} />
-              </Card>
+              <Link
+                href="/chores"
+                className="group flex min-h-20 items-center gap-3 rounded-[var(--radius-card)] bg-surface px-5 py-4 transition-shadow hover:ring-2 hover:ring-line-strong"
+              >
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="font-bold">Who plans the menu</span>
+                  <span className="text-sm text-muted">
+                    {flatmates.find((f) => f.id === flat.menu_owner_id)?.name ?? "Nobody yet"} · it&rsquo;s a chore now: hand it
+                    over or choose someone on Chores
+                  </span>
+                </span>
+                <ChevronRightIcon size={20} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </>
           ) : null}
 

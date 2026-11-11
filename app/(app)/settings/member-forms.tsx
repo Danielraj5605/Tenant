@@ -8,50 +8,11 @@ import {
   handOverAdmin,
   removeMember,
   setUsualSkips,
-  setMenuOwner,
   updateMember,
   type SettingsFormState,
 } from "./actions";
 
 const initial: SettingsFormState = {};
-
-export function MenuOwnerForm({
-  flatmates,
-  current,
-}: {
-  flatmates: { id: string; name: string }[];
-  current: string | null;
-}) {
-  const [state, action, pending] = useActionState(setMenuOwner, initial);
-  const [value, setValue] = useState(current ?? "");
-
-  return (
-    <form action={action} className="flex flex-col gap-3">
-      {state.ok ? <Notice tone="success">{state.ok}</Notice> : null}
-      {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
-      <label htmlFor="menuOwnerId" className="text-sm font-semibold">
-        Plans lunch and dinner
-      </label>
-      <select
-        id="menuOwnerId"
-        name="menuOwnerId"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="min-h-[52px] rounded-xl border border-line-strong bg-surface px-4 text-base hover:border-ink/40 focus:border-accent focus:ring-2 focus:ring-accent/25 focus:outline-none"
-      >
-        <option value="">Nobody yet</option>
-        {flatmates.map((f) => (
-          <option key={f.id} value={f.id}>
-            {f.name}
-          </option>
-        ))}
-      </select>
-      <Button type="submit" variant="secondary" loading={pending} disabled={value === (current ?? "")}>
-        Save menu owner
-      </Button>
-    </form>
-  );
-}
 
 export function EditMemberForm({
   member,

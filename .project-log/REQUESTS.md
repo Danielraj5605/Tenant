@@ -9,7 +9,7 @@ and asks which to do now, later, or skip.
 
 - [x] 2026-11-11 Fresh data: tabs open instantly then refresh in the background, and on returning to the app (user's choice) (small)
 - [x] 2026-11-11 Edit chores saves all or nothing (one transaction) (small)
-- [ ] 2026-11-11 Order in / We'll cook per meal, not per day (medium)
+- [x] 2026-11-11 Order in / We'll cook per meal, not per day (medium)
 - [ ] 2026-11-11 Menu owner as a chore with one person who can hand it over (user's choice) (small)
 - [ ] 2026-11-11 Swap chore days within a rotation: request, the other person accepts (user's choice) (large)
 - [x] 2026-11-11 Fix audit findings 1-3: styled 'not found' pages; monthly jobs whose person left the flat; explain why non-owners can't plan the menu (small)
@@ -43,7 +43,7 @@ and asks which to do now, later, or skip.
 
 ## Deferred
 
-- [ ] 2026-11-06 Per-meal menu plan (Order in / We'll cook per meal) (medium). Picked up 2026-11-11, see Accepted.
+- [x] 2026-11-06 Per-meal menu plan (Order in / We'll cook per meal) (medium). Picked up 2026-11-11, see Accepted.
 ## Declined
 
 - [ ] 2026-11-10 Away flatmates pay only rent (WiFi split only among people at home). Removed 2026-11-10 at the user's request; WiFi stays split among all members.

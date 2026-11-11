@@ -461,6 +461,17 @@
       ],
       "summary": "Edit chores now saves through one database function (save_chores, migration 20261119000001) in a single transaction: deletions, edits, new chores and rotations are all saved or none are. Proven directly: a save with one valid and one invalid chore failed and left nothing behind (6 chores before and after); an unknown chore id is refused. Live as Madan: Save is disabled with no changes; changing Take out trash 7:30→7:31 and back saved both times, database identical to the start. Migration applied with the user's OK.",
       "screenshots": false
+    },
+    {
+      "id": "meal-plans",
+      "title": "Order in / We'll cook per meal",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "5fd4f3c"
+      ],
+      "summary": "menu_days.meal_plans (migration 20261120000001) stores Order in / We'll cook per meal; a meal without its own choice follows the old day plan, so earlier choices still show. The No-cook card has a row per missed meal and an 'All N meals' row when several are undecided; meal lists say 'No cook · ordering in' / 'we're cooking'; Today's alert asks only about undecided meals and summarises mixed choices. Live test with a temporary part-day leave for Mary on 20 Nov (lunch and dinner), removed afterwards: All 2 meals → Order in saved both; switching dinner saved only dinner; the day row was deleted again. Not seen: the Today alert (20 Nov is outside its 7-day window). Note: 7 Nov shows no No-cook because two cooks (Lakshmi until 9 Nov, and Mary) overlap that day. 201/201 tests.",
+      "screenshots": true
     }
   ],
   "current_section": null,
@@ -660,7 +671,6 @@
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",
     "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
-    "The menu plan (Order in / We'll cook) is still one choice per day, even when the cook misses only one meal.",
     "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
     "Bill scanning has not been tested on the production site. Push: functions now start (secrets uploaded 6 Nov) but no phone has subscribed yet, so delivery is untested.",
     "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",

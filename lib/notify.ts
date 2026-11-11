@@ -9,6 +9,7 @@ export type NotifyRequest =
   | { expenseId: string }
   | { handOver: { assignmentId: string; fromMemberId: string; always: boolean } }
   | { choreDone: { assignmentId: string; byMemberId: string } }
+  | { menuPlanner: { toMemberId: string; fromMemberId: string } }
   | { testMemberId: string };
 
 export type NotifyResult = { ok: true; sent: number } | { ok: false; reason: "not-configured" | "failed" };

@@ -319,3 +319,36 @@ export async function saveAllChores(_prev: AllChoresState, form: FormData): Prom
   revalidatePath("/", "layout");
   redirect("/chores?saved=all");
 }
+
+export type MenuPlannerState = { error?: string };
+
+/**
+ * "Plan the menu" chore: the person who has it, or the admin, hands it to
+ * another flatmate. When nobody has it (or they left), any flatmate can choose.
+ */
+export async function setMenuPlanner(_prev: MenuPlannerState, form: FormData): Promise<MenuPlannerState> {
+  const { me, flat } = await requireFlat();
+  const to = z.uuid().safeParse(form.get("to"));
+  if (!to.success) return { error: "Pick who plans the menu." };
+  const supabase = await createClient();
+  const today = todayIn(flat.timezone);
+  const [{ data: person }, { data: owner }] = await Promise.all([
+    supabase.from("members").select("id, name").eq("id", to.data).eq("flat_id", flat.id).eq("role", "flatmate").is("left_on", null).maybeSingle(),
+    flat.menu_owner_id
+      ? supabase.from("members").select("id, left_on").eq("id", flat.menu_owner_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  if (!person) return { error: "Pick someone who lives in the flat." };
+  const vacant = !owner || (owner.left_on !== null && owner.left_on < today);
+  if (!(vacant || owner?.id === me.id || me.is_admin)) {
+    return { error: "Only the person who plans the menu or the admin can hand it over." };
+  }
+  if (!vacant && owner?.id === person.id) return { error: `${person.id === me.id ? "You already plan" : `${person.name} already plans`} the menu.` };
+
+  const { error } = await supabase.from("flats").update({ menu_owner_id: person.id }).eq("id", flat.id);
+  if (error) return { error: "It couldn't be saved. Try again." };
+  if (person.id !== me.id) after(() => callNotify({ menuPlanner: { toMemberId: person.id, fromMemberId: me.id } }));
+
+  revalidatePath("/", "layout");
+  redirect(`/chores?menu=${person.id}`);
+}

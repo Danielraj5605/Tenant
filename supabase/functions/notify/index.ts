@@ -4,6 +4,7 @@
 //   { expenseId }     right after a new split is saved: tells everyone with a share (not its creator) what they owe.
 //   { handOver }      right after a monthly job is handed over: tells the person who takes it.
 //   { choreDone }     right after a chore is marked done: tells every other flatmate.
+//   { menuPlanner }   right after "Plan the menu" is handed to someone: tells them.
 //   { testMemberId }  "Send a test notification" in Settings: pushes that member's own devices.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
@@ -18,14 +19,26 @@ Deno.serve(async (req) => {
   const secret = Deno.env.get("CRON_SECRET");
   if (!secret || req.headers.get("x-cron-secret") !== secret) return new Response("Forbidden", { status: 403 });
 
-  const { awayPeriodId, joinRequestId, expenseId, handOver, choreDone, testMemberId } = (await req.json().catch(() => ({}))) as {
+  const { awayPeriodId, joinRequestId, expenseId, handOver, choreDone, menuPlanner, testMemberId } = (await req.json().catch(() => ({}))) as {
     awayPeriodId?: string;
     joinRequestId?: string;
     expenseId?: string;
     handOver?: { assignmentId: string; fromMemberId: string; always: boolean };
     choreDone?: { assignmentId: string; byMemberId: string };
+    menuPlanner?: { toMemberId: string; fromMemberId: string };
     testMemberId?: string;
   };
+
+  if (menuPlanner) {
+    const { data: from } = await admin.from("members").select("name").eq("id", menuPlanner.fromMemberId).maybeSingle();
+    const result = await sendToMembers(admin, [menuPlanner.toMemberId], {
+      title: "You plan the menu now",
+      body: `${from?.name ?? "Someone"} handed \u201cPlan the menu\u201d to you. Plan this week's meals in Menu.`,
+      url: "/menu",
+      tag: "menu-planner",
+    });
+    return Response.json(result);
+  }
 
   if (choreDone) {
     const { data: turn } = await admin

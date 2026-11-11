@@ -104,8 +104,8 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
           {owner
             ? `Planned by ${owner.id === me.id ? "you" : owner.name}`
             : me.is_admin
-              ? "You plan meals until you pick a menu owner in Settings."
-              : "No menu owner yet. The admin can pick one in Settings."}
+              ? "Nobody has the Plan the menu chore yet, so you plan meals. Choose someone on Chores."
+              : "Nobody has the Plan the menu chore yet. Choose who does it on Chores."}
         </p>
       </header>
 
@@ -113,8 +113,8 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
         <div className="mb-4">
           <Notice tone="info">
             {owner
-              ? `Only ${owner.name}, the menu owner, can plan meals. You can still choose Order in or We’ll cook on a No-cook day.`
-              : "Only the flat admin can plan meals until they pick a menu owner in Settings. You can still choose Order in or We’ll cook on a No-cook day."}
+              ? `Only ${owner.name} plans meals: they have the Plan the menu chore. They can hand it over on Chores. You can still choose Order in or We’ll cook on a No-cook day.`
+              : "Nobody has the Plan the menu chore yet, so only the admin can plan meals. Choose who does it on Chores. You can still choose Order in or We’ll cook on a No-cook day."}
           </Notice>
         </div>
       ) : null}
