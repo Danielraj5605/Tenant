@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Names readable on phones
+
+- 17 cut-off names found at 320–390 px and fixed: names wrap instead of being cut; turn lists, pickers and tiles give names room. Live scan: 0 left.
+
 ## 2026-11-11 — Swap chore days
 
 - Swap a day on rotation chores: request, Accept/Decline, Cancel; swapped days don't shift the rotation. Migration 20261121000001; daily and notify redeployed; app 3d545a0. Checked live with temporary data, removed after.

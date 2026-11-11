@@ -494,6 +494,20 @@
       ],
       "summary": "On a rotation chore, 'Swap a day' lets you offer one of your open days this week for someone else's day; they get a notification and Accept or Decline (the user's choice); you can cancel while it waits, and a request expires once either day passes. Accepting re-checks that both turns still hold and nobody is away, then fixes both days in one transaction (accept_chore_swap). A swap doesn't shift the rotation: chore_assignments.rotation_member_id keeps whose turn it was, and the app and the 6 am job count the rotation from that (migration 20261121000001; daily and notify redeployed). Swapped days show 'swapped' on Who's next; Today shows incoming requests. Unit tests for the rules, including that later days stay the same. Live test as Madan on Laundry (Fri 13 ↔ Danielraj's Thu 12), future days only: ask → 'Waiting for…' → cancel; a request from Danielraj (inserted, since Claude can only sign in as Madan) showed on Today and Chores; Accept fixed Thu → Madan and Fri → Danielraj with each other's rotation turn kept, tiles said 'swapped', Sat and Mon unchanged; another request declined; everything removed afterwards and the tiles were back as before. Not exercised: someone else pressing Accept on their own device (same code path), and the push messages (no devices subscribed). 207/207 tests.",
       "screenshots": true
+    },
+    {
+      "id": "names-mobile",
+      "title": "Names readable on phones",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "b24229c",
+        "e3e6804",
+        "e1b8a01",
+        "9620a1f"
+      ],
+      "summary": "Scanned every page and the panels that open on tap (Swap a day, Choose who plans, Monthly, turn lists) at 320/360/375/390 px for names that were cut off or covered by other text. Found 17: worst was Add/Edit chore 'Who takes turns', where the move/remove buttons left the name about 30 px, so every name showed as one letter; also Who's next tiles, person pickers, Edit chores summary, New split shares, Settings Cook & maid link. Fixed with one rule (name-wrap: names wrap between words, never cut off) applied to every person's name; compact icon buttons in turn lists (✕ instead of 'Remove'); below 360 px the turn-list avatar is hidden and buttons are 36 px, pickers show one person per row, Who's next shows 3 tiles per row. Final scan on the live site: 0 problems at all four widths; checked by eye at 320 px. Chore titles and amounts still shorten with '…' by design.",
+      "screenshots": true
     }
   ],
   "current_section": null,
