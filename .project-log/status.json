@@ -483,6 +483,17 @@
       ],
       "summary": "Menu planning is a one-person chore (the user's choice): a 'Plan the menu' card at the top of Chores shows who does it and how many days this week are planned. The person who has it, or the admin, can hand it over; when nobody has it (or they left), any flatmate can choose who does it. The new person gets a notification ('You plan the menu now'). Settings' admin-only Menu owner picker is replaced by a link to Chores; the Menu page wording points to the chore. Stored as before in flats.menu_owner_id (no migration). notify redeployed. Live as Madan with nobody set: the card offered 'Choose who plans'; choosing Madan saved it, the card showed 'You · 6 of 7 days planned · Hand over' and Menu showed 'Planned by you'; restored to nobody afterwards.",
       "screenshots": true
+    },
+    {
+      "id": "chore-swaps",
+      "title": "Swap chore days (request and accept)",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "3d545a0"
+      ],
+      "summary": "On a rotation chore, 'Swap a day' lets you offer one of your open days this week for someone else's day; they get a notification and Accept or Decline (the user's choice); you can cancel while it waits, and a request expires once either day passes. Accepting re-checks that both turns still hold and nobody is away, then fixes both days in one transaction (accept_chore_swap). A swap doesn't shift the rotation: chore_assignments.rotation_member_id keeps whose turn it was, and the app and the 6 am job count the rotation from that (migration 20261121000001; daily and notify redeployed). Swapped days show 'swapped' on Who's next; Today shows incoming requests. Unit tests for the rules, including that later days stay the same. Live test as Madan on Laundry (Fri 13 ↔ Danielraj's Thu 12), future days only: ask → 'Waiting for…' → cancel; a request from Danielraj (inserted, since Claude can only sign in as Madan) showed on Today and Chores; Accept fixed Thu → Madan and Fri → Danielraj with each other's rotation turn kept, tiles said 'swapped', Sat and Mon unchanged; another request declined; everything removed afterwards and the tiles were back as before. Not exercised: someone else pressing Accept on their own device (same code path), and the push messages (no devices subscribed). 207/207 tests.",
+      "screenshots": true
     }
   ],
   "current_section": null,

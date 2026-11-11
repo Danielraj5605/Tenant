@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Swap chore days
+
+- Swap a day on rotation chores: request, Accept/Decline, Cancel; swapped days don't shift the rotation. Migration 20261121000001; daily and notify redeployed; app 3d545a0. Checked live with temporary data, removed after.
+
 ## 2026-11-11 — Plan the menu as a chore
 
 - One-person 'Plan the menu' chore on Chores with Hand over / Choose who plans; replaces the admin-only Menu owner setting. Checked live, restored after.
