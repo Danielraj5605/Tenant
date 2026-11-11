@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-11 — Notify when a chore is done
+
+- Marking a chore done notifies every other flatmate; Undo sends nothing.
+- Fixed a crash in the first deploy; added npm run functions:check (Deno type-check) and made functions:deploy run it.
+- notify redeployed; live test: 'Take out trash done · Rishab did it today.' displayed on a test device.
+
 ## 2026-11-11 — Notifications outside the app
 
 - Turning on now works in desktop and Android browsers (the old check said 'installed app only'); 0 devices had ever subscribed.
