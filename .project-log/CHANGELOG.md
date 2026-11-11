@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Scheduled jobs fixed
+
+- The 6 am daily job and the Sunday prompt had failed on every run since 6 Nov (missing Vault values project_url and cron_secret). Added them on production; a run through the cron path now returns 200.
+
 ## 2026-11-11 — Notify when a chore is done
 
 - Marking a chore done notifies every other flatmate; Undo sends nothing.

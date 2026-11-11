@@ -410,6 +410,15 @@
       ],
       "summary": "Marking a chore done (not Undo) notifies every other flatmate, every chore (user's choice): 'Take out trash done · Rishab did it today.'; if the admin marks it for someone: '… marked it done for Rishab'; monthly jobs say the due date. Done → Undo → Done replaces the same notification. First deploy crashed (500): choreDone wasn't read from the request; not caught because the Edge Functions were never type-checked. Fixed, and added npm run functions:check (Deno type-check, the way Supabase runs them), now run by npm run functions:deploy; proven to catch that exact bug. Live test with a test device as Madan: notify for Rishab's real 'Take out trash' returned sent 1 and the browser displayed it; test device removed. One run seconds after registering a brand-new device returned sent 0 (the push service can lag right after a device registers); a rerun worked. 199/199 tests, typecheck and lint pass.",
       "screenshots": false
+    },
+    {
+      "id": "cron-vault",
+      "title": "Scheduled jobs fixed (6 am daily, Sunday prompt)",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [],
+      "summary": "Found while reviewing open items: every scheduled run had failed since 6 Nov (tenant-daily 6 runs, tenant-weekly 1) with 'null value in column url', because the two Vault values the cron call reads (project_url, cron_secret) were never created. So no 6 am duty or monthly reminders were sent, and each day's duties only appeared when someone opened the app. Fixed with the user's OK by running supabase/.vault-setup.sql on production (values checked against the app URL and CRON_SECRET without printing; the file is git-ignored). Verified by calling public.call_daily_job('daily') exactly as cron does: HTTP 200 from the daily function for both flats. No app code changed.",
+      "screenshots": false
     }
   ],
   "current_section": null,
@@ -620,16 +629,15 @@
     "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
     "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
-    "The daily chore job runs from pg_cron using two Vault values (supabase/.vault-setup.sql, run once in the Supabase SQL editor). Not verified that they exist; if not, the schedule still doesn't fire (pages create the day's duties when opened).",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "Today's duties are created when a page first opens, so the very first load of the day can show 'Nothing for you today' until a refresh (seen while taking screenshots; existing behaviour).",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
     "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
     "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye.",
     "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is.",
     "Default split rules can no longer be changed in the app (the Settings card was removed on request). Each split can still be changed when it's made.",
-    "A push sent within seconds of a device first turning notifications on can be dropped by the push service (seen once in testing); later pushes arrive."
+    "A push sent within seconds of a device first turning notifications on can be dropped by the push service (seen once in testing); later pushes arrive.",
+    "The first scheduled 6 am run after the Vault fix is 12 Nov; check Supabase → Integrations → Cron (or cron.job_run_details) shows it succeeded."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"
