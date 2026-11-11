@@ -85,9 +85,10 @@ body {
   }
 }
 
-/* People's names are never cut off on small screens: they wrap instead. */
+/* People's names are never cut off on small screens: they wrap between words
+   ("Danielraj / S"); a single word only breaks if it can't fit at all. */
 @utility name-wrap {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   line-height: 1.25;
 }

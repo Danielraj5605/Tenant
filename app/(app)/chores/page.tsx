@@ -312,7 +312,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                         {upcoming.length ? (
                           <div className="flex flex-col gap-2">
                             <h3 className="text-sm font-bold">Who&rsquo;s next</h3>
-                            <ol className="grid grid-cols-4 gap-2">
+                            <ol className="grid grid-cols-3 gap-2 min-[360px]:grid-cols-4">
                               {upcoming.slice(0, 4).map((d) => (
                                 <li
                                   key={d.date}

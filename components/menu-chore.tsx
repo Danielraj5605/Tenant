@@ -36,7 +36,7 @@ export function MenuPlannerButton({
       {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-semibold">Who plans the menu from now on?</legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           {others.map((f) => (
             <label
               key={f.id}

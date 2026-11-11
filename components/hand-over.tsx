@@ -45,7 +45,7 @@ export function HandOverButton({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-semibold">Who takes over {choreName}?</legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
           {others.map((f) => (
             <label
               key={f.id}

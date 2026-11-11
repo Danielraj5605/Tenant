@@ -272,7 +272,9 @@ export function EditAllChores({
                       {d.rotation.map((id, i) => (
                         <li key={id} className="flex min-h-12 items-center gap-1.5 border-b border-line py-1 pr-1 pl-2 last:border-b-0">
                           <span className="w-4 shrink-0 text-xs font-bold text-muted tabular-nums">{i + 1}</span>
-                          <Avatar name={nameOf.get(id) ?? "?"} size={28} />
+                          <span className="shrink-0 max-[359px]:hidden">
+                            <Avatar name={nameOf.get(id) ?? "?"} size={28} />
+                          </span>
                           <span className="name-wrap flex-1 text-sm font-semibold">{nameOf.get(id)}</span>
                           <button
                             type="button"

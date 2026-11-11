@@ -192,7 +192,7 @@ export function ChoreForm({
             <p className="mb-2 text-sm text-muted">
               If they can&rsquo;t, they can hand it over to someone else from the Chores page.
             </p>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 md:grid-cols-3">
               {flatmates.map((f) => (
                 <label key={f.id} className={cx(pill(owner === f.id), "justify-start gap-2 pl-1.5")}>
                   <input
@@ -263,7 +263,9 @@ export function ChoreForm({
             {order.map((id, i) => (
               <li key={id} className="flex min-h-14 items-center gap-1.5 border-b border-line py-1.5 pr-1 pl-2 last:border-b-0">
                 <span className="w-4 shrink-0 text-xs font-bold text-muted tabular-nums">{i + 1}</span>
-                <Avatar name={nameOf.get(id) ?? "?"} size={30} />
+                <span className="shrink-0 max-[359px]:hidden">
+                  <Avatar name={nameOf.get(id) ?? "?"} size={30} />
+                </span>
                 <span className="name-wrap flex-1 font-semibold">{nameOf.get(id) ?? "Former member"}</span>
                 <button
                   type="button"
