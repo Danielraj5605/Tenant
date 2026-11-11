@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   const secret = Deno.env.get("CRON_SECRET");
   if (!secret || req.headers.get("x-cron-secret") !== secret) return new Response("Forbidden", { status: 403 });
 
-  const { awayPeriodId, joinRequestId, expenseId, handOver, testMemberId } = (await req.json().catch(() => ({}))) as {
+  const { awayPeriodId, joinRequestId, expenseId, handOver, choreDone, testMemberId } = (await req.json().catch(() => ({}))) as {
     awayPeriodId?: string;
     joinRequestId?: string;
     expenseId?: string;
