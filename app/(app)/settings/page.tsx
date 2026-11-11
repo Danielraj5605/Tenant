@@ -164,7 +164,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="font-bold">Cook &amp; maid</span>
-              <span className="truncate text-sm text-muted">
+              <span className="name-wrap text-sm text-muted">
                 {staff.length ? staff.map((s) => `${s.name} (${ROLE_LABEL[s.role].toLowerCase()})`).join(", ") : "Add them, with their phone numbers"}
               </span>
             </span>
