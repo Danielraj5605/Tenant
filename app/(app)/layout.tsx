@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { BottomNav } from "@/components/bottom-nav";
+import { RouteRefresher } from "@/components/route-refresher";
 import { ScreenSkeleton } from "@/components/skeletons";
 import { requireFlat } from "@/lib/flat";
 
@@ -22,6 +23,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Suspense>
       </main>
       <BottomNav />
+      {/* Reads the URL, so it sits in its own Suspense boundary. */}
+      <Suspense fallback={null}>
+        <RouteRefresher />
+      </Suspense>
     </div>
   );
 }
