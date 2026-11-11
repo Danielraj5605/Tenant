@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-11 — Full app audit (read-only)
+
+- All checks pass; 27 routes × 2 widths load clean; 147 links OK; 28 interactions pass; no data changed.
+- Found: plain default 404 page; monthly chores can stay with a departed owner; menu planning admin-only without a menu owner (silent redirect).
+
 ## 2026-11-11 — Scheduled jobs fixed
 
 - The 6 am daily job and the Sunday prompt had failed on every run since 6 Nov (missing Vault values project_url and cron_secret). Added them on production; a run through the cron path now returns 200.

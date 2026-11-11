@@ -419,6 +419,15 @@
       "commits": [],
       "summary": "Found while reviewing open items: every scheduled run had failed since 6 Nov (tenant-daily 6 runs, tenant-weekly 1) with 'null value in column url', because the two Vault values the cron call reads (project_url, cron_secret) were never created. So no 6 am duty or monthly reminders were sent, and each day's duties only appeared when someone opened the app. Fixed with the user's OK by running supabase/.vault-setup.sql on production (values checked against the app URL and CRON_SECRET without printing; the file is git-ignored). Verified by calling public.call_daily_job('daily') exactly as cron does: HTTP 200 from the daily function for both flats. No app code changed.",
       "screenshots": false
+    },
+    {
+      "id": "audit-2026-11-11",
+      "title": "Full app audit",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [],
+      "summary": "Read-only audit on the live site as Madan (non-admin), no data changed (row counts identical before/after). Checks: typecheck, lint, 199/199 tests, Edge Function type-check all pass. Crawl: all 27 routes at 375 and 1440 px load with no page errors, console errors or failed requests; 147 internal links all return 200. Interaction pass: 28 controls checked (month/week navigation, tabs, day select, part-day slots, invalid dates, chore form frequencies and rotation reordering, edit-all add row, hand-over open/cancel, split equal shares and Save gating, scan buttons, invalid phone, schedule controls, wrong current password, signed-out redirect, unknown username); all pass. Found: the 404 page is Next's plain default with no way back; a bad record link returns status 200 with 404 content; menu planning is admin-only while no menu owner is set and /menu/<date> silently bounces non-owners to the week; a monthly chore keeps assigning turns to its owner after they leave the flat (daily job and saveChore don't check left_on). Not testable by Claude: admin-only actions (signing in as the admin was declined), real bill scans, iPhone push.",
+      "screenshots": false
     }
   ],
   "current_section": null,
@@ -637,7 +646,10 @@
     "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is.",
     "Default split rules can no longer be changed in the app (the Settings card was removed on request). Each split can still be changed when it's made.",
     "A push sent within seconds of a device first turning notifications on can be dropped by the push service (seen once in testing); later pushes arrive.",
-    "The first scheduled 6 am run after the Vault fix is 12 Nov; check Supabase → Integrations → Cron (or cron.job_run_details) shows it succeeded."
+    "The first scheduled 6 am run after the Vault fix is 12 Nov; check Supabase → Integrations → Cron (or cron.job_run_details) shows it succeeded.",
+    "404 page is Next's plain default (unstyled, no link back to the app).",
+    "Monthly chores keep assigning turns to an owner who has left the flat (daily job and saveChore don't check left_on).",
+    "Menu planning is admin-only while no menu owner is set; /menu/<date> redirects non-owners to the week without saying why."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"
