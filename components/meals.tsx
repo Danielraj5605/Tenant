@@ -1,4 +1,5 @@
 import { MEALS, MEAL_LABEL, type Meal } from "@/lib/engine/presence";
+import type { DayPlan } from "@/lib/engine/menu";
 import type { MenuDay } from "@/lib/supabase/types";
 import { UsersIcon } from "./icons";
 import { cx } from "./ui";
@@ -14,10 +15,13 @@ export function MealList({
   day,
   counts,
   noCookMeals,
+  plans,
 }: {
   day: Pick<MenuDay, Meal> | null | undefined;
   counts: Record<Meal, number>;
   noCookMeals: readonly Meal[];
+  /** Each meal's Order in / We'll cook choice. */
+  plans?: Record<Meal, DayPlan>;
 }) {
   return (
     <dl className="flex flex-col divide-y divide-line">
@@ -30,7 +34,14 @@ export function MealList({
             <dd className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className={cx("min-w-0", dish ? "font-semibold" : "text-muted")}>{dish ?? "Not planned"}</span>
               {noCook ? (
-                <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-bold text-warn-ink">No cook</span>
+                <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-bold text-warn-ink">
+                  No cook{plans?.[meal] === "order_in" ? " · ordering in" : plans?.[meal] === "self_cook" ? " · we're cooking" : ""}
+                </span>
+              ) : plans?.[meal] && plans[meal] !== "cook" ? (
+                // Decided earlier (e.g. while the cook was on leave): still show it.
+                <span className="rounded-full bg-info-bg px-2 py-0.5 text-xs font-bold text-info-ink">
+                  {plans[meal] === "order_in" ? "Ordering in" : "We’re cooking"}
+                </span>
               ) : null}
             </dd>
             <dd className="inline-flex items-center gap-1 self-center rounded-full bg-sunk px-2 py-0.5 text-xs font-bold text-accent-dark tabular-nums">

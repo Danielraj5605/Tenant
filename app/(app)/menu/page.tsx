@@ -5,10 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { isIsoDate, todayIn } from "@/lib/engine/dates";
 import { addDays, formatRange, formatShortDate } from "@/lib/engine/calendar";
 import { MEALS, headcount, type Meal } from "@/lib/engine/presence";
-import { cookStatusOn, weekDates, weekStart } from "@/lib/engine/menu";
+import { cookStatusOn, mealPlans, weekDates, weekStart } from "@/lib/engine/menu";
 import { Card, Notice, Pill, cx } from "@/components/ui";
 import { NoCookCard } from "@/components/no-cook";
-import { MealList, mealsPhrase } from "@/components/meals";
+import { MealList } from "@/components/meals";
 import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, PlusIcon, UsersIcon } from "@/components/icons";
 
 export const metadata = { title: "Menu · Tenant" };
@@ -43,6 +43,7 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
     const home = headcount(members, date, periods);
     const counts = Object.fromEntries(MEALS.map((m) => [m, headcount(members, date, periods, m)])) as Record<Meal, number>;
     const { noCook, noCookMeals } = cookStatusOn(members, date, periods);
+    const plans = mealPlans(day);
     const isToday = date === today;
     const label = isToday ? "today" : `on ${formatShortDate(date)}`;
     const past = date < today;
@@ -77,20 +78,8 @@ export default async function MenuPage({ searchParams }: PageProps<"/menu">) {
               ) : null}
             </div>
           </div>
-          <MealList day={day} counts={counts} noCookMeals={noCookMeals} />
-          {!noCook && day && day.plan !== "cook" ? (
-            // Decided earlier (e.g. while the cook was on leave): still show it.
-            <p className="w-fit rounded-full bg-info-bg px-3 py-1 text-sm font-bold text-info-ink">
-              {day.plan === "order_in" ? "Ordering in" : "We’re cooking"}
-            </p>
-          ) : null}
-          {noCook ? (
-            <NoCookCard
-              date={date}
-              plan={day?.plan ?? "cook"}
-              label={noCookMeals.length === MEALS.length ? label : `for ${mealsPhrase(noCookMeals)} ${label}`}
-            />
-          ) : null}
+          <MealList day={day} counts={counts} noCookMeals={noCookMeals} plans={plans} />
+          {noCook ? <NoCookCard date={date} meals={noCookMeals} plans={plans} when={label} /> : null}
         </Card>
       </li>
     );

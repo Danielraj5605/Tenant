@@ -53,6 +53,8 @@ type MenuDayRow = {
   lunch: string | null;
   dinner: string | null;
   plan: MenuPlan;
+  /** Per-meal Order in / We'll cook; a meal not listed follows `plan`. */
+  meal_plans: Partial<Record<"breakfast" | "lunch" | "dinner", MenuPlan>>;
   created_at: string;
 };
 type MenuTemplateRow = {

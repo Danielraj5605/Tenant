@@ -1,5 +1,7 @@
 "use server";
 
+import { MEALS } from "@/lib/engine/presence";
+import { withMealPlans } from "@/lib/engine/menu";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -17,16 +19,27 @@ const Dish = z
 
 export type MenuFormState = { error?: string; fieldErrors?: Record<string, string | undefined> };
 
-/** Order in / We'll cook / back to the cook. Any flatmate can choose. */
+/**
+ * Order in / We'll cook / back to the cook, for the meals listed in "meals"
+ * (all three when missing). Any flatmate can choose.
+ */
 export async function setPlan(form: FormData) {
   const { flat } = await requireFlat();
   const date = Date_.safeParse(form.get("date"));
   const plan = z.enum(["cook", "order_in", "self_cook"]).safeParse(form.get("plan"));
-  if (!date.success || !plan.success) return;
+  const raw = String(form.get("meals") ?? "").split(",").filter(Boolean);
+  const meals = MEALS.filter((m) => raw.length === 0 || raw.includes(m));
+  if (!date.success || !plan.success || meals.length === 0) return;
   const supabase = await createClient();
+  const { data: day } = await supabase
+    .from("menu_days")
+    .select("plan, meal_plans")
+    .eq("flat_id", flat.id)
+    .eq("date", date.data)
+    .maybeSingle();
   await supabase
     .from("menu_days")
-    .upsert({ flat_id: flat.id, date: date.data, plan: plan.data }, { onConflict: "flat_id,date" });
+    .upsert({ flat_id: flat.id, date: date.data, ...withMealPlans(day, meals, plan.data) }, { onConflict: "flat_id,date" });
   revalidatePath("/", "layout");
 }
 

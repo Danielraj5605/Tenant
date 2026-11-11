@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 — Edit chores: all or nothing
+
+- One transaction for the whole Edit chores save (migration 20261119000001). Proven to roll back; checked live.
+
 ## 2026-11-11 — Fresh data on revisits
 
 - Revisited tabs open instantly, then refresh in the background; returning to the app refreshes too. Deployed d6f439c, checked live.

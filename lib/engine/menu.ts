@@ -40,3 +40,26 @@ export function cookStatusOn(members: readonly ScheduledMember[], date: string, 
     paid: cooks.some((c) => scheduledOn(c, date).works && cookWorkedOn(c, date, periods)),
   };
 }
+
+export type DayPlan = "cook" | "order_in" | "self_cook";
+type PlannedDay = { plan?: DayPlan | null; meal_plans?: Partial<Record<Meal, DayPlan>> | null } | null | undefined;
+
+/** Order in / We'll cook for one meal: its own choice, else the day's. */
+export function mealPlanOf(day: PlannedDay, meal: Meal): DayPlan {
+  return day?.meal_plans?.[meal] ?? day?.plan ?? "cook";
+}
+
+/** Each meal's plan for a day. */
+export const mealPlans = (day: PlannedDay): Record<Meal, DayPlan> =>
+  Object.fromEntries(MEALS.map((m) => [m, mealPlanOf(day, m)])) as Record<Meal, DayPlan>;
+
+/**
+ * Sets the plan for some meals, keeping the others. When every meal ends up
+ * the same, the day's plan follows, so older screens and alerts agree.
+ */
+export function withMealPlans(day: PlannedDay, meals: readonly Meal[], plan: DayPlan) {
+  const next: Record<Meal, DayPlan> = { ...mealPlans(day) };
+  for (const m of meals) next[m] = plan;
+  const same = MEALS.every((m) => next[m] === next.breakfast);
+  return { meal_plans: next, plan: same ? next.breakfast : (day?.plan ?? "cook") };
+}

@@ -450,6 +450,17 @@
       ],
       "summary": "Revisited tabs still open instantly from the router cache, then refresh in the background (router.refresh, no loading state); coming back to the app after 15 s or more away also refreshes. First visits aren't fetched twice. Live check as Madan: back to Calendar shown in 82–92 ms, one background refresh at about +250 ms; returning after 16 s hidden: one refresh (plus Next's usual link prefetches). No page errors. 199/199 tests.",
       "screenshots": false
+    },
+    {
+      "id": "edit-chores-atomic",
+      "title": "Edit chores: all or nothing",
+      "status": "done",
+      "date": "2026-11-11",
+      "commits": [
+        "376054c"
+      ],
+      "summary": "Edit chores now saves through one database function (save_chores, migration 20261119000001) in a single transaction: deletions, edits, new chores and rotations are all saved or none are. Proven directly: a save with one valid and one invalid chore failed and left nothing behind (6 chores before and after); an unknown chore id is refused. Live as Madan: Save is disabled with no changes; changing Take out trash 7:30→7:31 and back saved both times, database identical to the start. Migration applied with the user's OK.",
+      "screenshots": false
     }
   ],
   "current_section": null,
@@ -662,7 +673,6 @@
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
     "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
-    "Edit chores saves chore by chore: if the connection drops mid-save, some chores can be saved and others not (re-saving fixes it).",
     "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye.",
     "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is.",
     "Default split rules can no longer be changed in the app (the Settings card was removed on request). Each split can still be changed when it's made.",

@@ -7,7 +7,7 @@ import { formatINR } from "@/lib/engine/money";
 import { formatMonth, monthOf } from "@/lib/engine/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { MEALS, headcount, slotsPhrase, type Meal } from "@/lib/engine/presence";
-import { cookStatusOn, weekStart } from "@/lib/engine/menu";
+import { cookStatusOn, mealPlans, weekStart } from "@/lib/engine/menu";
 import { staffStatusOn } from "@/lib/engine/staff";
 import { ROLE_LABEL } from "@/components/away";
 import { DutyButton } from "@/components/chore-duty";
@@ -47,7 +47,7 @@ export default async function TodayPage() {
   ]);
   const joinNames = (requests ?? []).map((r) => r.name);
   const menu = (menuWeek ?? []).find((d) => d.date === today) ?? null;
-  const planOn = new Map((menuWeek ?? []).map((d) => [d.date, d.plan]));
+  const plansOn = new Map((menuWeek ?? []).map((d) => [d.date, mealPlans(d)]));
   const hasDishes = (d: { breakfast: string | null; lunch: string | null; dinner: string | null }) => Boolean(d.breakfast || d.lunch || d.dinner);
   const canPlan = flat.menu_owner_id ? flat.menu_owner_id === me.id : me.is_admin;
   const myDuties = views.filter((v) => v.today?.member_id === me.id);
@@ -95,14 +95,30 @@ export default async function TodayPage() {
         const meals = cookStatusOn(members, date, periods).noCookMeals;
         if (meals.length === 0) continue;
         const forMeals = meals.length === MEALS.length ? "" : ` for ${mealsPhrase(meals)}`;
-        const plan = planOn.get(date) ?? "cook";
+        const plans = plansOn.get(date) ?? mealPlans(null);
+        const undecided = meals.filter((m) => plans[m] === "cook");
         // The Order in / We'll cook buttons are on that week's menu.
         const menuHref = `/menu?w=${weekStart(date)}`;
-        // Once the flat has decided, say what was decided instead of asking again.
+        // Ask only about meals still undecided; once all are decided, say what was decided.
+        const decided = meals
+          .map((m) => `${mealsPhrase([m])} ${plans[m] === "order_in" ? "ordering in" : "you're cooking"}`)
+          .join(", ");
         alerts.push(
-          plan === "cook"
-            ? { key: `${staff.id}-${date}`, tone: "warn", date, href: menuHref, text: `No cook${forMeals} ${when}. Order in or cook yourselves?` }
-            : { key: `${staff.id}-${date}`, tone: "info", date, href: menuHref, text: `No cook${forMeals} ${when}: ${plan === "order_in" ? "ordering in" : "you're cooking"}.` },
+          undecided.length
+            ? {
+                key: `${staff.id}-${date}`,
+                tone: "warn",
+                date,
+                href: menuHref,
+                text: `No cook${undecided.length === MEALS.length ? "" : ` for ${mealsPhrase(undecided)}`} ${when}. Order in or cook yourselves?`,
+              }
+            : {
+                key: `${staff.id}-${date}`,
+                tone: "info",
+                date,
+                href: menuHref,
+                text: `No cook${forMeals} ${when}: ${new Set(meals.map((m) => plans[m])).size === 1 ? (plans[meals[0]] === "order_in" ? "ordering in" : "you're cooking") : decided}.`,
+              },
         );
       } else {
         const part = period.full_day ? "" : ` ${slotsPhrase(period.slots ?? [])}`.trimEnd();
@@ -320,14 +336,8 @@ export default async function TodayPage() {
                 </Link>
               }
             />
-            <MealList day={menu} counts={counts} noCookMeals={noCookMeals} />
-            {noCook ? (
-              <NoCookCard
-                date={today}
-                plan={menu?.plan ?? "cook"}
-                label={noCookMeals.length === MEALS.length ? "today" : `for ${mealsPhrase(noCookMeals)} today`}
-              />
-            ) : null}
+            <MealList day={menu} counts={counts} noCookMeals={noCookMeals} plans={mealPlans(menu)} />
+            {noCook ? <NoCookCard date={today} meals={noCookMeals} plans={mealPlans(menu)} when="today" /> : null}
             {canPlan && !(menu && hasDishes(menu)) ? (
               <Link
                 href={`/menu/${today}`}
