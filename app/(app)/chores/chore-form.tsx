@@ -266,13 +266,13 @@ export function ChoreForm({
                 <span className="shrink-0 max-[359px]:hidden">
                   <Avatar name={nameOf.get(id) ?? "?"} size={30} />
                 </span>
-                <span className="name-wrap flex-1 font-semibold">{nameOf.get(id) ?? "Former member"}</span>
+                <span className="name-wrap flex-1 font-semibold max-[359px]:text-sm">{nameOf.get(id) ?? "Former member"}</span>
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
                   aria-label={`Move ${nameOf.get(id)} up`}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30 max-[359px]:size-9"
                 >
                   <ArrowUpIcon size={20} />
                 </button>
@@ -281,7 +281,7 @@ export function ChoreForm({
                   onClick={() => move(i, 1)}
                   disabled={i === order.length - 1}
                   aria-label={`Move ${nameOf.get(id)} down`}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30 max-[359px]:size-9"
                 >
                   <ArrowDownIcon size={20} />
                 </button>
@@ -289,7 +289,7 @@ export function ChoreForm({
                   type="button"
                   onClick={() => setOrder((cur) => cur.filter((x) => x !== id))}
                   aria-label={`Take ${nameOf.get(id) ?? "them"} out of the rotation`}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger max-[359px]:size-9"
                 >
                   <XIcon size={18} />
                 </button>

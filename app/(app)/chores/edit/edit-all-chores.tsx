@@ -281,7 +281,7 @@ export function EditAllChores({
                             onClick={() => move(i, -1)}
                             disabled={i === 0}
                             aria-label={`Move ${nameOf.get(id)} up in ${label}`}
-                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30 max-[359px]:size-9"
                           >
                             <ArrowUpIcon size={18} />
                           </button>
@@ -290,7 +290,7 @@ export function EditAllChores({
                             onClick={() => move(i, 1)}
                             disabled={i === d.rotation.length - 1}
                             aria-label={`Move ${nameOf.get(id)} down in ${label}`}
-                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30 max-[359px]:size-9"
                           >
                             <ArrowDownIcon size={18} />
                           </button>
@@ -298,7 +298,7 @@ export function EditAllChores({
                             type="button"
                             onClick={() => update(d.key, { rotation: d.rotation.filter((x) => x !== id) })}
                             aria-label={`Take ${nameOf.get(id)} out of ${label}`}
-                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger"
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger max-[359px]:size-9"
                           >
                             <XIcon size={18} />
                           </button>
