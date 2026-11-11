@@ -57,7 +57,7 @@ export function HandOverButton({
             >
               <input type="radio" name="to" value={f.id} checked={to === f.id} onChange={() => setTo(f.id)} className="sr-only" />
               <Avatar name={f.name} size={28} />
-              <span className="min-w-0 truncate">{f.id === meId ? "Me" : f.name}</span>
+              <span className="name-wrap">{f.id === meId ? "Me" : f.name}</span>
             </label>
           ))}
         </div>

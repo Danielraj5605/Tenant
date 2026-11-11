@@ -104,7 +104,7 @@ export function JoinRequestItem({ id, name, username, when }: { id: string; name
     <li className="flex flex-col gap-3 border-b border-line py-3 last:border-b-0">
       <div className="flex items-center gap-3">
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-semibold">{name}</span>
+          <span className="name-wrap font-semibold">{name}</span>
           <span className="text-sm text-muted">
             @{username} · asked {when}
           </span>

@@ -303,14 +303,14 @@ export default async function TodayPage() {
               {home.map((m) => (
                 <li key={m.id} className="flex min-w-0 flex-col items-center gap-1.5 py-1">
                   <Avatar name={m.name} size={48} />
-                  <span className="w-full truncate text-center text-xs font-semibold">{m.name}</span>
+                  <span className="name-wrap w-full text-center text-xs font-semibold">{m.name}</span>
                 </li>
               ))}
               {away.map(({ member, back, periodId }) => {
                 const body = (
                   <>
                     <Avatar name={member.name} size={48} away />
-                    <span className="w-full truncate text-center text-xs font-semibold text-muted">{member.name}</span>
+                    <span className="name-wrap w-full text-center text-xs font-semibold text-muted">{member.name}</span>
                     {back ? (
                       <span className="-mt-1 w-full truncate text-center text-xs text-muted">Back {formatShortDate(back).slice(4)}</span>
                     ) : null}
@@ -399,7 +399,7 @@ export default async function TodayPage() {
                 {staffToday.map(({ person, status }) => (
                   <li key={person.id} className="flex items-center gap-3">
                     <Avatar name={person.name} size={32} away={status.kind === "off"} />
-                    <span className="min-w-0 flex-1 truncate font-semibold">
+                    <span className="name-wrap flex-1 font-semibold">
                       {person.name}
                       <span className="font-medium text-muted"> · {ROLE_LABEL[person.role]}</span>
                     </span>

@@ -296,7 +296,7 @@ function DayRow({ p }: { p: AwayItem }) {
           <RoleDot role={p.member.role} className="absolute -right-0.5 -bottom-0.5 size-3 ring-2 ring-surface" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-bold">{p.member.name}</span>
+          <span className="name-wrap font-bold">{p.member.name}</span>
           <span className="truncate text-sm text-muted">
             {[
               p.member.role !== "flatmate" ? ROLE_LABEL[p.member.role] : null,

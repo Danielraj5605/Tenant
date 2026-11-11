@@ -63,7 +63,7 @@ export function MonthlyCard({
           {ownerId ? <Avatar name={nameOf.get(ownerId) ?? "?"} size={36} /> : null}
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-xs font-semibold text-muted">First one due {formatShortDate(nextDue)}</span>
-            <span className="truncate font-bold">{who(ownerId)}</span>
+            <span className="name-wrap font-bold">{who(ownerId)}</span>
           </span>
         </div>
       ) : (
@@ -97,7 +97,7 @@ export function MonthlyCard({
                           : `Due ${formatShortDate(turn.due_date)}`
                         : `Due ${formatShortDate(turn.due_date)}`}
                   </span>
-                  <span className="truncate font-bold">{who(turn.member_id)}</span>
+                  <span className="name-wrap font-bold">{who(turn.member_id)}</span>
                 </span>
                 {status.kind === "done" ? (
                   <Pill>

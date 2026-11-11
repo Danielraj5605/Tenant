@@ -145,7 +145,7 @@ export default async function StaffPage({ searchParams }: PageProps<"/staff">) {
                     >
                       <Avatar name={s.name} size={36} />
                       <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate font-semibold">{s.name}</span>
+                        <span className="name-wrap font-semibold">{s.name}</span>
                         <span className="text-sm text-muted">
                           {ROLE_LABEL[s.role]}, until {s.left_on ? formatShortDate(s.left_on) : ""}
                         </span>
@@ -229,7 +229,7 @@ function StaffCard({
           <RoleDot role={person.role} className="absolute -right-0.5 -bottom-0.5 size-3.5 ring-2 ring-surface" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="truncate text-title font-bold">{person.name}</h2>
+          <h2 className="name-wrap text-title font-bold">{person.name}</h2>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-sm font-semibold text-muted">{ROLE_LABEL[person.role]}</span>
             {statusBadge}

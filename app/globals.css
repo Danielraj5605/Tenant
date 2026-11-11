@@ -84,3 +84,10 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* People's names are never cut off on small screens: they wrap instead. */
+@utility name-wrap {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}

@@ -289,7 +289,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                               <Avatar name={nameOf.get(ownerId!) ?? "?"} size={36} />
                               <span className="flex min-w-0 flex-1 flex-col">
                                 <span className="text-xs font-semibold text-muted">Today</span>
-                                <span className="truncate font-bold">{shortName(ownerId!)}</span>
+                                <span className="name-wrap font-bold">{shortName(ownerId!)}</span>
                               </span>
                               {duty.status === "done" ? (
                                 <Pill>
@@ -333,7 +333,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                                   )}
                                   <span
                                     className={cx(
-                                      "w-full truncate text-xs",
+                                      "name-wrap w-full text-xs",
                                       d.memberId ? "font-bold" : "font-semibold text-muted",
                                     )}
                                   >
@@ -379,7 +379,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                 </Link>
                 <div className="flex min-h-12 items-center gap-3 px-2">
                   <Avatar name={nameOf.get(ownerId ?? "") ?? "?"} size={32} />
-                  <span className="min-w-0 flex-1 truncate font-semibold">
+                  <span className="name-wrap flex-1 font-semibold">
                     {ownerId === me.id ? "You" : ownerId ? (nameOf.get(ownerId) ?? "Former member") : "Nobody yet"}
                   </span>
                   <Badge tone="neutral">Does it every time</Badge>
@@ -414,7 +414,7 @@ export default async function ChoresPage({ searchParams }: PageProps<"/chores">)
                       <li key={id} className="flex min-h-12 items-center gap-3 px-2">
                         <span className="w-5 text-sm font-bold text-muted tabular-nums">{i + 1}</span>
                         <Avatar name={nameOf.get(id) ?? "?"} size={32} away={away} />
-                        <span className={cx("min-w-0 flex-1 truncate font-semibold", away && "text-muted")}>
+                        <span className={cx("name-wrap flex-1 font-semibold", away && "text-muted")}>
                           {id === me.id ? "You" : (nameOf.get(id) ?? "Former member")}
                         </span>
                         {away ? <Badge tone="info">Away, skipped</Badge> : current ? <Badge>Today</Badge> : null}

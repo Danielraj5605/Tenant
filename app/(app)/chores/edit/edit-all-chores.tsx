@@ -261,7 +261,7 @@ export function EditAllChores({
               <details className="group -mx-1 rounded-xl" open={isNew || Boolean(err?.rotation) || undefined}>
                 <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-xl px-1 hover:bg-bg">
                   <span className="text-sm font-semibold">Who takes turns</span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-muted">
+                  <span className="name-wrap flex-1 py-1 text-sm text-muted">
                     {d.rotation.length ? d.rotation.map((id) => nameOf.get(id)).join(" → ") : "Nobody yet"}
                   </span>
                   <ChevronRightIcon size={18} className="shrink-0 text-muted transition-transform group-open:rotate-90" />
@@ -270,16 +270,16 @@ export function EditAllChores({
                   {d.rotation.length ? (
                     <ol className="flex flex-col rounded-xl border border-line-strong">
                       {d.rotation.map((id, i) => (
-                        <li key={id} className="flex min-h-12 items-center gap-2 border-b border-line pl-3 last:border-b-0">
-                          <span className="w-4 text-sm font-bold text-muted">{i + 1}</span>
+                        <li key={id} className="flex min-h-12 items-center gap-1.5 border-b border-line py-1 pr-1 pl-2 last:border-b-0">
+                          <span className="w-4 shrink-0 text-xs font-bold text-muted tabular-nums">{i + 1}</span>
                           <Avatar name={nameOf.get(id) ?? "?"} size={28} />
-                          <span className="min-w-0 flex-1 truncate text-sm font-semibold">{nameOf.get(id)}</span>
+                          <span className="name-wrap flex-1 text-sm font-semibold">{nameOf.get(id)}</span>
                           <button
                             type="button"
                             onClick={() => move(i, -1)}
                             disabled={i === 0}
                             aria-label={`Move ${nameOf.get(id)} up in ${label}`}
-                            className="flex size-11 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
                           >
                             <ArrowUpIcon size={18} />
                           </button>
@@ -288,7 +288,7 @@ export function EditAllChores({
                             onClick={() => move(i, 1)}
                             disabled={i === d.rotation.length - 1}
                             aria-label={`Move ${nameOf.get(id)} down in ${label}`}
-                            className="flex size-11 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
                           >
                             <ArrowDownIcon size={18} />
                           </button>
@@ -296,7 +296,7 @@ export function EditAllChores({
                             type="button"
                             onClick={() => update(d.key, { rotation: d.rotation.filter((x) => x !== id) })}
                             aria-label={`Take ${nameOf.get(id)} out of ${label}`}
-                            className="flex size-11 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger"
+                            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger"
                           >
                             <XIcon size={18} />
                           </button>

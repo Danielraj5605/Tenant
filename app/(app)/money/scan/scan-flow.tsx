@@ -477,7 +477,7 @@ function PdfChip({ name }: { name: string }) {
       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-tint text-accent-dark">
         <FileTextIcon size={22} />
       </span>
-      <span className="min-w-0 flex-1 truncate font-semibold">{name}</span>
+      <span className="name-wrap flex-1 font-semibold">{name}</span>
     </div>
   );
 }

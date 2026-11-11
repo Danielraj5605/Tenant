@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useState } from "react";
 import type { ChoreFrequency } from "@/lib/supabase/types";
 import { Avatar, Button, Field, Notice, cx } from "@/components/ui";
-import { ArrowDownIcon, ArrowUpIcon } from "@/components/icons";
+import { ArrowDownIcon, ArrowUpIcon, XIcon } from "@/components/icons";
 import { saveChore, type ChoreFormState } from "./actions";
 import { defaultStartMonth, dueDateIn, ordinal } from "@/lib/engine/monthly";
 import { formatMonth, formatShortDate, shiftMonth } from "@/lib/engine/calendar";
@@ -204,7 +204,7 @@ export function ChoreForm({
                     className="sr-only"
                   />
                   <Avatar name={f.name} size={30} />
-                  <span className="min-w-0 truncate">{f.name}</span>
+                  <span className="name-wrap">{f.name}</span>
                 </label>
               ))}
             </div>
@@ -261,16 +261,16 @@ export function ChoreForm({
         {order.length ? (
           <ol className="flex flex-col rounded-xl border border-line-strong bg-surface">
             {order.map((id, i) => (
-              <li key={id} className="flex min-h-14 items-center gap-2 border-b border-line px-3 last:border-b-0">
-                <span className="w-5 text-sm font-bold text-muted">{i + 1}</span>
-                <Avatar name={nameOf.get(id) ?? "?"} size={32} />
-                <span className="min-w-0 flex-1 truncate font-semibold">{nameOf.get(id) ?? "Former member"}</span>
+              <li key={id} className="flex min-h-14 items-center gap-1.5 border-b border-line py-1.5 pr-1 pl-2 last:border-b-0">
+                <span className="w-4 shrink-0 text-xs font-bold text-muted tabular-nums">{i + 1}</span>
+                <Avatar name={nameOf.get(id) ?? "?"} size={30} />
+                <span className="name-wrap flex-1 font-semibold">{nameOf.get(id) ?? "Former member"}</span>
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
                   aria-label={`Move ${nameOf.get(id)} up`}
-                  className="flex size-11 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
                 >
                   <ArrowUpIcon size={20} />
                 </button>
@@ -279,16 +279,17 @@ export function ChoreForm({
                   onClick={() => move(i, 1)}
                   disabled={i === order.length - 1}
                   aria-label={`Move ${nameOf.get(id)} down`}
-                  className="flex size-11 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg disabled:opacity-30"
                 >
                   <ArrowDownIcon size={20} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setOrder((cur) => cur.filter((x) => x !== id))}
-                  className="min-h-11 rounded-full px-2 text-sm font-bold text-danger hover:bg-warn-bg"
+                  aria-label={`Take ${nameOf.get(id) ?? "them"} out of the rotation`}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-warn-bg hover:text-danger"
                 >
-                  Remove
+                  <XIcon size={18} />
                 </button>
               </li>
             ))}

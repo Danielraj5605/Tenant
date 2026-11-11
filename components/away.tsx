@@ -72,7 +72,7 @@ export function AwayRow({ item, today, editable = true }: { item: AwayItem; toda
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="flex items-center gap-2">
-            <span className="truncate font-bold">{member.name}</span>
+            <span className="name-wrap font-bold">{member.name}</span>
             {long ? <Badge tone="info">Long away</Badge> : null}
           </span>
           <span className="text-sm font-semibold text-ink">{formatRange(item.start_date, item.end_date)}</span>

@@ -55,7 +55,7 @@ export function MenuChoreCard({
           <Avatar name={ownerName ?? "?"} size={36} />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-xs font-semibold text-muted">This week: {weekPlanned} of 7 days planned</span>
-            <span className="truncate font-bold">{mine ? "You" : ownerName}</span>
+            <span className="name-wrap font-bold">{mine ? "You" : ownerName}</span>
           </span>
         </div>
       )}

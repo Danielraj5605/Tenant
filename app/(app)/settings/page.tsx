@@ -126,7 +126,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
                   <>
                     <Avatar name={m.name} size={40} away={Boolean(away)} />
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate font-semibold">
+                      <span className="name-wrap font-semibold">
                         {m.name}
                         {m.id === me.id ? <span className="font-medium text-muted"> (you)</span> : null}
                       </span>

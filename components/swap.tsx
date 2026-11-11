@@ -67,7 +67,7 @@ export function SwapButton({
             <label key={t.date} className={pill(theirs === t.date)}>
               <input type="radio" name="toDate" value={t.date} checked={theirs === t.date} onChange={() => setTheirs(t.date)} className="sr-only" />
               <Avatar name={t.name} size={28} />
-              <span className="min-w-0 truncate">
+              <span className="name-wrap">
                 {t.name}, {day(t.date)}
               </span>
             </label>

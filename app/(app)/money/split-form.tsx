@@ -432,7 +432,7 @@ export function SplitForm({
                     className="size-6 shrink-0 accent-accent"
                   />
                   <label htmlFor={`inc-${m.id}`} className={cx("flex min-w-0 flex-1 items-center gap-2 font-semibold", !on && "text-muted")}>
-                    <span className="truncate">{m.id === meId ? "You" : m.name}</span>
+                    <span className="name-wrap">{m.id === meId ? "You" : m.name}</span>
                     {away ? <Badge tone="info">Away</Badge> : null}
                   </label>
                   <div className="relative">
