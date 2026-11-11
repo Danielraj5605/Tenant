@@ -1,8 +1,8 @@
 "use server";
 
+import { callNotify } from "@/lib/notify";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { supabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 import { getFlatContext } from "@/lib/flat";
 import { CreateFlatInput, JoinRequestInput } from "@/lib/engine/onboarding";
@@ -85,20 +85,7 @@ export async function requestToJoin(_prev: FormState, form: FormData): Promise<F
 }
 
 /** Ask the notify Edge Function to push the flat admin. Best-effort. */
-async function notifyAdmin(joinRequestId: string) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return;
-  try {
-    await fetch(`${supabaseEnv().url}/functions/v1/notify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-cron-secret": secret },
-      body: JSON.stringify({ joinRequestId }),
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch {
-    // Push is best-effort; the request still shows in Settings and on Today.
-  }
-}
+const notifyAdmin = (joinRequestId: string) => callNotify({ joinRequestId });
 
 /** Withdraw your pending join request. */
 export async function cancelJoinRequest() {

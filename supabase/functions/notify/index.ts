@@ -1,6 +1,9 @@
 // Called by the Tenant server (x-cron-secret header):
 //   { awayPeriodId }  right after the cook or maid is marked on leave: alerts the rest of the flat (SPEC §4.9).
 //   { joinRequestId } right after someone asks to join with the flat code: alerts the flat admin.
+//   { expenseId }     right after a new split is saved: tells everyone with a share (not its creator) what they owe.
+//   { handOver }      right after a monthly job is handed over: tells the person who takes it.
+//   { testMemberId }  "Send a test notification" in Settings: pushes that member's own devices.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
 import { MEALS, MEAL_LABEL, MEAL_SLOT, periodSlots, slotsPhrase } from "../_shared/engine/presence.ts";
@@ -14,10 +17,70 @@ Deno.serve(async (req) => {
   const secret = Deno.env.get("CRON_SECRET");
   if (!secret || req.headers.get("x-cron-secret") !== secret) return new Response("Forbidden", { status: 403 });
 
-  const { awayPeriodId, joinRequestId } = (await req.json().catch(() => ({}))) as {
+  const { awayPeriodId, joinRequestId, expenseId, handOver, testMemberId } = (await req.json().catch(() => ({}))) as {
     awayPeriodId?: string;
     joinRequestId?: string;
+    expenseId?: string;
+    handOver?: { assignmentId: string; fromMemberId: string; always: boolean };
+    testMemberId?: string;
   };
+
+  if (testMemberId) {
+    const result = await sendToMembers(admin, [testMemberId], {
+      title: "Notifications are on",
+      body: "This is how Tenant will reach you: duties, splits, rent and leave alerts.",
+      url: "/settings",
+      tag: "test",
+    });
+    return Response.json(result);
+  }
+
+  if (expenseId) {
+    const { data: expense } = await admin
+      .from("expenses")
+      .select("id, title, total_paise, created_by, paid_by")
+      .eq("id", expenseId)
+      .maybeSingle();
+    if (!expense) return Response.json({ sent: 0 });
+    const [{ data: shares }, { data: people }] = await Promise.all([
+      admin.from("expense_shares").select("member_id, amount_paise").eq("expense_id", expenseId),
+      admin.from("members").select("id, name").in("id", [expense.created_by, expense.paid_by]),
+    ]);
+    const nameOf = new Map((people ?? []).map((p) => [p.id, p.name as string]));
+    const creator = nameOf.get(expense.created_by) ?? "Someone";
+    let sent = 0;
+    // One personal message each: their own share.
+    for (const s of shares ?? []) {
+      if (s.member_id === expense.created_by || s.amount_paise <= 0) continue;
+      const paidBy = s.member_id === expense.paid_by ? "you paid" : `${nameOf.get(expense.paid_by) ?? "someone"} paid`;
+      const r = await sendToMembers(admin, [s.member_id], {
+        title: `${creator} added ${expense.title}`,
+        body: `Your share ${rupees(s.amount_paise)} of ${rupees(expense.total_paise)} · ${paidBy}`,
+        url: `/money/${expense.id}`,
+        tag: `expense-${expense.id}`,
+      });
+      sent += r.sent;
+    }
+    return Response.json({ sent });
+  }
+
+  if (handOver) {
+    const { data: turn } = await admin
+      .from("chore_assignments")
+      .select("member_id, due_date, status, chore:chores(name)")
+      .eq("id", handOver.assignmentId)
+      .maybeSingle();
+    if (!turn?.member_id || turn.status !== "pending" || turn.member_id === handOver.fromMemberId) return Response.json({ sent: 0 });
+    const { data: from } = await admin.from("members").select("name").eq("id", handOver.fromMemberId).maybeSingle();
+    const name = (turn.chore as { name?: string } | null)?.name ?? "A job";
+    const result = await sendToMembers(admin, [turn.member_id], {
+      title: handOver.always ? `${name} is yours from now on` : `${name} is yours this time`,
+      body: `${from?.name ?? "Someone"} handed it to you. Due ${formatRange(turn.due_date, turn.due_date)}.`,
+      url: "/chores",
+      tag: `handover-${handOver.assignmentId}`,
+    });
+    return Response.json(result);
+  }
 
   if (joinRequestId) {
     const { data: request } = await admin
@@ -41,7 +104,7 @@ Deno.serve(async (req) => {
     return Response.json(result);
   }
 
-  if (!awayPeriodId) return new Response("Missing awayPeriodId or joinRequestId", { status: 400 });
+  if (!awayPeriodId) return new Response("Nothing to send", { status: 400 });
 
   const { data: period } = await admin
     .from("away_periods")
@@ -78,3 +141,9 @@ Deno.serve(async (req) => {
   });
   return Response.json(result);
 });
+
+/** ₹1,234.50 from paise (₹1,234 when there are no paise). */
+function rupees(paise: number): string {
+  const r = paise / 100;
+  return `₹${r.toLocaleString("en-IN", { minimumFractionDigits: paise % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
+}

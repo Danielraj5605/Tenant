@@ -12,6 +12,7 @@ import { staffStatusOn } from "@/lib/engine/staff";
 import { ROLE_LABEL } from "@/components/away";
 import { DutyButton } from "@/components/chore-duty";
 import { InstallCard } from "@/components/install-card";
+import { NotifyPrompt } from "@/components/push-setup";
 import { NoCookCard } from "@/components/no-cook";
 import { MealList, mealsPhrase } from "@/components/meals";
 import { GetStarted } from "@/components/get-started";
@@ -138,6 +139,7 @@ export default async function TodayPage() {
 
       <InstallCard />
       <GetStarted steps={setupSteps} />
+      <NotifyPrompt />
 
       {joinNames.length || alerts.length ? (
         <section aria-label="Alerts" className="flex flex-col gap-2">

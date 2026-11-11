@@ -1,11 +1,13 @@
 // Called by pg_cron (see migrations/*_cron.sql) with the x-cron-secret header.
-//   job "daily"  (06:00 IST): create today's chore assignments, remind whoever is on duty.
+//   job "daily"  (06:00 IST): create today's chore assignments, remind whoever is on duty;
+//                 create this cycle's turn of each monthly job, remind 2 days before and when overdue.
 //   job "weekly" (Sun 18:00 IST): ask every flatmate "Away any day next week?"
 // Headcount is computed on read (SPEC §5.2), so nothing is precomputed here.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { addDays, formatShortDate } from "../_shared/engine/calendar.ts";
 import { todayIn } from "../_shared/engine/dates.ts";
 import { isoWeekday, planToday } from "../_shared/engine/rotation.ts";
+import { dueDateIn, occurrenceOnOrBefore, type MonthlyChore } from "../_shared/engine/monthly.ts";
 import { sendToMembers } from "../_shared/push.ts";
 
 const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -17,7 +19,7 @@ type FlatRow = { id: string; timezone: string };
 async function runDaily(flat: FlatRow) {
   const today = todayIn(flat.timezone);
   const [chores, rotation, history, existing, members, periods] = await Promise.all([
-    db.from("chores").select("id, name, frequency, days_of_week").eq("flat_id", flat.id),
+    db.from("chores").select("id, name, frequency, days_of_week, every_months, day_of_month, start_month").eq("flat_id", flat.id),
     db.from("chore_rotation").select("chore_id, member_id, position").eq("flat_id", flat.id).order("position"),
     db
       .from("chore_assignments")
@@ -87,7 +89,58 @@ async function runDaily(flat: FlatRow) {
     });
     sent += r.sent;
   }
-  return { created: rows.length, reminded: byMember.size, sent };
+  const monthly = await runMonthly(flat.id, today, chores.data ?? [], rotations);
+  return { created: rows.length, reminded: byMember.size, sent: sent + monthly.sent, monthly };
+}
+
+type ChoreRow = { id: string; name: string; frequency: string } & Partial<MonthlyChore>;
+
+/**
+ * Monthly jobs (rent, salaries, bills): make sure this cycle's turn exists for
+ * its owner, then remind 2 days before the due date and on overdue days 1, 4,
+ * 7, ... The due day itself is covered by "Your duty today" above.
+ */
+async function runMonthly(flatId: string, today: string, chores: ChoreRow[], rotations: Record<string, string[]>) {
+  const list = chores.filter(
+    (c): c is ChoreRow & MonthlyChore =>
+      c.frequency === "monthly" && Boolean(c.every_months && c.day_of_month && c.start_month),
+  );
+  if (list.length === 0) return { created: 0, sent: 0 };
+
+  const month = today.slice(0, 7);
+  const turns = list.flatMap((c) => {
+    const occ = occurrenceOnOrBefore(c, month);
+    const owner = rotations[c.id]?.[0];
+    return occ && owner ? [{ chore_id: c.id, flat_id: flatId, member_id: owner, due_date: dueDateIn(c, occ), status: "pending" }] : [];
+  });
+  if (turns.length) {
+    await db.from("chore_assignments").upsert(turns, { onConflict: "chore_id,due_date", ignoreDuplicates: true });
+  }
+
+  const { data: open } = await db
+    .from("chore_assignments")
+    .select("chore_id, member_id, due_date")
+    .eq("flat_id", flatId)
+    .eq("status", "pending")
+    .in("chore_id", list.map((c) => c.id))
+    .not("member_id", "is", null)
+    .lte("due_date", addDays(today, 2));
+  const nameOf = new Map(list.map((c) => [c.id, c.name]));
+  let sent = 0;
+  for (const t of open ?? []) {
+    const name = nameOf.get(t.chore_id) ?? "A monthly job";
+    const late = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${t.due_date}T00:00:00Z`)) / 86_400_000);
+    const payload =
+      t.due_date === addDays(today, 2)
+        ? { title: `${name} is due ${formatShortDate(t.due_date)}`, body: "In 2 days. Hand it over in Chores if you can't do it." }
+        : late > 0 && late % 3 === 1
+          ? { title: `${name} is overdue`, body: `It was due ${formatShortDate(t.due_date)}. Mark it done in Chores once it's paid.` }
+          : null;
+    if (!payload) continue;
+    const r = await sendToMembers(db, [t.member_id!], { ...payload, url: "/chores", tag: `monthly-${t.chore_id}-${t.due_date}` });
+    sent += r.sent;
+  }
+  return { created: turns.length, sent };
 }
 
 async function runWeekly(flat: FlatRow) {

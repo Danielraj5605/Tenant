@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { callNotify } from "@/lib/notify";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -107,6 +109,9 @@ export async function saveSplit(_prev: SplitFormState, form: FormData): Promise<
     if (msg.includes("add up")) return { error: "Shares must add up exactly to the total." };
     return { error: "The split couldn't be saved. Try again." };
   }
+
+  // A new split: tell everyone with a share what they owe. Edits stay quiet.
+  if (!p.id) after(() => callNotify({ expenseId: id }));
 
   revalidatePath("/", "layout");
   redirect(`/money/${id}`);

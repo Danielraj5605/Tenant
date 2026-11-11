@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const ENGINE_FILES = ["calendar.ts", "dates.ts", "presence.ts", "rotation.ts"];
+export const ENGINE_FILES = ["calendar.ts", "dates.ts", "presence.ts", "rotation.ts", "monthly.ts"];
 const root = path.resolve(import.meta.dirname, "..");
 const src = path.join(root, "lib/engine");
 const dest = path.join(root, "supabase/functions/_shared/engine");

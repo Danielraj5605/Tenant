@@ -211,7 +211,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           </Card>
 
           <Card className="flex flex-col gap-3">
-            <h2 className="text-title font-bold">Reminders on this phone</h2>
+            <h2 className="text-title font-bold">Notifications on this device</h2>
             <PushSetup />
           </Card>
 

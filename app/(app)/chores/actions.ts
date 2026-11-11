@@ -1,5 +1,7 @@
 "use server";
 
+import { after } from "next/server";
+import { callNotify } from "@/lib/notify";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -149,6 +151,8 @@ export async function handOverDuty(_prev: HandOverState, form: FormData): Promis
       .insert({ chore_id: duty.chore_id, member_id: person.id, flat_id: flat.id, position: 0 });
     if (rotErr) return { error: "This turn moved, but later months couldn't be changed. Edit the chore to set who does it." };
   }
+
+  after(() => callNotify({ handOver: { assignmentId: duty.id, fromMemberId: me.id, always } }));
 
   revalidatePath("/", "layout");
   // Said at the top of Chores: the card itself may no longer show the hand-over control.

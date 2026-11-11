@@ -7,7 +7,7 @@ import { z } from "zod";
 import { requireFlat } from "@/lib/flat";
 import { createClient } from "@/lib/supabase/server";
 import { AwayPeriodInput } from "@/lib/engine/inputs";
-import { supabaseEnv } from "@/lib/supabase/env";
+import { callNotify } from "@/lib/notify";
 import { canEditAwayFor, type Actor } from "@/lib/engine/permissions";
 
 const NOT_YOURS = "You can only change your own away days and the cook's or maid's leave. Ask the admin.";
@@ -34,20 +34,7 @@ async function periodOwner(flatId: string, id: string): Promise<string | null> {
 }
 
 /** Ask the notify Edge Function to alert the flat. Best-effort: never blocks saving. */
-async function notifyLeave(awayPeriodId: string) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return;
-  try {
-    await fetch(`${supabaseEnv().url}/functions/v1/notify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-cron-secret": secret },
-      body: JSON.stringify({ awayPeriodId }),
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch {
-    // Push is best-effort.
-  }
-}
+const notifyLeave = (awayPeriodId: string) => callNotify({ awayPeriodId });
 
 export type AwayFormState = {
   error?: string;
