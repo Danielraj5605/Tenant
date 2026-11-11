@@ -92,7 +92,7 @@ export function usePush() {
   return { state, turnOn, turnOff };
 }
 
-const WHAT = "Your duty each morning, new splits with your share, rent and bills before they're due, jobs handed to you, cook or maid leave, and a Sunday prompt for next week's away days.";
+const WHAT = "Your duty each morning, chores others finish, new splits with your share, rent and bills before they're due, jobs handed to you, cook or maid leave, and a Sunday prompt for next week's away days.";
 
 const COPY: Partial<Record<PushState, string>> = {
   "needs-install": "On iPhone, notifications only work after you add Tenant to your Home Screen (Share → Add to Home Screen), then open it from there.",

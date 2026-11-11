@@ -3,6 +3,7 @@
 //   { joinRequestId } right after someone asks to join with the flat code: alerts the flat admin.
 //   { expenseId }     right after a new split is saved: tells everyone with a share (not its creator) what they owe.
 //   { handOver }      right after a monthly job is handed over: tells the person who takes it.
+//   { choreDone }     right after a chore is marked done: tells every other flatmate.
 //   { testMemberId }  "Send a test notification" in Settings: pushes that member's own devices.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { formatRange } from "../_shared/engine/calendar.ts";
@@ -22,8 +23,43 @@ Deno.serve(async (req) => {
     joinRequestId?: string;
     expenseId?: string;
     handOver?: { assignmentId: string; fromMemberId: string; always: boolean };
+    choreDone?: { assignmentId: string; byMemberId: string };
     testMemberId?: string;
   };
+
+  if (choreDone) {
+    const { data: turn } = await admin
+      .from("chore_assignments")
+      .select("flat_id, member_id, due_date, status, chore:chores(name, frequency)")
+      .eq("id", choreDone.assignmentId)
+      .maybeSingle();
+    // Undone again before this ran: nothing to say.
+    if (!turn || turn.status !== "done") return Response.json({ sent: 0 });
+    const chore = turn.chore as { name?: string; frequency?: string } | null;
+    const { data: flatmates } = await admin
+      .from("members")
+      .select("id, name")
+      .eq("flat_id", turn.flat_id)
+      .eq("role", "flatmate")
+      .is("left_on", null);
+    const nameOf = new Map((flatmates ?? []).map((m) => [m.id, m.name as string]));
+    const by = nameOf.get(choreDone.byMemberId) ?? "Someone";
+    const owner = turn.member_id ? (nameOf.get(turn.member_id) ?? "someone") : null;
+    const did = !owner || turn.member_id === choreDone.byMemberId ? `${by} did it` : `${by} marked it done for ${owner}`;
+    const when = chore?.frequency === "monthly" ? `, due ${formatRange(turn.due_date, turn.due_date)}` : " today";
+    const result = await sendToMembers(
+      admin,
+      (flatmates ?? []).map((m) => m.id).filter((id) => id !== choreDone.byMemberId),
+      {
+        title: `${chore?.name ?? "A chore"} done`,
+        body: `${did}${when}.`,
+        url: "/chores",
+        // Done, undone and done again replaces the same notification.
+        tag: `done-${choreDone.assignmentId}`,
+      },
+    );
+    return Response.json(result);
+  }
 
   if (testMemberId) {
     const result = await sendToMembers(admin, [testMemberId], {

@@ -172,12 +172,14 @@ export async function deleteChore(form: FormData) {
 
 /** Mark today's duty done (or undo). Only the owner can; enforced in SQL. */
 export async function setChoreDone(form: FormData) {
-  const { userId } = await requireFlat();
+  const { userId, me } = await requireFlat();
   const id = z.uuid().safeParse(form.get("assignmentId"));
   const done = form.get("done") === "true";
   if (!id.success) return;
   const supabase = await createClient();
-  await supabase.rpc("set_chore_done", { p_user_id: userId, p_assignment_id: id.data, p_done: done });
+  const { error } = await supabase.rpc("set_chore_done", { p_user_id: userId, p_assignment_id: id.data, p_done: done });
+  // Done (not undo): tell the rest of the flat.
+  if (!error && done) after(() => callNotify({ choreDone: { assignmentId: id.data, byMemberId: me.id } }));
   revalidatePath("/", "layout");
 }
 
