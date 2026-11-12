@@ -7,6 +7,8 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-12 Known issue (user-reported): joining a flat with a code made a new flat instead, and you couldn't change flat. Cause: the code was typed into 'Flat name'. Fixed: join-first onboarding, code-as-name refused, 'Move to another flat' in Settings (medium)
+- [x] 2026-11-12 Known issue (user-reported): skipping some meals showed Kishore as away. Cause: part-day entries were drawn as away on the Calendar. Fixed: shown as home, skipping a meal (small)
 - [x] 2026-11-11 On phones, names are cut off or overlapped in several places; check everywhere and fix (medium)
 - [x] 2026-11-11 Fresh data: tabs open instantly then refresh in the background, and on returning to the app (user's choice) (small)
 - [x] 2026-11-11 Edit chores saves all or nothing (one transaction) (small)

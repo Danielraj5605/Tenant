@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
   "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
-  "last_updated": "2026-11-10",
-  "last_sync": "2026-11-10",
+  "last_updated": "2026-11-12",
+  "last_sync": "2026-11-12",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794403802-b8d3"
+    "version": "1794504107-bf2f"
   },
   "sections": [
     {
@@ -508,17 +508,46 @@
       ],
       "summary": "Scanned every page and the panels that open on tap (Swap a day, Choose who plans, Monthly, turn lists) at 320/360/375/390 px for names that were cut off or covered by other text. Found 17: worst was Add/Edit chore 'Who takes turns', where the move/remove buttons left the name about 30 px, so every name showed as one letter; also Who's next tiles, person pickers, Edit chores summary, New split shares, Settings Cook & maid link. Fixed with one rule (name-wrap: names wrap between words, never cut off) applied to every person's name; compact icon buttons in turn lists (✕ instead of 'Remove'); below 360 px the turn-list avatar is hidden and buttons are 36 px, pickers show one person per row, Who's next shows 3 tiles per row. Final scan on the live site: 0 problems at all four widths; checked by eye at 320 px. Chore titles and amounts still shorten with '…' by design.",
       "screenshots": true
+    },
+    {
+      "id": "sample-cook-removed",
+      "title": "Sample cook Lakshmi removed; passwords reset",
+      "status": "done",
+      "date": "2026-11-12",
+      "commits": [],
+      "summary": "Data only, plus the seed script. All 6 accounts (kingdani and the 5 sample flatmates) were given one new shared password at the user's request; checked that it verifies for each (the password is not recorded here). Lakshmi, the sample cook, was deleted from the live flat for good: her member row (she had only been marked as left on 9 Nov), her 2 away periods and the 2 \"Lakshmi's pay\" expenses (Sep, settled; Oct, unsettled, so October balances drop by that amount). The Cook's pay category and the 8 Nov \"order in\" menu day were kept. scripts/seed-sample.ts no longer creates her, her away days or her pay; Selvi (maid) stays. npm run check: 207/207 tests; the script builds. No UI changed, so no screenshots.",
+      "screenshots": false
+    },
+    {
+      "id": "join-and-meal-skips",
+      "title": "Fixes: joining by flat code, and meal skips shown as away",
+      "status": "done",
+      "date": "2026-11-12",
+      "commits": [
+        "7c41a2d"
+      ],
+      "summary": "Two user-reported issues from 12 Nov. (1) Joining by code: the join itself worked; the \"test1\" account had typed the code 8SRJHF into 'Flat name' under 'Start a new flat', which created a flat named \"8SRJHF\" (no join request was ever sent), and there was no way to change flat afterwards. Now: onboarding puts 'Have a flat code?' first and 'Start a new flat' second ('only if your flat isn't on Tenant yet'); a flat code typed as the flat name is refused with directions and nothing is created; Settings has 'Move to another flat' (enter the code; you stay in your flat until the other admin accepts, then you leave it and join theirs; an admin with flatmates must hand over admin first; cancel while waiting). Migration 20261122000001 applied with the user's OK. (2) Meal skips shown as away: Kishore's 'I usually skip breakfast and lunch' was saved correctly and he was counted for dinner; the Calendar drew him as away because of a separate part-day entry for 12 Nov (morning and afternoon), and every part-day entry was drawn as away. Now a flatmate's part-day entry for one or two meals shows as 'Home · skipping breakfast and lunch' with a normal avatar, no away dot on the month grid, and sits under 'Home, skipping a meal' instead of 'Flatmates away'; a whole day or all three meals still shows as away; the away form asks 'Which meals are they skipping?'. Kishore's data was right and was not changed. Tests: 210/210 (3 new for the partial-skip case), typecheck, lint. Switching flats on the live database with throwaway accounts and flats: 14/14 (unknown code, own flat's code, stays put while waiting, wrong admin refused, accept moves them, empty old flat deleted, admin with flatmates refused, history kept as 'left', decline changes nothing; row counts back to the start). Browser on a local build against the live database: onboarding 15/15 at 375/768/1440 with a throwaway account (join first, code-as-name refused and nothing created, unknown and malformed codes explained, no sideways scroll, no page errors); Calendar, the entry page, Settings and Today at 375/768/1440 as Madan with no sideways scroll or page errors. Deployed (7c41a2d, Vercel: success). Not done: a signed-in check on the live site (the shared password set on 12 Nov isn't known to Claude), and the 'Move to another flat' form was not submitted through the browser (the same database functions were tested directly). test1 was left for the user to move in the app, at their choice.",
+      "screenshots": true
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    "app/(app)/chores/actions.ts",
-    "lib/notify.ts",
-    "components/push-setup.tsx",
-    "supabase/functions/notify/index.ts",
-    "scripts/check-functions.mjs",
-    "package.json"
+    "app/onboarding/actions.ts",
+    "app/onboarding/forms.tsx",
+    "app/onboarding/page.tsx",
+    "app/(app)/settings/page.tsx",
+    "app/(app)/settings/actions.ts",
+    "app/(app)/settings/member-forms.tsx",
+    "app/(app)/calendar/page.tsx",
+    "app/(app)/calendar/away/[id]/page.tsx",
+    "app/(app)/calendar/away/away-form.tsx",
+    "components/away.tsx",
+    "lib/engine/presence.ts",
+    "lib/engine/presence.test.ts",
+    "supabase/functions/_shared/engine/presence.ts",
+    "supabase/migrations/20261122000001_switch_flats.sql",
+    "scripts/seed-sample.ts"
   ],
   "test_coverage": [
     {
@@ -700,24 +729,32 @@
     {
       "date": "2026-11-11",
       "text": "Chore done notifications go to the whole flat for every chore (user's choice over rotation-only or monthly-only)."
+    },
+    {
+      "date": "2026-11-12",
+      "text": "Switching flats: one flat at a time. A person in a flat asks to join another by code and stays put until that flat's admin accepts; then they leave the old flat (marked as left if they have history, otherwise removed; a flat left with nobody is deleted). An admin with other flatmates must hand over admin first. Onboarding puts 'Have a flat code?' first."
+    },
+    {
+      "date": "2026-11-12",
+      "text": "A flatmate's part-day entry for one or two meals is shown as 'home, skipping a meal', never as away. A whole day, or all three meals marked off, shows as away. Cook and maid part-day leave is unchanged."
     }
   ],
   "open_questions": [],
   "known_issues": [
+    "The \"test1\" account is still alone in the stray flat named \"8SRJHF\" (left for the user to move, at their choice): sign in as test1, Settings → Move to another flat, enter 8SRJHF, then accept as the admin of C2 102. The stray flat deletes itself.",
+    "Moving to another flat turns notifications off for that person (their devices were registered to the old flat); they turn them on again in Settings.",
+    "The deployed Edge Functions' copy of presence.ts lacks two display-only helpers added on 12 Nov (unused by the functions); the next functions deploy brings it in line.",
     "No screenshots for Phases 1–5 or the sign-in change (built before this log existed).",
     "No section's 'done when' criterion in SPEC §11 has been checked with real use yet (a week of chores, a month of money, 20 real bills).",
     "§12 cases are covered by unit tests on the engine functions; there are no end-to-end UI tests.",
-    "GROQ_API_KEY is not set in production or locally: bill scanning has no fallback if Gemini fails.",
     "Bill scanning has not been tested on the production site. Push: functions now start (secrets uploaded 6 Nov) but no phone has subscribed yet, so delivery is untested.",
     "Seven unused test domains (letscohabit, getcohabit, cohabithq, cohabito, cohabby, cohabiting, ourcohabit .vercel.app) are still attached to the Vercel project; remove them in Settings → Domains.",
-    "Sample logins use one shared sample password on the live site. Remove or change them before real use.",
     "First tap on a tab still waits for one server trip (~0.35 s). Prefetching signed-in data would need \"use cache: private\" data caching; not done.",
     "If you were signed out on your phone, likely causes were switching between tenant-plum.vercel.app and wecohabit.vercel.app (separate cookies) or the 30-day expiry. Not reproduced on desktop Chromium.",
     "Deleting a whole flat that has chore duties fails in the database (the \"skipped duty has no member\" rule trips while members are removed). The app has no delete-flat feature; found while cleaning up test data.",
     "The new error page (app/error.tsx) is in place but wasn't seen in a browser test: a dropped request already recovers through Next's full-page fallback, and a real server crash can't be injected into a production build.",
     "With service workers blocked (some in-app/private browsers), the Serwist library logs \"Cannot read properties of undefined (reading 'waiting')\"; pages still work.",
     "VAPID_SUBJECT is still the placeholder mailto:you@example.com.",
-    "PDF bills have no fallback reader: Groq only reads images (and GROQ_API_KEY isn't set). If Gemini fails, use a photo or New split.",
     "New scanned expenses no longer keep a bill picture, so the expense page can't show the original bill for them.",
     "Before 10 Nov the e2e 'no sideways scroll' checks could pass on a page that was too wide at phone size (emulation zooms out). Fixed in all suites; the earlier sections' screenshots were also checked by eye.",
     "Lakshmi's last day shows as 9 Nov (it was 5 Nov earlier today). Not changed by Claude's tests; probably edited on the live site. Left as is.",
@@ -726,7 +763,8 @@
     "The first scheduled 6 am run after the Vault fix is 12 Nov; check Supabase → Integrations → Cron (or cron.job_run_details) shows it succeeded.",
     "The departed-owner handling for monthly jobs is type-checked but not exercised live (no flatmate has left).",
     "An in-app 'Not found' (e.g. a deleted split) still returns HTTP 200 with the Not found page (streaming); only matters to crawlers.",
-    "A revisited tab shows its remembered data for a fraction of a second before the background refresh lands."
+    "A revisited tab shows its remembered data for a fraction of a second before the background refresh lands.",
+    "The flat has no cook now, but the menu days already saved still use the \"cook\" plan (and the seed script still creates them that way), so the app may still show \"No cook\" alerts."
   ],
   "repo": "https://github.com/Danielraj5605/Tenant",
   "production_url": "https://wecohabit.vercel.app"

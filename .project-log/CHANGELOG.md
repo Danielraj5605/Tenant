@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-12 — Joining by flat code; meal skips no longer shown as away
+
+- Onboarding: 'Have a flat code?' first; a flat code typed as the flat name is refused (that is how the stray flat "8SRJHF" was made). Settings: 'Move to another flat' by code, moving on the other admin's accept (migration 20261122000001). Calendar: a flatmate skipping one or two meals shows as home, not away. 210/210 tests; switching 14/14 and onboarding 15/15 with throwaway accounts. Deployed (7c41a2d).
+
+## 2026-11-12 — Sample cook removed, passwords reset
+
+- All 6 logins reset to one new shared password at the user's request (not recorded here). Lakshmi (sample cook) deleted from the live flat with her 2 away periods and 2 pay expenses; scripts/seed-sample.ts no longer creates her. 207/207 tests.
+
 ## 2026-11-11 — Names readable on phones
 
 - 17 cut-off names found at 320–390 px and fixed: names wrap instead of being cut; turn lists, pickers and tiles give names room. Live scan: 0 left.
