@@ -165,7 +165,7 @@ export function UsualSkipsForm({ current }: { current: readonly string[] }) {
             );
           })}
         </div>
-        <p className="text-sm text-muted">The cook sees fewer people for those meals. For a one-off, mark yourself away for part of the day instead.</p>
+        <p className="text-sm text-muted">The cook sees fewer people for those meals. You still show as home. For one day only, use Mark someone away on the Calendar and untick &ldquo;Away the whole day&rdquo;.</p>
       </fieldset>
       <SubmitButton>Save</SubmitButton>
     </form>

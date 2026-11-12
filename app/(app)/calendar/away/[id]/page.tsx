@@ -7,7 +7,7 @@ import { BackToCalendar, awayFormMembers } from "../shared";
 import { DeleteAwayButton } from "./delete-button";
 import { canEditAwayFor } from "@/lib/engine/permissions";
 import { formatRange } from "@/lib/engine/calendar";
-import { partLabel } from "@/components/away";
+import { partLabel, skipLabel, skipsMealsOnly } from "@/components/away";
 import { Card } from "@/components/ui";
 
 export const metadata = { title: "Edit away dates · Tenant" };
@@ -32,17 +32,21 @@ export default async function EditAwayPage({ params }: PageProps<"/calendar/away
     .maybeSingle();
   if (!owner) notFound();
 
+  const skipping = skipsMealsOnly({ ...period, member: owner });
+
   // Someone else's away days: show them, but only they or the admin can change them.
   if (!canEditAwayFor(me, owner)) {
     return (
       <>
         <header className="mb-6 flex flex-col gap-3">
           <BackToCalendar date={period.start_date} />
-          <h1 className="text-display font-extrabold break-words">{owner.name} is away</h1>
+          <h1 className="text-display font-extrabold break-words">
+            {owner.name} is {skipping ? "home, skipping a meal" : "away"}
+          </h1>
         </header>
         <Card className="flex flex-col gap-2">
           <p className="text-lg font-bold">{formatRange(period.start_date, period.end_date)}</p>
-          {period.full_day ? null : <p className="text-muted">{partLabel(period.slots)}</p>}
+          {period.full_day ? null : <p className="text-muted">{skipping ? skipLabel(period) : partLabel(period.slots)}</p>}
           {period.reason ? <p className="text-muted">{period.reason}</p> : null}
           <p className="mt-2 text-sm text-muted">Only {owner.name} or the flat admin can change these dates.</p>
         </Card>

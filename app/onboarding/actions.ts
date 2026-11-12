@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getFlatContext } from "@/lib/flat";
-import { CreateFlatInput, JoinRequestInput } from "@/lib/engine/onboarding";
+import { CreateFlatInput, JoinRequestInput, formatFlatCode, normalizeFlatCode } from "@/lib/engine/onboarding";
 
 export type FormState = {
   error?: string;
@@ -16,6 +16,10 @@ export type FormState = {
 
 function rpcMessage(message: string | undefined, fallback: string) {
   if (!message) return fallback;
+  if (message.includes("already belong to this flat")) return "You're already in this flat.";
+  if (message.includes("Hand over admin")) {
+    return "You're the admin of your current flat. Hand over admin to a flatmate first (open them under Members), then ask again.";
+  }
   if (message.includes("already belong")) return "You already belong to a flat.";
   if (message.includes("No flat has this code")) return "No flat has this code. Check it with your flatmate.";
   if (message.includes("Sign in")) return "Your session ended. Sign in again.";
@@ -35,6 +39,21 @@ export async function createFlat(_prev: FormState, form: FormData): Promise<Form
 
   const { userId } = await getFlatContext();
   const supabase = await createClient();
+
+  // A flat code typed as the flat name: they meant to join that flat, not start a new one.
+  const asCode = normalizeFlatCode(parsed.data.flatName);
+  if (asCode) {
+    const { data: existing } = await supabase.from("flats").select("name").eq("flat_code", asCode).maybeSingle();
+    if (existing) {
+      return {
+        values,
+        fieldErrors: {
+          flatName: `${formatFlatCode(asCode)} is the code of an existing flat (${existing.name}), not a name. To join it, enter the code under “Have a flat code?” instead.`,
+        },
+      };
+    }
+  }
+
   const { error } = await supabase.rpc("create_flat", {
     p_user_id: userId,
     p_flat_name: parsed.data.flatName,
@@ -81,6 +100,7 @@ export async function requestToJoin(_prev: FormState, form: FormData): Promise<F
   if (pending) after(() => notifyAdmin(pending.id));
 
   revalidatePath("/onboarding");
+  revalidatePath("/settings");
   return {};
 }
 
@@ -97,4 +117,5 @@ export async function cancelJoinRequest() {
     .eq("user_id", userId)
     .eq("status", "pending");
   revalidatePath("/onboarding");
+  revalidatePath("/settings");
 }

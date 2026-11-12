@@ -6,6 +6,8 @@ import {
   isLongAway,
   isPresent,
   isPresentFor,
+  periodMeals,
+  showsAway,
   slotsPhrase,
   type AwaySlot,
   returnDate,
@@ -190,5 +192,33 @@ describe("usual skips", () => {
   it("they still count for other meals and as home", () => {
     expect(headcount([a, b, c], "2026-11-09", [], "lunch")).toBe(3);
     expect(headcount([a, b, c], "2026-11-09", [])).toBe(3);
+  });
+});
+
+describe("skipping some meals is not being away", () => {
+  // Kishore: usually skips breakfast and lunch, and has a part-day entry for both on 12 Nov.
+  const k: PresenceMember = { id: "k", role: "flatmate", joined_on: "2026-01-01", left_on: null, usual_skips: ["breakfast", "lunch"] };
+  const other: PresenceMember = { id: "o", role: "flatmate", joined_on: "2026-01-01", left_on: null };
+  const entry = away("k", "2026-11-12", "2026-11-12", false, ["morning", "afternoon"]);
+
+  it("he is home that day and counted for dinner only", () => {
+    expect(isPresent(k, "2026-11-12", [entry])).toBe(true);
+    expect(headcount([k, other], "2026-11-12", [entry])).toBe(2);
+    expect(headcount([k, other], "2026-11-12", [entry], "breakfast")).toBe(1);
+    expect(headcount([k, other], "2026-11-12", [entry], "lunch")).toBe(1);
+    expect(headcount([k, other], "2026-11-12", [entry], "dinner")).toBe(2);
+  });
+
+  it("a part-day entry for one or two meals doesn't show him as away", () => {
+    expect(periodMeals(entry)).toEqual(["breakfast", "lunch"]);
+    expect(showsAway(entry)).toBe(false);
+    expect(showsAway(away("k", "2026-11-12", "2026-11-12", false, ["night"]))).toBe(false);
+  });
+
+  it("a whole day, or every meal marked off, does", () => {
+    expect(showsAway(away("k", "2026-11-12", "2026-11-13"))).toBe(true);
+    expect(showsAway(away("k", "2026-11-12", "2026-11-12", false, ["morning", "afternoon", "night"]))).toBe(true);
+    // No slots recorded means every slot.
+    expect(showsAway(away("k", "2026-11-12", "2026-11-12", false, null))).toBe(true);
   });
 });

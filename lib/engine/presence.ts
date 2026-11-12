@@ -63,6 +63,16 @@ export function isPresentFor(member: PresenceMember, date: string, periods: read
   );
 }
 
+/** The meals an absence misses. */
+export const periodMeals = (p: AwayPeriod): Meal[] => MEALS.filter((m) => periodSlots(p).includes(MEAL_SLOT[m]));
+
+/**
+ * Whether an absence shows a flatmate as away. A whole day does, and so does a
+ * part-day entry that misses every meal. Missing one or two meals doesn't: the
+ * person is home and only left out of those meals' headcount.
+ */
+export const showsAway = (p: AwayPeriod): boolean => p.full_day || periodMeals(p).length === MEALS.length;
+
 /** "in the morning", "in the afternoon and at night", ... for part-day absences. */
 export function slotsPhrase(slots: readonly AwaySlot[]): string {
   const words: Record<AwaySlot, string> = { morning: "in the morning", afternoon: "in the afternoon", night: "at night" };

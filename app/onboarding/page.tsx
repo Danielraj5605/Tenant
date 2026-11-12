@@ -26,35 +26,40 @@ async function Onboarding() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="flex flex-col gap-5 md:p-7">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-title font-bold">Start a new flat</h2>
-          <p className="text-muted">You&rsquo;ll be the admin. Then share the flat code with your flatmates.</p>
-        </div>
-        <CreateFlatForm suggestedName={suggestedName} />
-      </Card>
-      <div className="flex items-center gap-3 px-2 text-sm font-semibold text-muted" aria-hidden="true">
-        <span className="h-px flex-1 bg-line-strong" />
-        or
-        <span className="h-px flex-1 bg-line-strong" />
-      </div>
+      {/* Joining comes first: most people arrive with a code from a flatmate. */}
       <Card className="flex flex-col gap-4 md:p-7">
         <section aria-labelledby="join-heading" className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 id="join-heading" className="text-title font-bold">
-              Joining a flatmate&rsquo;s flat?
+              Have a flat code?
             </h2>
-            <p className="text-muted">Ask them for the flat code. The admin lets you in.</p>
+            <p className="text-muted">
+              Join the flat your flatmates already use. Enter the code they gave you; the flat admin lets you in.
+            </p>
           </div>
           {request?.status === "pending" ? (
             <PendingRequest flatName={flatName} name={request.name} />
           ) : (
             <>
               {declined ? <Notice tone="warn">The admin of {flatName} declined your request.</Notice> : null}
-              <JoinRequestForm suggestedName={suggestedName} />
+              <JoinRequestForm suggestedName={suggestedName} primary />
             </>
           )}
         </section>
+      </Card>
+      <div className="flex items-center gap-3 px-2 text-sm font-semibold text-muted" aria-hidden="true">
+        <span className="h-px flex-1 bg-line-strong" />
+        or
+        <span className="h-px flex-1 bg-line-strong" />
+      </div>
+      <Card className="flex flex-col gap-5 md:p-7">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-title font-bold">Start a new flat</h2>
+          <p className="text-muted">
+            Only if your flat isn&rsquo;t on Tenant yet. You&rsquo;ll be the admin and get a flat code to share.
+          </p>
+        </div>
+        <CreateFlatForm suggestedName={suggestedName} />
       </Card>
     </div>
   );
@@ -77,14 +82,14 @@ export default function OnboardingPage() {
         </p>
         <div className="flex flex-col gap-2">
           <h1 className="text-display font-extrabold md:text-display-lg">Set up your flat</h1>
-          <p className="text-lg font-medium text-muted">Start a new flat, or join the one your flatmates use.</p>
+          <p className="text-lg font-medium text-muted">Join the flat your flatmates use, or start a new one.</p>
         </div>
       </div>
       <Suspense
         fallback={
           <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading">
+            <Skeleton className="h-80 rounded-[var(--radius-card)]" />
             <Skeleton className="h-72 rounded-[var(--radius-card)]" />
-            <Skeleton className="h-48 rounded-[var(--radius-card)]" />
           </div>
         }
       >

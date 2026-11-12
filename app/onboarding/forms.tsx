@@ -22,6 +22,7 @@ export function CreateFlatForm({ suggestedName }: { suggestedName: string }) {
         id="flatName"
         name="flatName"
         label="Flat name"
+        hint="A name for the new flat, not a flat code."
         placeholder="e.g. Flat 4B, Anna Nagar"
         autoComplete="off"
         maxLength={60}
@@ -40,21 +41,28 @@ export function CreateFlatForm({ suggestedName }: { suggestedName: string }) {
         error={state.fieldErrors?.memberName}
         required
       />
-      <Button type="submit" loading={pending || state.created}>
-        Create flat
+      <Button type="submit" variant="secondary" loading={pending || state.created}>
+        Create a new flat
       </Button>
     </form>
   );
 }
 
-export function JoinRequestForm({ suggestedName }: { suggestedName: string }) {
+export function JoinRequestForm({
+  suggestedName,
+  primary = false,
+}: {
+  suggestedName: string;
+  /** The main action on the page (onboarding), rather than a side option (Settings). */
+  primary?: boolean;
+}) {
   const [state, action, pending] = useActionState(requestToJoin, initial);
 
   return (
     <form action={action} className="flex flex-col gap-4" noValidate>
       {state.error ? <Notice tone="warn">{state.error}</Notice> : null}
       <Field
-        id="code"
+        id="flatCode"
         name="code"
         label="Flat code"
         hint="6 characters, e.g. K7M-4QX. Ask the flat admin; it's in their Settings."
@@ -78,7 +86,7 @@ export function JoinRequestForm({ suggestedName }: { suggestedName: string }) {
         error={state.fieldErrors?.memberName}
         required
       />
-      <Button type="submit" variant="secondary" loading={pending}>
+      <Button type="submit" variant={primary ? "primary" : "secondary"} loading={pending}>
         Ask to join
       </Button>
     </form>
@@ -91,6 +99,15 @@ function CancelButton() {
     <Button type="submit" variant="ghost" loading={pending}>
       Cancel request
     </Button>
+  );
+}
+
+/** Withdraw a pending join request (onboarding and Settings). */
+export function CancelJoinRequest() {
+  return (
+    <form action={cancelJoinRequest}>
+      <CancelButton />
+    </form>
   );
 }
 

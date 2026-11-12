@@ -125,20 +125,24 @@ export function AwayForm({
           <span className="text-sm text-muted">
             {chosen?.role === "cook"
               ? "Untick if she still works part of the day. Part days are paid in full; full days off are unpaid."
-              : "Untick if they're only out for part of one day."}
+              : chosen?.role === "maid"
+                ? "Untick if she's only out for part of one day."
+                : "Untick if they're home but skipping a meal or two that day. They still show as home."}
           </span>
         </span>
       </label>
 
       {fullDay ? null : (
         <fieldset className="flex flex-col gap-2" aria-describedby="slots-hint">
-          <legend className="mb-1 text-sm font-semibold">Which part of the day?</legend>
+          <legend className="mb-1 text-sm font-semibold">
+            {chosen && chosen.role !== "flatmate" ? "Which part of the day?" : "Which meals are they skipping?"}
+          </legend>
           <p id="slots-hint" className="mb-1 text-sm text-muted">
             {chosen?.role === "cook"
               ? "No cook for these meals. The rest of the day she cooks as usual."
               : chosen?.role === "maid"
                 ? "Shown on the calendar so the flat knows when she's out."
-                : "They're left out of the headcount for these meals. Chores and splits treat them as home."}
+                : "They're left out of the headcount for these meals only. They show as home unless all three are picked; chores and splits treat them as home."}
           </p>
           <div className="grid grid-cols-3 gap-2">
             {MEALS.map((meal) => {

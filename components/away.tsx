@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { MemberRole } from "@/lib/supabase/types";
 import { formatRange, formatShortDate } from "@/lib/engine/calendar";
-import { SLOTS, SLOT_LABEL, isLongAway, returnDate, type AwaySlot } from "@/lib/engine/presence";
+import { SLOTS, SLOT_LABEL, isLongAway, periodMeals, returnDate, showsAway, type AwaySlot } from "@/lib/engine/presence";
 import { Avatar, cx } from "./ui";
+import { mealsPhrase } from "./meals";
 import { ChevronRightIcon } from "./icons";
 
 export const DOT_CLASS: Record<MemberRole, string> = {
@@ -44,18 +45,30 @@ export function partLabel(slots: readonly AwaySlot[] | null | undefined): string
   return names.length === 1 ? `${names[0]} only` : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
 
+/**
+ * A flatmate who is home but skipping a meal or two that day. They are not away:
+ * only those meals' headcount leaves them out.
+ */
+export const skipsMealsOnly = (item: Pick<AwayItem, "full_day" | "slots" | "member_id" | "start_date" | "end_date" | "member">) =>
+  item.member.role === "flatmate" && !showsAway(item);
+
+/** "Skipping breakfast and lunch" for a flatmate's part-day entry. */
+export const skipLabel = (item: Pick<AwayItem, "full_day" | "slots" | "member_id" | "start_date" | "end_date">) =>
+  `Skipping ${mealsPhrase(periodMeals(item))}`;
+
 /** One row in "Who's away". Tapping it opens the edit form (or a read-only view). */
 export function AwayRow({ item, today, editable = true }: { item: AwayItem; today: string; editable?: boolean }) {
   const { member } = item;
   const long = isLongAway(item);
   const staff = member.role !== "flatmate";
+  const skipping = skipsMealsOnly(item);
   const back = returnDate(item);
   // "Back" only means something after a full-day absence.
   const ongoing = item.full_day && item.start_date <= today && today <= item.end_date;
 
   const detail = [
     staff ? ROLE_LABEL[member.role] : null,
-    item.full_day ? null : partLabel(item.slots),
+    item.full_day ? null : skipping ? skipLabel(item) : partLabel(item.slots),
     item.reason,
   ].filter(Boolean);
 
@@ -64,10 +77,10 @@ export function AwayRow({ item, today, editable = true }: { item: AwayItem; toda
       <Link
         href={`/calendar/away/${item.id}`}
         className="flex min-h-16 items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-bg"
-        aria-label={`${editable ? "Edit" : "See"} ${member.name}, away ${formatRange(item.start_date, item.end_date)}`}
+        aria-label={`${editable ? "Edit" : "See"} ${member.name}, ${skipping ? "home but skipping meals on" : "away"} ${formatRange(item.start_date, item.end_date)}`}
       >
         <span className="relative">
-          <Avatar name={member.name} size={40} away />
+          <Avatar name={member.name} size={40} away={!skipping} />
           <RoleDot role={member.role} className="absolute -right-0.5 -bottom-0.5 size-3 ring-2 ring-surface" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">

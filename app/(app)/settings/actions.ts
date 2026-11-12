@@ -110,7 +110,10 @@ export async function decideJoinRequest(_prev: SettingsFormState, form: FormData
     p_accept: accept,
   });
   if (error) {
-    if (error.message.includes("already belong")) return { error: "They joined another flat in the meantime." };
+    if (error.message.includes("already belong")) return { error: "They're already in this flat." };
+    if (error.message.includes("still the admin")) {
+      return { error: "They're still the admin of their current flat. They need to hand over admin there first." };
+    }
     if (error.message.includes("already handled")) return { error: "This request was already handled." };
     return { error: "That didn't work. Try again." };
   }

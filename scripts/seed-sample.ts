@@ -1,5 +1,5 @@
 /**
- * Fill a flat with sample data: five flatmates (with logins), a cook and a maid,
+ * Fill a flat with sample data: five flatmates (with logins), a maid,
  * away periods, chores with rotation history, a menu, and ~2 months of expenses.
  * Shares are computed with the app's own engine, so they match what the UI would save.
  *
@@ -18,7 +18,6 @@ import { isPresent, type AwayPeriod, type PresenceMember } from "../lib/engine/p
 import { isoWeekday, projectAssignments, type Chore } from "../lib/engine/rotation";
 import {
   computeShares,
-  cookPay,
   daysPresentInMonth,
   defaultParticipants,
   ruleNote,
@@ -52,10 +51,7 @@ const FLATMATES = [
   { username: "kishore", name: "Kishore" },
   { username: "barani", name: "Barani" },
 ];
-const STAFF = [
-  { name: "Lakshmi", role: "cook" as const },
-  { name: "Selvi", role: "maid" as const },
-];
+const STAFF = [{ name: "Selvi", role: "maid" as const }];
 
 function must<T>(res: { data: T; error: { message: string } | null }, what: string): T {
   if (res.error) throw new Error(`${what}: ${res.error.message}`);
@@ -131,7 +127,7 @@ async function seed() {
   const members: Member[] = [admin, ...inserted];
   const by = (name: string) => members.find((m) => m.name === name)!;
   const D = admin, M = by("Madan"), K = by("Karthik"), R = by("Rishab"), Ki = by("Kishore"), B = by("Barani");
-  const cook = by("Lakshmi"), maid = by("Selvi");
+  const maid = by("Selvi");
   const flatmates = [D, M, K, R, Ki, B];
 
   // ---------------------------------------------------------------- away periods
@@ -151,9 +147,6 @@ async function seed() {
     full(R, "2026-11-08", "2026-11-09", "Diwali at home"),
     part(M, TODAY, ["night"], "Office dinner"),
     part(Ki, "2026-11-12", ["morning", "afternoon"], "Early client visit"),
-    full(cook, "2026-10-13", "2026-10-13", "Sick"),
-    full(cook, "2026-11-08", "2026-11-08", "Diwali"),
-    part(cook, "2026-10-26", ["night"], "Family function"),
     full(maid, "2026-10-20", "2026-10-21", "Leave"),
   ];
   must(await db.from("away_periods").insert(away.map((a) => ({ ...a, flat_id: FLAT_ID }))), "away_periods");
@@ -212,7 +205,7 @@ async function seed() {
   };
   const SUNDAYS: Record<string, [string, string, string, "cook" | "order_in" | "self_cook"]> = {
     "2026-11-01": ["Masala dosa", "Chicken biryani, raita", "Curd rice, pickle", "cook"],
-    "2026-11-08": ["", "", "", "order_in"], // Lakshmi on leave for Diwali
+    "2026-11-08": ["", "", "", "order_in"], // Diwali: ordering in
   };
   const menu: [string, string, string, string, "cook" | "order_in" | "self_cook"][] = [];
   for (let d = "2026-10-26"; d <= "2026-11-14"; d = addDays(d, 1)) {
@@ -242,7 +235,7 @@ async function seed() {
   type Item = [name: string, rupees: number, opts?: { kind?: ExpenseItem["kind"]; off?: boolean; mine?: Member }];
   type Exp = {
     date: string; category: string; title: string; merchant?: string; paidBy: Member;
-    rupees?: number; items?: Item[]; cookRate?: number; settled?: boolean;
+    rupees?: number; items?: Item[]; settled?: boolean;
   };
   const p = (r: number) => Math.round(r * 100);
   const months = ["2026-09", "2026-10", "2026-11"];
@@ -269,7 +262,6 @@ async function seed() {
       ["Discount", 40, { kind: "discount" }],
     ] },
     { date: "2026-09-30", category: "Household", title: "Selvi's pay (September)", paidBy: Ki, rupees: 4000 },
-    { date: "2026-09-30", category: "Cook's pay", title: "Lakshmi's pay (September)", paidBy: M, cookRate: 300 },
     { date: "2026-10-04", category: "Groceries", title: "Monthly groceries", merchant: "BigBasket", paidBy: D, items: [
       ["Ponni rice 25 kg", 1490], ["Urad dal 1 kg", 155], ["Toor dal 2 kg", 340], ["Groundnut oil 5 L", 1050],
       ["Ghee 500 ml", 330], ["Masala pack", 380], ["Protein bar", 220, { off: true }], ["Delivery fee", 30, { kind: "fee" }],
@@ -282,7 +274,6 @@ async function seed() {
     { date: "2026-10-27", category: "Groceries", title: "Snacks for Diwali", merchant: "Sri Krishna Sweets", paidBy: Ki, rupees: 1240 },
     { date: "2026-10-20", category: "Household", title: "Gas stove service", merchant: "Local mechanic", paidBy: K, rupees: 450 },
     { date: "2026-10-31", category: "Household", title: "Selvi's pay (October)", paidBy: D, rupees: 4000 },
-    { date: "2026-10-31", category: "Cook's pay", title: "Lakshmi's pay (October)", paidBy: M, cookRate: 300 },
     { date: "2026-11-02", category: "Groceries", title: "Monthly groceries", merchant: "DMart", paidBy: K, items: [
       ["Ponni rice 25 kg", 1490], ["Toor dal 2 kg", 350], ["Sunflower oil 5 L", 810], ["Rava 1 kg", 62],
       ["Coffee powder 500 g", 290], ["Biscuits", 140], ["Face wash", 245, { off: true }],
@@ -303,13 +294,8 @@ async function seed() {
       name, amountPaise: p(rupees), kind: o?.kind ?? "item", included: !o?.off, personalMemberId: o?.mine?.id ?? null,
     }));
     const signed = (i: ExpenseItem) => (i.kind === "discount" ? -i.amountPaise : i.amountPaise);
-    let total = items.length ? items.reduce((s, i) => s + signed(i), 0) : p(e.rupees ?? 0);
+    const total = items.length ? items.reduce((s, i) => s + signed(i), 0) : p(e.rupees ?? 0);
     const month = monthOf(e.date);
-    let cookInfo;
-    if (rule === "per_day_worked") {
-      cookInfo = { ...cookPay(p(e.cookRate!), cook, month, away), ratePaise: p(e.cookRate!) };
-      total = cookInfo.totalPaise;
-    }
     const { split } = splitTotal(items, total);
     const participants = defaultParticipants(rule, members, e.date, away);
     const weighted = rule === "per_day_worked" && flat.prorate_monthly;
@@ -326,7 +312,7 @@ async function seed() {
     const awayNames = flatmates
       .filter((m) => m.joined_on <= e.date && !isPresent(m, e.date, away))
       .map((m) => m.name);
-    const note = ruleNote({ rule, awayNames, prorated: weighted, pay: cookInfo });
+    const note = ruleNote({ rule, awayNames, prorated: weighted });
     const reasons = shareReasons({ items, shares, locked: new Set(), personalTotals });
 
     const id = must(

@@ -14,7 +14,7 @@ import {
 } from "@/lib/engine/calendar";
 import { MEALS, awayOn, headcount } from "@/lib/engine/presence";
 import type { MemberRole } from "@/lib/supabase/types";
-import { AwayRow, DOT_CLASS, ROLE_LABEL, RoleDot, partLabel, type AwayItem } from "@/components/away";
+import { AwayRow, DOT_CLASS, ROLE_LABEL, RoleDot, partLabel, skipLabel, skipsMealsOnly, type AwayItem } from "@/components/away";
 import { canEditAwayFor } from "@/lib/engine/permissions";
 import { mealsPhrase } from "@/components/meals";
 import { cookStatusOn } from "@/lib/engine/menu";
@@ -45,8 +45,13 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
     return m ? [{ ...p, member: { id: m.id, name: m.name, role: m.role } }] : [];
   });
 
+  // A flatmate skipping a meal or two is home, so they get no "away" dot.
   const rolesAwayOn = (date: string) => {
-    const roles = new Set(awayOn(date, items).map((p) => p.member.role));
+    const roles = new Set(
+      awayOn(date, items)
+        .filter((p) => !skipsMealsOnly(p))
+        .map((p) => p.member.role),
+    );
     return ROLE_ORDER.filter((r) => roles.has(r));
   };
 
@@ -54,15 +59,21 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   const monthEnd = addDays(`${shiftMonth(month, 1)}-01`, -1);
   const inMonth = items.filter((p) => p.start_date <= monthEnd && p.end_date >= monthStart);
   // The cook and maid are listed apart from the flatmates.
-  const flatmatesAway = inMonth.filter((p) => p.member.role === "flatmate");
+  const flatmatesAway = inMonth.filter((p) => p.member.role === "flatmate" && !skipsMealsOnly(p));
+  // Home, but left out of a meal or two: listed apart so nobody reads them as away.
+  const mealSkips = inMonth.filter(skipsMealsOnly);
   const staffLeave = inMonth.filter((p) => p.member.role !== "flatmate");
   const monthName = formatMonth(month).split(" ")[0];
 
   const selectedAway = awayOn(selected, items);
   const flatmates = members.filter((m) => m.role === "flatmate" && m.joined_on <= selected && (!m.left_on || m.left_on >= selected));
   const home = headcount(members, selected, periods);
-  // Whole-day absences first, then people out for part of the day.
-  const dayRows = [...selectedAway.filter((p) => p.full_day), ...selectedAway.filter((p) => !p.full_day)];
+  // Whole-day absences first, then people out for part of the day, then people only skipping meals.
+  const dayRows = [
+    ...selectedAway.filter((p) => p.full_day),
+    ...selectedAway.filter((p) => !p.full_day && !skipsMealsOnly(p)),
+    ...selectedAway.filter(skipsMealsOnly),
+  ];
   const dayFlatmates = dayRows.filter((p) => p.member.role === "flatmate");
   const dayStaff = dayRows.filter((p) => p.member.role !== "flatmate");
   const { noCookMeals } = cookStatusOn(members, selected, periods);
@@ -251,6 +262,18 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
                 ))}
               </ul>
             )}
+            {mealSkips.length ? (
+              <div className="mt-2 flex flex-col gap-1 border-t border-line pt-3">
+                <h3 id="month-skips-heading" className="px-2 text-sm font-bold tracking-wide text-muted uppercase">
+                  Home, skipping a meal
+                </h3>
+                <ul className="flex flex-col divide-y divide-line" aria-labelledby="month-skips-heading">
+                  {mealSkips.map((item) => (
+                    <AwayRow key={item.id} item={item} today={today} editable={canEditAwayFor(me, item.member)} />
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </Card>
 
           <Card className="flex flex-col gap-1 px-3">
@@ -286,13 +309,14 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
   );
 }
 
-/** One person away on the selected day. */
+/** One person away (or home but skipping a meal) on the selected day. */
 function DayRow({ p }: { p: AwayItem }) {
+  const skipping = skipsMealsOnly(p);
   return (
     <li>
       <Link href={`/calendar/away/${p.id}`} className="flex min-h-14 items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-bg">
         <span className="relative">
-          <Avatar name={p.member.name} size={36} away />
+          <Avatar name={p.member.name} size={36} away={!skipping} />
           <RoleDot role={p.member.role} className="absolute -right-0.5 -bottom-0.5 size-3 ring-2 ring-surface" />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
@@ -300,7 +324,11 @@ function DayRow({ p }: { p: AwayItem }) {
           <span className="truncate text-sm text-muted">
             {[
               p.member.role !== "flatmate" ? ROLE_LABEL[p.member.role] : null,
-              p.full_day ? "Away all day" : `Out: ${partLabel(p.slots).replace(/ only$/, "").toLowerCase()}`,
+              p.full_day
+                ? "Away all day"
+                : skipping
+                  ? `Home · ${skipLabel(p).toLowerCase()}`
+                  : `Out: ${partLabel(p.slots).replace(/ only$/, "").toLowerCase()}`,
               p.reason,
             ]
               .filter(Boolean)

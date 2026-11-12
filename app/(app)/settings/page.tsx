@@ -14,6 +14,7 @@ import { JoinRequestItem, UsualSkipsForm } from "./member-forms";
 import { formatFlatCode } from "@/lib/engine/onboarding";
 import { PushSetup } from "@/components/push-setup";
 import { PasswordSetup } from "@/components/password-setup";
+import { CancelJoinRequest, JoinRequestForm } from "@/app/onboarding/forms";
 
 export const metadata = { title: "Flat settings · Tenant" };
 
@@ -22,7 +23,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
   const { created, removed, request, admin } = await searchParams;
   const today = todayIn(flat.timezone);
   const supabase = await createClient();
-  const [{ data: members }, { data: periods }, { data: requests }] = await Promise.all([
+  const [{ data: members }, { data: periods }, { data: requests }, { data: myRequest }] = await Promise.all([
     supabase
       .from("members")
       .select("*")
@@ -38,7 +39,17 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           .eq("status", "pending")
           .order("created_at")
       : Promise.resolve({ data: [] }),
+    // My own latest request to move to another flat.
+    supabase
+      .from("join_requests")
+      .select("name, status, flat_id, flat:flats(name)")
+      .eq("user_id", user.id)
+      .neq("flat_id", flat.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
+  const moveTo = (myRequest?.flat as { name: string } | null)?.name ?? "the other flat";
   const pending = (requests ?? []) as { id: string; name: string; created_at: string; user: { username: string } | null }[];
   const askedOn = (iso: string) =>
     new Intl.DateTimeFormat("en-IN", { timeZone: flat.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
@@ -222,6 +233,41 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           <Card className="flex flex-col gap-3">
             <h2 className="text-title font-bold">Notifications on this device</h2>
             <PushSetup />
+          </Card>
+
+          <Card className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <h2 id="move" className="scroll-mt-6 text-title font-bold">Move to another flat</h2>
+              <p className="text-sm text-muted">
+                You can be in one flat at a time. When the other flat&rsquo;s admin accepts, you leave {flat.name} and
+                join theirs. Your past bills here are kept.
+              </p>
+            </div>
+            {myRequest?.status === "pending" ? (
+              <div className="flex flex-col gap-3" aria-live="polite">
+                <Notice tone="success">
+                  Request sent to {moveTo} as {myRequest.name}. You stay in {flat.name} until their admin accepts.
+                </Notice>
+                <CancelJoinRequest />
+              </div>
+            ) : me.is_admin && flatmates.some((f) => f.id !== me.id && !f.left_on) ? (
+              <Notice tone="info">
+                You&rsquo;re the admin here. Hand over admin to a flatmate first (open them under Members), then come back.
+              </Notice>
+            ) : (
+              <details className="group">
+                <summary className="inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-full font-bold text-accent marker:content-none hover:text-accent-dark [&::-webkit-details-marker]:hidden">
+                  I have another flat&rsquo;s code
+                  <ChevronRightIcon size={18} className="transition-transform group-open:rotate-90" />
+                </summary>
+                <div className="flex flex-col gap-3 pt-3">
+                  {myRequest?.status === "declined" ? (
+                    <Notice tone="warn">The admin of {moveTo} declined your last request.</Notice>
+                  ) : null}
+                  <JoinRequestForm suggestedName={me.name} />
+                </div>
+              </details>
+            )}
           </Card>
 
           <SignOutButton />
