@@ -6,7 +6,7 @@
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794579849-6a93"
+    "version": "1794581762-7edd"
   },
   "sections": [
     {
@@ -534,8 +534,10 @@
       "title": "PDF bills read again",
       "status": "done",
       "date": "2026-11-13",
-      "commits": [],
-      "summary": "User report: a PDF bill gave no data. Found by testing the server's own scan code on 6 test bills (Zepto, a 3-invoice Blinkit order, a 41-line Swiggy bill, scanned 1- and 3-page PDFs, a photo): Gemini 2.5 Flash's free tier allows only 20 reads a day per model (this key had used them up, partly by Claude's own testing) and often answers 503 'high demand'; photos can fall back to Groq, but PDFs had no backup, so they failed with 'This PDF couldn't be read'. Also: a 3-page PDF took 13–16 s against a 20 s limit; the prompt asked for null on unreadable amounts that the checker refused; gemini-2.5-flash-lite is closed to new keys. Fixed: PDFs try gemini-2.5-flash → gemini-3.5-flash-lite → gemini-3.5-flash (35 s each, a busy or out-of-quota model fails in under a second); photos try Gemini → Groq → 3.5 Flash-Lite (models settable by GEMINI_MODEL / GEMINI_BACKUP_MODELS). Thinking off on 2.5 Flash (3.x refuses that setting), structured output so the reply always has the right shape, missing fields as null, an unreadable amount kept as ₹0 to fix in review, a garbled reply moves to the next model, multi-invoice PDFs listed once with the order total. Password-protected PDFs get their own message. The page recognises a PDF by its first bytes, for Android pickers that send one without a .pdf name. Loading text says longer bills can take up to a minute. Verified: with 2.5 Flash's quota used up, all 6 test bills read correctly via 3.5 Flash-Lite (3–9 s; the scanned 3-page one 24 s), totals match the items. 216/216 tests, typecheck, lint and a production build pass; the route answers on the build (401 signed out). Not done: a signed-in run through the page (Claude has no password, and signing a test session was refused), screenshots (only a loading label changed), deploy (waiting for the user's OK).",
+      "commits": [
+        "2deb67c"
+      ],
+      "summary": "User report: a PDF bill gave no data. Found by testing the server's own scan code on 6 test bills (Zepto, a 3-invoice Blinkit order, a 41-line Swiggy bill, scanned 1- and 3-page PDFs, a photo): Gemini 2.5 Flash's free tier allows only 20 reads a day per model (this key had used them up, partly by Claude's own testing) and often answers 503 'high demand'; photos can fall back to Groq, but PDFs had no backup, so they failed with 'This PDF couldn't be read'. Also: a 3-page PDF took 13–16 s against a 20 s limit; the prompt asked for null on unreadable amounts that the checker refused; gemini-2.5-flash-lite is closed to new keys. Fixed: PDFs try gemini-2.5-flash → gemini-3.5-flash-lite → gemini-3.5-flash (35 s each, a busy or out-of-quota model fails in under a second); photos try Gemini → Groq → 3.5 Flash-Lite (models settable by GEMINI_MODEL / GEMINI_BACKUP_MODELS). Thinking off on 2.5 Flash (3.x refuses that setting), structured output so the reply always has the right shape, missing fields as null, an unreadable amount kept as ₹0 to fix in review, a garbled reply moves to the next model, multi-invoice PDFs listed once with the order total. Password-protected PDFs get their own message. The page recognises a PDF by its first bytes, for Android pickers that send one without a .pdf name. Loading text says longer bills can take up to a minute. Verified: with 2.5 Flash's quota used up, all 6 test bills read correctly via 3.5 Flash-Lite (3–9 s; the scanned 3-page one 24 s), totals match the items. 216/216 tests, typecheck, lint and a production build pass; the route answers on the build (401 signed out). Not done: a signed-in run through the page (Claude has no password, and signing a test session was refused), screenshots (only a loading label changed). Deployed (2deb67c, Vercel: success); the live /api/scan answers (401 signed out).",
       "screenshots": false
     }
   ],
@@ -746,7 +748,7 @@
   ],
   "open_questions": [],
   "known_issues": [
-    "PDF scan fix (13 Nov) is not deployed yet and wasn't run through the signed-in page; the server's scan code was tested directly on 6 bills.",
+    "PDF scan fix (13 Nov) is deployed but wasn't run through the signed-in page; the server's scan code was tested directly on 6 bills.",
     "Bill reading uses free Gemini tiers: 2.5 Flash allows 20 reads a day per model and every model is sometimes busy, so a scan can still fail at peak times. A paid Gemini key, or a Groq key for photos, would make it dependable.",
     "GROQ_API_KEY is empty in .env.local, so locally photos have no Groq backup; whether Vercel has one wasn't checked (no Vercel CLI).",
     "The \"test1\" account is still alone in the stray flat named \"8SRJHF\" (left for the user to move, at their choice): sign in as test1, Settings → Move to another flat, enter 8SRJHF, then accept as the admin of C2 102. The stray flat deletes itself.",

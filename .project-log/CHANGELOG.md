@@ -2,7 +2,7 @@
 
 ## 2026-11-13: PDF bills read again
 
-- Cause: free Gemini 2.5 Flash allows only 20 reads a day and is often busy (503), and PDFs had no backup reader, so they failed with "couldn't be read". Now PDFs try 2.5 Flash, then 3.5 Flash-Lite, then 3.5 Flash (35 s each); photos get 3.5 Flash-Lite after Groq. Also: thinking off on 2.5 Flash (faster), fixed reply format, unreadable amounts kept as ₹0 to fix, a clear message for password-protected PDFs, PDFs recognised by content on Android. 6/6 test bills read with the daily quota used up. 216/216 tests. Not deployed yet.
+- Cause: free Gemini 2.5 Flash allows only 20 reads a day and is often busy (503), and PDFs had no backup reader, so they failed with "couldn't be read". Now PDFs try 2.5 Flash, then 3.5 Flash-Lite, then 3.5 Flash (35 s each); photos get 3.5 Flash-Lite after Groq. Also: thinking off on 2.5 Flash (faster), fixed reply format, unreadable amounts kept as ₹0 to fix, a clear message for password-protected PDFs, PDFs recognised by content on Android. 6/6 test bills read with the daily quota used up. 216/216 tests. Deployed (2deb67c).
 
 ## 2026-11-12 — Joining by flat code; meal skips no longer shown as away
 
