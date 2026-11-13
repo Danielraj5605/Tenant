@@ -1,12 +1,12 @@
 {
   "project": "Tenant",
   "tagline": "Flat-share app: availability, chores, menu, money and bill scanning for one flat of six. Live at https://wecohabit.vercel.app",
-  "last_updated": "2026-11-12",
-  "last_sync": "2026-11-12",
+  "last_updated": "2026-11-13",
+  "last_sync": "2026-11-13",
   "artifact": {
     "slug": "765a12b6-ad64-4539-acfc-45bf19f93a43",
     "url": "https://claude.ai/artifact/FceV2rSQepQ8xxZeUXfiRY",
-    "version": "1794504107-bf2f"
+    "version": "1794579849-6a93"
   },
   "sections": [
     {
@@ -528,26 +528,27 @@
       ],
       "summary": "Two user-reported issues from 12 Nov. (1) Joining by code: the join itself worked; the \"test1\" account had typed the code 8SRJHF into 'Flat name' under 'Start a new flat', which created a flat named \"8SRJHF\" (no join request was ever sent), and there was no way to change flat afterwards. Now: onboarding puts 'Have a flat code?' first and 'Start a new flat' second ('only if your flat isn't on Tenant yet'); a flat code typed as the flat name is refused with directions and nothing is created; Settings has 'Move to another flat' (enter the code; you stay in your flat until the other admin accepts, then you leave it and join theirs; an admin with flatmates must hand over admin first; cancel while waiting). Migration 20261122000001 applied with the user's OK. (2) Meal skips shown as away: Kishore's 'I usually skip breakfast and lunch' was saved correctly and he was counted for dinner; the Calendar drew him as away because of a separate part-day entry for 12 Nov (morning and afternoon), and every part-day entry was drawn as away. Now a flatmate's part-day entry for one or two meals shows as 'Home · skipping breakfast and lunch' with a normal avatar, no away dot on the month grid, and sits under 'Home, skipping a meal' instead of 'Flatmates away'; a whole day or all three meals still shows as away; the away form asks 'Which meals are they skipping?'. Kishore's data was right and was not changed. Tests: 210/210 (3 new for the partial-skip case), typecheck, lint. Switching flats on the live database with throwaway accounts and flats: 14/14 (unknown code, own flat's code, stays put while waiting, wrong admin refused, accept moves them, empty old flat deleted, admin with flatmates refused, history kept as 'left', decline changes nothing; row counts back to the start). Browser on a local build against the live database: onboarding 15/15 at 375/768/1440 with a throwaway account (join first, code-as-name refused and nothing created, unknown and malformed codes explained, no sideways scroll, no page errors); Calendar, the entry page, Settings and Today at 375/768/1440 as Madan with no sideways scroll or page errors. Deployed (7c41a2d, Vercel: success). Not done: a signed-in check on the live site (the shared password set on 12 Nov isn't known to Claude), and the 'Move to another flat' form was not submitted through the browser (the same database functions were tested directly). test1 was left for the user to move in the app, at their choice.",
       "screenshots": true
+    },
+    {
+      "id": "pdf-scan-fix",
+      "title": "PDF bills read again",
+      "status": "done",
+      "date": "2026-11-13",
+      "commits": [],
+      "summary": "User report: a PDF bill gave no data. Found by testing the server's own scan code on 6 test bills (Zepto, a 3-invoice Blinkit order, a 41-line Swiggy bill, scanned 1- and 3-page PDFs, a photo): Gemini 2.5 Flash's free tier allows only 20 reads a day per model (this key had used them up, partly by Claude's own testing) and often answers 503 'high demand'; photos can fall back to Groq, but PDFs had no backup, so they failed with 'This PDF couldn't be read'. Also: a 3-page PDF took 13–16 s against a 20 s limit; the prompt asked for null on unreadable amounts that the checker refused; gemini-2.5-flash-lite is closed to new keys. Fixed: PDFs try gemini-2.5-flash → gemini-3.5-flash-lite → gemini-3.5-flash (35 s each, a busy or out-of-quota model fails in under a second); photos try Gemini → Groq → 3.5 Flash-Lite (models settable by GEMINI_MODEL / GEMINI_BACKUP_MODELS). Thinking off on 2.5 Flash (3.x refuses that setting), structured output so the reply always has the right shape, missing fields as null, an unreadable amount kept as ₹0 to fix in review, a garbled reply moves to the next model, multi-invoice PDFs listed once with the order total. Password-protected PDFs get their own message. The page recognises a PDF by its first bytes, for Android pickers that send one without a .pdf name. Loading text says longer bills can take up to a minute. Verified: with 2.5 Flash's quota used up, all 6 test bills read correctly via 3.5 Flash-Lite (3–9 s; the scanned 3-page one 24 s), totals match the items. 216/216 tests, typecheck, lint and a production build pass; the route answers on the build (401 signed out). Not done: a signed-in run through the page (Claude has no password, and signing a test session was refused), screenshots (only a loading label changed), deploy (waiting for the user's OK).",
+      "screenshots": false
     }
   ],
   "current_section": null,
   "next_section": null,
   "changed_files": [
-    "app/onboarding/actions.ts",
-    "app/onboarding/forms.tsx",
-    "app/onboarding/page.tsx",
-    "app/(app)/settings/page.tsx",
-    "app/(app)/settings/actions.ts",
-    "app/(app)/settings/member-forms.tsx",
-    "app/(app)/calendar/page.tsx",
-    "app/(app)/calendar/away/[id]/page.tsx",
-    "app/(app)/calendar/away/away-form.tsx",
-    "components/away.tsx",
-    "lib/engine/presence.ts",
-    "lib/engine/presence.test.ts",
-    "supabase/functions/_shared/engine/presence.ts",
-    "supabase/migrations/20261122000001_switch_flats.sql",
-    "scripts/seed-sample.ts"
+    "lib/scan/index.ts",
+    "lib/scan/fallback.ts",
+    "lib/scan/fallback.test.ts",
+    "lib/engine/scan.ts",
+    "lib/engine/scan.test.ts",
+    "app/api/scan/route.ts",
+    "app/(app)/money/scan/scan-flow.tsx"
   ],
   "test_coverage": [
     {
@@ -737,10 +738,17 @@
     {
       "date": "2026-11-12",
       "text": "A flatmate's part-day entry for one or two meals is shown as 'home, skipping a meal', never as away. A whole day, or all three meals marked off, shows as away. Cook and maid part-day leave is unchanged."
+    },
+    {
+      "date": "2026-11-13",
+      "text": "Bill reading tries a chain of free models: PDFs gemini-2.5-flash → gemini-3.5-flash-lite → gemini-3.5-flash; photos Gemini → Groq → gemini-3.5-flash-lite. Free 2.5 Flash allows 20 reads a day per model, so the backups carry the rest."
     }
   ],
   "open_questions": [],
   "known_issues": [
+    "PDF scan fix (13 Nov) is not deployed yet and wasn't run through the signed-in page; the server's scan code was tested directly on 6 bills.",
+    "Bill reading uses free Gemini tiers: 2.5 Flash allows 20 reads a day per model and every model is sometimes busy, so a scan can still fail at peak times. A paid Gemini key, or a Groq key for photos, would make it dependable.",
+    "GROQ_API_KEY is empty in .env.local, so locally photos have no Groq backup; whether Vercel has one wasn't checked (no Vercel CLI).",
     "The \"test1\" account is still alone in the stray flat named \"8SRJHF\" (left for the user to move, at their choice): sign in as test1, Settings → Move to another flat, enter 8SRJHF, then accept as the admin of C2 102. The stray flat deletes itself.",
     "Moving to another flat turns notifications off for that person (their devices were registered to the old flat); they turn them on again in Settings.",
     "The deployed Edge Functions' copy of presence.ts lacks two display-only helpers added on 12 Nov (unused by the functions); the next functions deploy brings it in line.",

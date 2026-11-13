@@ -25,7 +25,16 @@ const KIND_LABEL: Record<ItemKind, string> = { item: "Item", fee: "Fee", tax: "T
 /** Same cap as /api/scan and the bills bucket (Vercel limits a request to 4.5 MB). */
 const MAX_PDF_BYTES = 4 * 1024 * 1024;
 
-const isPdfFile = (f: File) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf");
+/**
+ * By content, not just name or type: Android pickers (WhatsApp, Drive) can hand
+ * over a PDF with no .pdf name and a generic type such as application/octet-stream.
+ */
+async function isPdfFile(f: File) {
+  if (f.type === "application/pdf" || f.type === "application/x-pdf" || f.name.toLowerCase().endsWith(".pdf")) return true;
+  if (f.type.startsWith("image/")) return false;
+  const head = await f.slice(0, 5).text().catch(() => "");
+  return head === "%PDF-";
+}
 
 export function ScanFlow({
   meId,
@@ -63,7 +72,7 @@ export function ScanFlow({
   async function handleFile(file: File | undefined) {
     if (!file) return;
     try {
-      const pdf = isPdfFile(file);
+      const pdf = await isPdfFile(file);
       let upload: Blob;
       if (pdf) {
         if (file.size > MAX_PDF_BYTES) throw new Error("That PDF is over 4 MB. Upload a photo or screenshot of the bill instead.");
@@ -80,7 +89,7 @@ export function ScanFlow({
         setPdfName(null);
       }
 
-      setPhase({ kind: "working", label: pdf ? "Reading the PDF" : "Reading the bill" });
+      setPhase({ kind: "working", label: pdf ? "Reading the PDF (longer bills can take up to a minute)" : "Reading the bill" });
       const data = new FormData();
       data.append("photo", upload, pdf ? "bill.pdf" : "bill.jpg");
       const res = await fetch("/api/scan", { method: "POST", body: data });

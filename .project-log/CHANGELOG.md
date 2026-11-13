@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13: PDF bills read again
+
+- Cause: free Gemini 2.5 Flash allows only 20 reads a day and is often busy (503), and PDFs had no backup reader, so they failed with "couldn't be read". Now PDFs try 2.5 Flash, then 3.5 Flash-Lite, then 3.5 Flash (35 s each); photos get 3.5 Flash-Lite after Groq. Also: thinking off on 2.5 Flash (faster), fixed reply format, unreadable amounts kept as ₹0 to fix, a clear message for password-protected PDFs, PDFs recognised by content on Android. 6/6 test bills read with the daily quota used up. 216/216 tests. Not deployed yet.
+
 ## 2026-11-12 — Joining by flat code; meal skips no longer shown as away
 
 - Onboarding: 'Have a flat code?' first; a flat code typed as the flat name is refused (that is how the stray flat "8SRJHF" was made). Settings: 'Move to another flat' by code, moving on the other admin's accept (migration 20261122000001). Calendar: a flatmate skipping one or two meals shows as home, not away. 210/210 tests; switching 14/14 and onboarding 15/15 with throwaway accounts. Deployed (7c41a2d).

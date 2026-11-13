@@ -11,6 +11,11 @@ const MAX_PDF_BYTES = 4 * 1024 * 1024;
 const isPdf = (bytes: Uint8Array) =>
   bytes.length > 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46; // "%PDF"
 const isJpeg = (bytes: Uint8Array) => bytes.length > 2 && bytes[0] === 0xff && bytes[1] === 0xd8;
+/** Password-protected PDFs (common for bank and electricity e-bills) carry an /Encrypt entry. */
+const isEncryptedPdf = (bytes: Uint8Array) => Buffer.from(bytes).includes("/Encrypt");
+
+/** A PDF can try three Gemini models, up to 35 s each (a busy model usually fails in under a second). */
+export const maxDuration = 120;
 
 /**
  * POST /api/scan (multipart, field "photo": a JPEG photo or a PDF) → returns the
@@ -57,12 +62,21 @@ export async function POST(request: Request) {
     if (err instanceof ScanUnavailableError) {
       return NextResponse.json({ error: "Bill scanning isn't set up yet. Use New split for now." }, { status: 503 });
     }
-    console.error("scan failed", err);
+    console.error("scan failed", mime, file.size, err);
+    if (mime === "application/pdf" && isEncryptedPdf(bytes)) {
+      return NextResponse.json(
+        {
+          error:
+            "This PDF is password-protected, so it can't be read. Open it, take a screenshot of the bill and upload that, or use New split.",
+        },
+        { status: 422 },
+      );
+    }
     return NextResponse.json(
       {
         error:
           mime === "application/pdf"
-            ? "This PDF couldn't be read. Try a photo of the bill, or use New split."
+            ? "This PDF couldn't be read. Try a screenshot or photo of the bill, or use New split."
             : "This bill couldn't be read. Try a clearer, flatter photo, or use New split.",
       },
       { status: 502 },

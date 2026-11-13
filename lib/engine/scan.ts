@@ -6,22 +6,52 @@ import { z } from "zod";
 import { isIsoDate } from "./dates";
 import type { ItemKind } from "./money";
 
-/** What a model must return (SPEC §10 response schema). */
+/**
+ * What a model must return (SPEC §10 response schema). Missing optional fields
+ * count as null, and an unreadable amount (null, as the prompt asks) is kept
+ * as a line to fix in review instead of failing the whole bill.
+ */
 export const ScanResult = z.object({
-  merchant: z.string().nullable(),
-  date: z.string().nullable(),
+  merchant: z.string().nullish().transform((v) => v ?? null),
+  date: z.string().nullish().transform((v) => v ?? null),
   items: z.array(
     z.object({
-      name: z.string(),
-      quantity: z.number().nullable(),
-      amount: z.number(),
+      name: z.string().nullish().transform((v) => v ?? ""),
+      quantity: z.number().nullish().transform((v) => v ?? null),
+      amount: z.number().nullable(),
       kind: z.enum(["item", "fee", "tax", "discount"]),
     }),
   ),
-  total: z.number().nullable(),
+  total: z.number().nullish().transform((v) => v ?? null),
   warning: z.enum(["total_mismatch"]).optional(),
 });
 export type ScanResult = z.infer<typeof ScanResult>;
+
+/** The same shape for Gemini's structured output, so it can't reply in another shape. */
+export const GEMINI_SCAN_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    merchant: { type: "STRING", nullable: true },
+    date: { type: "STRING", nullable: true, description: "yyyy-mm-dd" },
+    items: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          name: { type: "STRING" },
+          quantity: { type: "NUMBER", nullable: true },
+          amount: { type: "NUMBER", nullable: true },
+          kind: { type: "STRING", enum: ["item", "fee", "tax", "discount"] },
+        },
+        required: ["name", "quantity", "amount", "kind"],
+        propertyOrdering: ["name", "quantity", "amount", "kind"],
+      },
+    },
+    total: { type: "NUMBER", nullable: true },
+  },
+  required: ["merchant", "date", "items", "total"],
+  propertyOrdering: ["merchant", "date", "items", "total"],
+} as const;
 
 export type ScannedItem = {
   name: string;
@@ -49,7 +79,7 @@ export function normalizeScan(raw: ScanResult): NormalizedScan {
   const items: ScannedItem[] = raw.items.map((i) => ({
     name: i.name.trim().slice(0, 80) || "Unreadable item",
     quantity: i.quantity !== null && i.quantity > 0 ? i.quantity : null,
-    amountPaise: rupeesToPaise(i.amount),
+    amountPaise: i.amount === null ? 0 : rupeesToPaise(i.amount),
     kind: i.kind,
     included: true,
   }));
@@ -77,5 +107,6 @@ Rules:
 - Discounts, coupons and savings are kind "discount" with a positive amount.
 - Keep item names exactly as printed (English or Tamil). Do not translate.
 - "total" is the final amount payable printed on the bill.
+- A PDF can hold several invoices for one order (one per seller) plus an order summary. List every line from every invoice once; "total" is the amount paid for the whole order. Skip terms, addresses and other pages with no bill lines.
 - If something is unreadable, use null. Never guess numbers.
 - Output JSON only, no prose and no code fences.`;

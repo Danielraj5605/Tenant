@@ -7,6 +7,7 @@ and asks which to do now, later, or skip.
 
 ## Accepted
 
+- [x] 2026-11-13 Known issue (user-reported): scanning a PDF bill didn't get the data. Cause: Gemini 2.5 Flash's free tier (20 reads a day, often busy) with no backup reader for PDFs. Fixed with a chain of Gemini models and sturdier reading (small)
 - [x] 2026-11-12 Known issue (user-reported): joining a flat with a code made a new flat instead, and you couldn't change flat. Cause: the code was typed into 'Flat name'. Fixed: join-first onboarding, code-as-name refused, 'Move to another flat' in Settings (medium)
 - [x] 2026-11-12 Known issue (user-reported): skipping some meals showed Kishore as away. Cause: part-day entries were drawn as away on the Calendar. Fixed: shown as home, skipping a meal (small)
 - [x] 2026-11-11 On phones, names are cut off or overlapped in several places; check everywhere and fix (medium)

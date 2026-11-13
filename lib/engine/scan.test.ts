@@ -29,6 +29,19 @@ describe("ScanResult schema (SPEC §10)", () => {
     expect(ScanResult.safeParse({ merchant: null, date: null, items: [], total: null }).success).toBe(true);
   });
 
+  it("treats missing optional fields as null instead of failing the bill", () => {
+    const r = ScanResult.safeParse({ items: [{ name: "Milk", amount: 27, kind: "item" }] });
+    expect(r.success).toBe(true);
+    expect(r.data).toMatchObject({ merchant: null, date: null, total: null, items: [{ quantity: null }] });
+  });
+
+  it("keeps a line with an unreadable (null) amount as ₹0 to fix in review", () => {
+    const r = ScanResult.parse({ merchant: null, date: null, items: [{ name: "Smudged", quantity: null, amount: null, kind: "item" }], total: 50 });
+    const n = normalizeScan(r);
+    expect(n.items[0]).toMatchObject({ name: "Smudged", amountPaise: 0 });
+    expect(n.warning).toBe("total_mismatch");
+  });
+
   it("rejects unknown kinds", () => {
     const bad = { merchant: null, date: null, items: [{ name: "x", quantity: null, amount: 1, kind: "tip" }], total: null };
     expect(ScanResult.safeParse(bad).success).toBe(false);
